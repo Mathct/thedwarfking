@@ -14,9 +14,6 @@
  *
  */
 
-use Bga\GameFramework\GameStateBuilder;
-use Bga\GameFramework\StateType;
-
 /*
    Game state machine is a tool used to facilitate game developpement by doing common stuff that can be set up
    in a very easy way from this configuration file.
@@ -34,19 +31,18 @@ use Bga\GameFramework\StateType;
    Arguments of game states:
    _ name: the name of the GameState, in order you can recognize it on your own code.
    _ description: the description of the current game state is always displayed in the action status bar on
-                  the top of the game. Most of the time this is useless for game state with `StateType::GAME` type.
+                  the top of the game. Most of the time this is useless for game state with "game" type.
    _ descriptionmyturn: the description of the current game state when it's your turn.
    _ type: defines the type of game states (activeplayer / multipleactiveplayer / game / manager)
    _ action: name of the method to call when this game state become the current game state. Usually, the
-             action method is prefixed by 'st' (ex: 'stMyGameStateName').
-   _ possibleactions: array that specify possible player actions on this step. It allows you to use `checkAction`
-                      method on both client side (Javacript: `this.checkAction`) and server side (PHP: `$this->checkAction`).
-                      Note that autowired actions and calls with this.bgaPerformAction call the checkAction except if it's explicitely disabled in the call
+             action method is prefixed by "st" (ex: "stMyGameStateName").
+   _ possibleactions: array that specify possible player actions on this step. It allows you to use "checkAction"
+                      method on both client side (Javacript: this.checkAction) and server side (PHP: $this->checkAction).
    _ transitions: the transitions are the possible paths to go from a game state to another. You must name
-                  transitions in order to use transition names in `nextState` PHP method, and use IDs to
+                  transitions in order to use transition names in "nextState" PHP method, and use IDs to
                   specify the next game state for each transition.
    _ args: name of the method to call to retrieve arguments for this gamestate. Arguments are sent to the
-           client side to be used on `onEnteringState` or to set arguments in the gamestate description.
+           client side to be used on "onEnteringState" or to set arguments in the gamestate description.
    _ updateGameProgression: when specified, the game progression is updated (=> call to your getGameProgression
                             method).
 */
@@ -55,39 +51,47 @@ use Bga\GameFramework\StateType;
 
 
 $machinestates = [
-    // only keep this line if your initial state is not 2. In that case, uncomment and replace '2' by your first state id.
-    // 1 => GameStateBuilder::gameSetup(2)->build(), 
 
-    2 => GameStateBuilder::create()
-        ->name('playerTurn')
-        ->description(clienttranslate('${actplayer} must play a card or pass'))
-        ->descriptionmyturn(clienttranslate('${you} must play a card or pass'))
-        ->type(StateType::ACTIVE_PLAYER)
-        ->args('argPlayerTurn')
-        ->possibleactions([
-            // these actions are called from the front with bgaPerformAction, and matched to the function on the game.php file
-            'actPlayCard', 
-            'actPass',
-        ])
-        ->transitions([
-            'playCard' => 3, 
-            'pass' => 3,
-        ])
-        ->build(),
+    // The initial state. Please do not modify.
 
-    3 => GameStateBuilder::create()
-        ->name('nextPlayer')
-        ->description('')
-        ->type(StateType::GAME)
-        ->action('stNextPlayer')
-        ->updateGameProgression(true)
-        ->transitions([
-            'endScore' => 98, 
-            'nextPlayer' => 2,
-        ])
-        ->build(),
+    1 => array(
+        "name" => "gameSetup",
+        "description" => "",
+        "type" => "manager",
+        "action" => "stGameSetup",
+        "transitions" => ["" => 2]
+    ),
 
-    98 => GameStateBuilder::endScore()->build(),
+    
+    2 => array(
+        "name" => "pending",
+        "description" => '',
+        "type" => "game",
+        "action" => "stPending",
+        "updateGameProgression" => true,
+        "transitions" => array("end" => 99, "player"=> 3, "same" => 2)
+    ),
+    
+    3 => array(
+        "name" => "playerTurn",
+        "description" => clienttranslate('${actplayer} must take an action'),
+        "descriptionmyturn" => clienttranslate('${you} must take an action'),
+        "type" => "activeplayer",
+        "args" => "argPlayerTurn",
+        "possibleactions" => array( "actSelect", "actButton"),
+        "transitions" => array( "next" => 2, "zombiePass" => 2, "end" => 99)
+    ), 
+
+    // Final state.
+    // Please do not modify (and do not overload action/args methods).
+    99 => [
+        "name" => "gameEnd",
+        "description" => clienttranslate("End of game"),
+        "type" => "manager",
+        "action" => "stGameEnd",
+        "args" => "argGameEnd"
+    ],
+
 ];
 
 

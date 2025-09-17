@@ -75,7 +75,7 @@ $gameinfos = [
     'language_dependency' => false,
 
     // Colors attributed to players
-    'player_colors' => ['ff0000', '008000', '0000ff', 'ffa500', 'e94190', '982fff', '72c3b1', 'f07f16', 'bdd002', '7b7b7b', '000000', 'ffffff'],                       
+    'player_colors' => ["ff0000", "008000", "0000ff", "ffa500", "773300"],
 
     // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
     // NB: this parameter is used only to flag games supporting this feature; you must use (or not use) reattributeColorsBasedOnPreferences PHP method to actually enable or disable the feature.
@@ -94,8 +94,4 @@ $gameinfos = [
         //  minimum possible value: 320 (the lowest value you specify, the better the display is on mobile)
         'min' => 740,
     ],
-
-    // Flag to enable 3D mode (adds a 3D button to the menu)
-    // Enable this only if your game functions correctly in 3D
-    'enable_3d' => false,
 ];

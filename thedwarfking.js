@@ -20,7 +20,7 @@ define([
     "ebg/core/gamegui",
     "ebg/counter"
 ],
-function (dojo, declare, gamegui, counter) {
+function (dojo, declare) {
     return declare("bgagame.thedwarfking", ebg.core.gamegui, {
         constructor: function(){
             console.log('thedwarfking constructor');
@@ -43,40 +43,47 @@ function (dojo, declare, gamegui, counter) {
             
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
+
+/////////////////////////////////////////////////////////////////////////////////           
+//    _____                      _____        _            
+//   / ____|                    |  __ \      | |           
+//  | |  __  __ _ _ __ ___   ___| |  | | __ _| |_ __ _ ___ 
+//  | | |_ |/ _` | '_ ` _ \ / _ \ |  | |/ _` | __/ _` / __|
+//  | |__| | (_| | | | | | |  __/ |__| | (_| | || (_| \__ \
+//   \_____|\__,_|_| |_| |_|\___|_____/ \__,_|\__\__,_|___/
+//                                                        
+/////////////////////////////////////////////////////////////////////////////////
         
         setup: function( gamedatas )
         {
             console.log( "Starting game setup" );
 
-            // Example to add a div on the game area
-            this.getGameAreaElement().insertAdjacentHTML('beforeend', `
-                <div id="player-tables"></div>
-            `);
-            
-            // Setting up player boards
-            Object.values(gamedatas.players).forEach(player => {
-                // example of setting up players boards
-                this.getPlayerPanelElement(player.id).insertAdjacentHTML('beforeend', `
-                    <div id="player-counter-${player.id}">A player counter</div>
-                `);
-
-                // example of adding a div for each player
-                document.getElementById('player-tables').insertAdjacentHTML('beforeend', `
-                    <div id="player-table-${player.id}">
-                        <strong>${player.name}</strong>
-                        <div>Player zone content goes here</div>
-                    </div>
-                `);
-            });
-            
+                       
             // TODO: Set up your game interface here, according to "gamedatas"
+
+            this.players = gamedatas.players; // A RAJOUTER POUR MOTEUR (UTILITY METHODS)
             
  
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
+
+            //// CONNECTIONS CLICK
+            dojo.query(".carre").connect('onclick', this, 'onSelect' )
+            
+
             console.log( "Ending game setup" );
         },
+
+/////////////////////////////////////////////////////////////////////////////////   
+//         _____ _        _            
+//        / ____| |      | |           
+//       | (___ | |_ __ _| |_ ___  ___ 
+//        \___ \| __/ _` | __/ _ \/ __|
+//        ____) | || (_| | ||  __/\__ \
+//       |_____/ \__\__,_|\__\___||___/
+//                                    
+/////////////////////////////////////////////////////////////////////////////////    
        
 
         ///////////////////////////////////////////////////
@@ -88,22 +95,54 @@ function (dojo, declare, gamegui, counter) {
         onEnteringState: function( stateName, args )
         {
             console.log( 'Entering state: '+stateName, args );
-            
+
             switch( stateName )
             {
             
-            /* Example:
-            
-            case 'myGameState':
-            
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
+            case 'playerTurn':
+                this.args = args.args;
+                for( var sid in this.args.selectable)
+                {
+                    if(this.isCurrentPlayerActive())
+                    {
+                        dojo.query("#"+this.args.selectable[sid]).addClass("selectable");
+                    
+                    }
+                }
+
+                for( var sid in this.args.selected)
+                {
+                    if(this.isCurrentPlayerActive())
+                    {
+                        dojo.query("#"+this.args.selected[sid]).addClass("selected");
+                    }
+                }
+
+          
+
+                if( this.isCurrentPlayerActive() )
+                {
+                    if(args.args.titleyou != null) 
+                    {
+                        $('pagemaintitletext').innerHTML = this.format_string_recursive(_(args.args.titleyou).replace('${you}', this.divYou()).replace(/#opponent#/g,args.args.opponent).replace('#nb#',args.args.nb).replace('#nb2#',args.args.nb2).replace('#icon#',args.args.icon).replace('#icon2#',args.args.icon2), args.args);
+                    }
+                } 
+                    
+                else
+                {
+                    if(args.args.title != null) 
+                    {
+                        $('pagemaintitletext').innerHTML = this.format_string_recursive(_(args.args.title).replace('${actplayer}', this.divActPlayer()).replace('#nb#',args.args.nb).replace('#nb2#',args.args.nb2).replace('#icon#',args.args.icon).replace('#icon2#',args.args.icon2), args.args);  
+                    }
+                }
+
+                    
                 
                 break;
-           */
+    
            
            
-            case 'dummy':
+            case 'dummmy':
                 break;
             }
         },
@@ -114,20 +153,14 @@ function (dojo, declare, gamegui, counter) {
         onLeavingState: function( stateName )
         {
             console.log( 'Leaving state: '+stateName );
+
+            dojo.query(".selectable").removeClass("selectable");
+            dojo.query(".selected").removeClass("selected");
             
             switch( stateName )
             {
             
-            /* Example:
-            
-            case 'myGameState':
-            
-                // Hide the HTML block we are displaying only during this game state
-                dojo.style( 'my_html_block_id', 'display', 'none' );
-                
-                break;
-           */
-           
+                      
            
             case 'dummy':
                 break;
@@ -142,81 +175,256 @@ function (dojo, declare, gamegui, counter) {
             console.log( 'onUpdateActionButtons: '+stateName, args );
                       
             if( this.isCurrentPlayerActive() )
-            {            
-                switch( stateName )
-                {
-                 case 'playerTurn':    
-                    const playableCardsIds = args.playableCardsIds; // returned by the argPlayerTurn
-
-                    // Add test action buttons in the action status bar, simulating a card click:
-                    playableCardsIds.forEach(
-                        cardId => this.statusBar.addActionButton(_('Play card with id ${card_id}').replace('${card_id}', cardId), () => this.onCardClick(cardId))
-                    ); 
-
-                    this.statusBar.addActionButton(_('Pass'), () => this.bgaPerformAction("actPass"), { color: 'secondary' }); 
-                    break;
+                {            
+                    switch( stateName )
+                    {
+    
+                        case "playerTurn":
+                            for( var nb in args.buttons )
+                            { 
+                                     
+                                if(args.buttons[nb] == "cancel")
+                                {
+                                this.addActionButton( 'cancel', _("Cancel") ,'onOpButton', null, null, 'gray' );
+                                }
+                                if(args.buttons[nb] == "pass")
+                                {
+                                this.addActionButton( 'pass', _("Pass") ,'onOpButton', null, null, 'gray' );
+                                }
+                                if(args.buttons[nb] == "yes") 
+                                {
+                                this.addActionButton('btn_yes', _("Yes"), 'onOpButton', null, null, 'blue');
+                                this.startActionTimer('btn_yes', 5, 1);
+                                }
+                                if(args.buttons[nb] == "no") 
+                                {
+                                this.addActionButton( 'no', _("No") ,'onOpButton', null, null, 'red' );
+                                }
+                            }
+                                      
+                            
+                            break;
+    
+    
+    
+                    }
                 }
-            }
         },        
 
-        ///////////////////////////////////////////////////
-        //// Utility methods
-        
-        /*
-        
-            Here, you can defines some utility methods that you can use everywhere in your javascript
-            script.
-        
-        */
+/////////////////////////////////////////////////////////////////////////////////         
+//   _    _ _   _ _ _ _                          _   _               _     
+//  | |  | | | (_) (_) |                        | | | |             | |    
+//  | |  | | |_ _| |_| |_ _   _   _ __ ___   ___| |_| |__   ___   __| |___ 
+//  | |  | | __| | | | __| | | | | '_ ` _ \ / _ \ __| '_ \ / _ \ / _` / __|
+//  | |__| | |_| | | | |_| |_| | | | | | | |  __/ |_| | | | (_) | (_| \__ \
+//   \____/ \__|_|_|_|\__|\__, | |_| |_| |_|\___|\__|_| |_|\___/ \__,_|___/
+//                         __/ |                                           
+//                        |___/                                            
+/////////////////////////////////////////////////////////////////////////////////  
 
-
-        ///////////////////////////////////////////////////
-        //// Player's action
-        
-        /*
-        
-            Here, you are defining methods to handle player's action (ex: results of mouse click on 
-            game objects).
+divYou : function() {
             
-            Most of the time, these methods:
-            _ check the action is possible at this game state.
-            _ make a call to the game server
+    var color = this.players[this.player_id].color;
+    var color_bg = "";
+    var you = "<span style=\"font-weight:bold;color:#" + color + ";" + color_bg + "\">" + _("You") + "</span>";
+    return you;
+},
+
+divActPlayer : function() {        	
+    var color = this.players[this.getActivePlayerId()].color;
+    var name = this.players[this.getActivePlayerId()].name;
+    var color_bg = "";
+    var you = "<span style=\"font-weight:bold;color:#" + color + ";" + color_bg + "\">" + name + "</span>";
+    return you;
+},
+
+format_string_recursive : function(log, args) {
+    try {
+        if (log && args && !args.processed) {
+            args.processed = true;
+
+            
+        }
+    } catch (e) {
+        console.error(log,args,"Exception thrown", e.stack);
+    }
+    return this.inherited(arguments);
+},
+ 
+attachToNewParentNoDestroy: function (mobile_in, new_parent_in, relation, place_position) 
+    {
+
+        const mobile = $(mobile_in);
+        const new_parent = $(new_parent_in);
+
+        var src = dojo.position(mobile);
+        if (place_position)
+            mobile.style.position = place_position;
+        dojo.place(mobile, new_parent, relation);
+        mobile.offsetTop;//force re-flow
+        var tgt = dojo.position(mobile);
+        var box = dojo.marginBox(mobile);
+        var cbox = dojo.contentBox(mobile);
+        var left = box.l + src.x - tgt.x;
+        var top = box.t + src.y - tgt.y;
+
+        mobile.style.position = "absolute";
+        mobile.style.left = left + "px";
+        mobile.style.top = top + "px";
+        box.l += box.w - cbox.w;
+        box.t += box.h - cbox.h;
+        mobile.offsetTop;//force re-flow
+        return box;
+    },
+
+// TIMER sur bouton
+
+startActionTimer: function(buttonId, time, pref, autoclick = false) {
+    var button = $(buttonId);
+    var isReadOnly = this.isReadOnly();
+    if (button == null || isReadOnly || pref == 2) {
+        return;
+    }
+
+    // If confirm disabled, click on button
+    if (pref == 0) {
+        if (autoclick) 
+            button.click();
+        return;
+    }
+
+    this._actionTimerLabel = button.innerHTML;
+    this._actionTimerSeconds = time;
+    this._actionTimerFunction = () => {
+        var button = $(buttonId);
+        if (button == null) {
+            this.stopActionTimer();
+        } 
+        else if (this._actionTimerSeconds-- > 1) {
+            button.innerHTML = this._actionTimerLabel + ' (' + this._actionTimerSeconds + ')';
+        } 
+        else {
+            //debug('Timer ' + buttonId + ' execute');
+            button.click();
+            this.stopActionTimer();
+        }
+    };
+    this._actionTimerFunction();
+    this._actionTimerId = window.setInterval(this._actionTimerFunction.bind(this), 1000);
+    //debug('Timer #' + this._actionTimerId + ' ' + buttonId + ' start');
+},
+
+stopActionTimer() {
+    if (this._actionTimerId != null) {
+        //debug('Timer #' + this._actionTimerId + ' stop');
+        window.clearInterval(this._actionTimerId);
+        delete this._actionTimerId;
+    }
+},
+
+isReadOnly: function () {
+    return (
+        this.isSpectator || typeof g_replayFrom != "undefined" || g_archive_mode
+    );
+},
+
+//////// RESIZED
+
+onScreenWidthChange: function () {
+this.updateLayout();
+},
+
+updateLayout: function () {
+
+    var gameWidth = 2000;
+    
+
+    game_play_area = document.getElementById('game_play_area');
+
+    if(game_play_area.offsetWidth <= 2000)
+    {
+        var horizontalScale = game_play_area.offsetWidth / gameWidth;
+
+        var resized = document.getElementById('resized');
+        resized.style.transform = 'scale(' + horizontalScale + ')';
+
+        var scaledHeight = (resized.offsetHeight * horizontalScale);
+        game_play_area.style.height = scaledHeight+'px';
+
+    }
+},
+
+
+/////////////////////////////////////////////////////////////////////////////////  
+//         _____  _                       _                  _   _             
+//        |  __ \| |                     ( )                | | (_)            
+//        | |__) | | __ _ _   _  ___ _ __|/ ___    __ _  ___| |_ _  ___  _ __  
+//        |  ___/| |/ _` | | | |/ _ \ '__| / __|  / _` |/ __| __| |/ _ \| '_ \ 
+//        | |    | | (_| | |_| |  __/ |    \__ \ | (_| | (__| |_| | (_) | | | |
+//        |_|    |_|\__,_|\__, |\___|_|    |___/  \__,_|\___|\__|_|\___/|_| |_|
+//                         __/ |                                               
+//                        |___/                                                
+/////////////////////////////////////////////////////////////////////////////////  
         
-        */
-        
-        // Example:
-        
-        onCardClick: function( card_id )
+                
+        onSelect: function(evt)
+        {        	 
+            // Preventing default browser reaction
+             dojo.stopEvent( evt );
+
+            
+             
+            if( !this.isCurrentPlayerActive() || !(evt.currentTarget.classList.contains('selectable')) )
+            {   
+                return; 
+            }
+            
+            if(this.isCurrentPlayerActive() && evt.currentTarget.classList.contains('selectable'))
+            {
+                
+                this.bgaPerformAction('actSelect', { arg1: evt.currentTarget.id });
+            }
+
+        },
+
+        onOpButton: function(evt)
         {
-            console.log( 'onCardClick', card_id );
+            
+            // Preventing default browser reaction
+            dojo.stopEvent( evt );
+            
+            this.bgaPerformAction('actButton', { arg1: evt.currentTarget.id });
+            
+            
 
-            this.bgaPerformAction("actPlayCard", { 
-                card_id,
-            }).then(() =>  {                
-                // What to do after the server call if it succeeded
-                // (most of the time, nothing, as the game will react to notifs / change of state instead)
-            });        
-        },    
+        },
 
         
-        ///////////////////////////////////////////////////
-        //// Reaction to cometD notifications
+///////////////////////////////////////////////////////////////////////////////// 
+//       _   _       _   _  __ _           _   _                 
+//      | \ | |     | | (_)/ _(_)         | | (_)                
+//      |  \| | ___ | |_ _| |_ _  ___ __ _| |_ _  ___  _ __  ___ 
+//      | . ` |/ _ \| __| |  _| |/ __/ _` | __| |/ _ \| '_ \/ __|
+//      | |\  | (_) | |_| | | | | (_| (_| | |_| | (_) | | | \__ \
+//      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/
+//                                                                 
+/////////////////////////////////////////////////////////////////////////////////  
 
-        /*
-            setupNotifications:
-            
-            In this method, you associate each of your game notifications with your local method to handle it.
-            
-            Note: game notification names correspond to "notifyAllPlayers" and "notifyPlayer" calls in
-                  your thedwarfking.game.php file.
-        
-        */
         setupNotifications: function()
         {
             console.log( 'notifications subscriptions setup' );
             
-            // automatically listen to the notifications, based on the `notif_xxx` function on this class.
-            this.bgaSetupPromiseNotifications();
+            // TODO: here, associate your game notifications with local methods
+            
+            // Example 1: standard notification handling
+            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
+            
+            // Example 2: standard notification handling + tell the user interface to wait
+            //            during 3 seconds after calling the method in order to let the players
+            //            see what is happening in the game.
+            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
+            // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
+            // 
         },  
         
         // TODO: from this point and below, you can write your game notifications handling methods
@@ -224,12 +432,12 @@ function (dojo, declare, gamegui, counter) {
         /*
         Example:
         
-        notif_cardPlayed: async function( args )
+        notif_cardPlayed: function( notif )
         {
             console.log( 'notif_cardPlayed' );
-            console.log( args );
+            console.log( notif );
             
-            // Note: args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
+            // Note: notif.args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
             
             // TODO: play the card in the user interface.
         },    
