@@ -331,7 +331,7 @@ isReadOnly: function () {
 //////// RESIZED
 
 onScreenWidthChange: function () {
-this.updateLayout();
+//this.updateLayout();
 },
 
 updateLayout: function () {

@@ -1,7 +1,7 @@
 {OVERALL_GAME_HEADER}
 
 
-<div id="resized">
+<div id="my_board">
   <div class="carre"></div>
 </div>
 

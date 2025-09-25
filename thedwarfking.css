@@ -14,14 +14,16 @@
  */
 
 
-#resized {
+#my_board {
   
-  transform-origin: top left;
-  width: 2000px;
-  height: 2000px;
-  background-color: red;
+  width: 750px;
+  height: 750px;
   position: relative;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  margin-bottom: 100px;
+  background-color: red;
    
 }
 
