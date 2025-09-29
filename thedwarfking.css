@@ -13,28 +13,103 @@
  *
  */
 
+ * {
+  box-sizing: border-box; 
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 
-#my_board {
+
+#board_id {
   
-  width: 750px;
-  height: 750px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  margin: 0px auto;
+  border-radius: 10px;
+  z-index: 1;
   position: relative;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 10px;
-  margin-bottom: 100px;
-  background-color: red;
    
 }
 
-.carre{
-  height: 200px;
-  width: 200px;
-  background-color: blue;
-  position: absolute;
-  top: 10%;
-  left: 10%;
+#nb_round {
+
+  font-size: 25px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+
 }
+
+.titre {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  cursor: default;
+}
+
+.cards-container {
+  margin: 10px auto;
+  width: calc(100% - 100px);
+  border-radius: 20px;
+  z-index: 50;
+  
+}
+
+#table_cards {
+  margin-top: 20px;
+}
+
+.stockitem .player-title {
+	position: absolute;
+	top: -1.3em;
+  font-size: 16pt;
+	/* font-weight: bold; */
+	width: 100%;
+	text-align: center;
+	text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stockitem {
+/* useful pour resizing sprites */
+    background-image: url('img/cards.jpg');
+    background-size: 1600% 400%;
+    box-shadow: 1px 2px 1px 1px rgba(0, 0, 0, 0.44);
+    border-radius: 5%;
+}
+
+#hand_container .stockitem:hover{
+  transform: scale(1.1) !important;
+  z-index: 100 !important;
+}
+
+
+
+
+
+
+
+.selectable {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  outline: 3px solid yellow; 
+  box-shadow: 0 0 3px black;
+}
+
+.selected {
+  outline: 3px solid yellow; 
+  box-shadow: 0 0 3px black;
+}
+
+
+
 
 
 

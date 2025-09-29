@@ -1,14 +1,9 @@
 {OVERALL_GAME_HEADER}
 
 
-<div id="my_board">
-  <div class="carre"></div>
+<div id="board_id">
+  
 </div>
-
-
-
-
-
 
 
 <script type="text/javascript">

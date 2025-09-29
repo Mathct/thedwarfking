@@ -18,17 +18,24 @@
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
-    "ebg/counter"
+    "ebg/counter",
+    "ebg/stock"
 ],
 function (dojo, declare) {
+
+
+    /* CONSTANTS HERE */
+    const CARD_WIDTH = 150;
+    const CARD_HEIGHT = 236;
+    const CARDS_PER_ROW = 16;
+
+
+
     return declare("bgagame.thedwarfking", ebg.core.gamegui, {
         constructor: function(){
             console.log('thedwarfking constructor');
               
-            // Here, you can init the global variables of your user interface
-            // Example:
-            // this.myGlobalValue = 0;
-
+        
         },
         
         /*
@@ -62,15 +69,23 @@ function (dojo, declare) {
             // TODO: Set up your game interface here, according to "gamedatas"
 
             this.players = gamedatas.players; // A RAJOUTER POUR MOTEUR (UTILITY METHODS)
-            
+
+            this.my_hand = gamedatas.my_hand;
+            this.table = gamedatas.table;
+            this.first_player_play = gamedatas.first_player_play;
+            this.no_round = parseInt(gamedatas.no_round);
+            this.no_trick = parseInt(gamedatas.no_trick);
+            this.no_turn = parseInt(gamedatas.no_turn);
+
+
+            this.setupBoard();
  
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
-
+         
             //// CONNECTIONS CLICK
-            dojo.query(".carre").connect('onclick', this, 'onSelect' )
-            
+            dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
 
             console.log( "Ending game setup" );
         },
@@ -399,6 +414,188 @@ updateLayout: function () {
 
         },
 
+        setupBoard: function () {
+        console.log('Setting up the board');
+
+        
+        const gameBoardHTML = `
+            
+                    <div id="nb_round">${_("Round")}: ${this.no_round} / 7</div>
+
+                    <div id="table_cards_container" class="cards-container">
+                        <div class="titre">${_("Cards played")}:</div>
+                        <div id="table_cards" class="cards"></div>
+                        
+                    </div> 
+
+                    
+                    <div id="hand_container" class="cards-container">
+                        <div class="titre" id="my_cards_title">${_("My cards")}:</div>
+                        <div id="my_cards" class="cards"></div>
+                    </div>
+                        
+        `
+        
+
+
+        const gamePlayArea = document.getElementById("board_id");
+        gamePlayArea.insertAdjacentHTML("beforeend", gameBoardHTML);
+
+        this.setupStocks();
+
+        },
+
+        createStockForCards: function(page, element)
+        {
+            let stock = new ebg.stock();
+            stock.create(page, element, CARD_WIDTH, CARD_HEIGHT);
+            stock.image_items_per_row = CARDS_PER_ROW;
+
+            return stock;
+        },
+
+        getStockCardType: function( card ) {
+        let card_id;
+        if (card.type == 1) {
+
+            if(card.type_arg < 11)
+            {
+                card_id = parseInt(card.type_arg);
+            }
+
+            else if (card.type_arg == 11) {
+
+                if(card.type_arg_2 == 1)
+                {
+                    card_id = 11;
+                }
+
+                else if(card.type_arg_2 == 2)
+                {
+                    card_id = 12;
+                }
+            }
+
+            else if (card.type_arg > 11) {
+
+                card_id = 1 + parseInt(card.type_arg);
+            }
+            
+        } 
+        
+        else if (card.type == 2) {
+
+            if(card.type_arg < 11)
+            {
+                card_id = 16 + parseInt(card.type_arg);
+            }
+
+            else if (card.type_arg == 11) {
+
+                if(card.type_arg_2 == 1)
+                {
+                    card_id = 27;
+                }
+
+                else if(card.type_arg_2 == 2)
+                {
+                    card_id = 28;
+                }
+            }
+
+            else if (card.type_arg > 11) {
+
+                card_id = 17 + parseInt(card.type_arg);
+            }
+        } 
+
+        else if (card.type == 3) {
+
+            if(card.type_arg < 11)
+            {
+                card_id = 32 + parseInt(card.type_arg);
+            }
+
+            else if (card.type_arg == 11) {
+
+                if(card.type_arg_2 == 1)
+                {
+                    card_id = 43;
+                }
+
+                else if(card.type_arg_2 == 2)
+                {
+                    card_id = 44;
+                }
+            }
+
+            else if (card.type_arg > 11) {
+
+                card_id = 33 + parseInt(card.type_arg);
+            }
+        }
+        
+        else if (card.type == 4) {
+            
+                card_id = 48 + parseInt(card.type_arg);
+        } 
+
+
+        return card_id
+
+        },
+
+
+
+    setupStocks: function() {
+
+    // Stock pour la main du joueur
+    this.handStock = this.createStockForCards(this, $('my_cards'));
+    this.handStock.setSelectionMode(0);
+    this.handStock.setOverlap(60, 0);
+    for( var card_id = 1; card_id <= 53; card_id++) {
+        this.handStock.addItemType(card_id, card_id, g_gamethemeurl + 'img/cards.jpg', card_id-1);
+    }
+
+
+    // Stock pour la table : pas de weight pour la table pour ne pas classer les cartes selon leur type.
+    this.tableStock = this.createStockForCards(this, $('table_cards'));
+    for( var card_id = 1; card_id <= 53; card_id++) {
+        this.tableStock.addItemType(card_id, 0, g_gamethemeurl + 'img/cards.jpg', card_id-1);
+    }
+    this.tableStock.setSelectionMode(0);
+    this.tableStock.use_vertical_overlap_as_offset = false;
+    this.tableStock.vertical_overlap = -15;
+
+
+    
+    // Cards in player's hand
+    Object.values(this.my_hand).forEach( card =>
+    {
+        const card_type = this.getStockCardType(card);
+        this.handStock.addToStockWithId(card_type, card.id);
+    } );
+    this.handStock.updateDisplay();
+
+
+    //Cards in table
+    Object.values(this.table).forEach((card) => {
+
+        console.log('this_table_card', card);
+
+
+        const card_type = this.getStockCardType(card);
+        this.tableStock.addToStockWithId(card_type, card.id);
+
+        const player = this.players[card.location_arg];
+
+        const card_div = document.getElementById('table_cards_item_' + card.id);
+        dojo.place('<div class="player-title" style="color: #' + player.color + '">' + player.name + '</div>', card_div);
+    });
+    
+
+},
+
         
 ///////////////////////////////////////////////////////////////////////////////// 
 //       _   _       _   _  __ _           _   _                 
@@ -414,34 +611,51 @@ updateLayout: function () {
         {
             console.log( 'notifications subscriptions setup' );
             
-            // TODO: here, associate your game notifications with local methods
-            
-            // Example 1: standard notification handling
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-            
-            // Example 2: standard notification handling + tell the user interface to wait
-            //            during 3 seconds after calling the method in order to let the players
-            //            see what is happening in the game.
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-            // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
-            // 
+            dojo.subscribe( 'playCard', this, "notif_playCard" );
+            dojo.subscribe( 'endTurn', this, "notif_endTurn" );
         },  
         
-        // TODO: from this point and below, you can write your game notifications handling methods
-        
-        /*
-        Example:
-        
-        notif_cardPlayed: function( notif )
-        {
-            console.log( 'notif_cardPlayed' );
-            console.log( notif );
+        notif_playCard: function(notif) {
             
-            // Note: notif.args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
-            
-            // TODO: play the card in the user interface.
-        },    
-        
-        */
+            const card = notif.args.card_play;
+            console.warn(card.id)
+            // Add the card to the table
+            this.table[card.id] = card; // remplacer l'indice par table.length si ça sert à quelque chose...
+            const div_id = this.player_id == card.location_arg ? `my_cards_item_${card.id}` : undefined;
+            const card_type = this.getStockCardType(card);
+            const player = this.players[card.location_arg];
+            this.tableStock.addToStockWithId(card_type, card.id, div_id);
+            const card_div = document.getElementById('table_cards_item_' + card.id);
+            dojo.place('<div class="player-title" style="color: #' + player.color + '">' + player.name + '</div>', card_div);
+
+
+            // Destroy the card for the current player
+            if (this.player_id == card.location_arg) {
+
+                this.handStock.removeFromStockById(card.id);
+            }
+
+
+        },
+
+        notif_endTurn: function(notif) {
+            const winner_id = notif.args.winner_id;
+            this.tableStock.removeAllTo('overall_player_board_' + winner_id);
+   
+        },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    });             
 });

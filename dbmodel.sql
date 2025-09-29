@@ -44,3 +44,22 @@ CREATE TABLE IF NOT EXISTS `pending` (
   `arg4` varchar(50) NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000 ;
+
+CREATE TABLE IF NOT EXISTS `cards` (
+  `card_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `card_type` varchar(16) NOT NULL,
+  `card_type_arg` int(11) NOT NULL,
+  `card_type_arg_2` int(11) unsigned DEFAULT 0,
+  `card_location` varchar(16) NOT NULL,
+  `card_location_arg` int(11) NOT NULL,
+  PRIMARY KEY (`card_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--  `card`
+--   `card_id` 
+--   `card_type`         1= green     2= blue   3= red    4=special
+--   `card_type_arg`     2,3,4,5,6,7,8,9,10,12(J),13(Q),14(K),15(A) (le 1 et 11 sont des cartes speciales), 101 jusqu'à 114 pour les cartes speciales
+--   `card_location`     deck, id joueur (hand), board ou discard
+--   `card_location_arg` non utilisé
+
+ALTER TABLE `player` ADD `player_turn` int(5) NOT NULL DEFAULT 0;
