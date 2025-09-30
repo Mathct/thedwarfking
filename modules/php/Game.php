@@ -2,7 +2,7 @@
 /**
  *------
  * BGA framework: Gregory Isabelli & Emmanuel Colin & BoardGameArena
- * thedwarfking implementation : © <Your name here> <Your email address here>
+ * thedwarfking implementation : © <Mathieu Chatrain> <mathieu.chatrain@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -243,12 +243,20 @@ class Game extends \Table
 
 
         /************ Init Pending *****/
-
-                
-        foreach( $players as $player_id => $player )
-        {
-            $this->addPendingFirst($player_id, "PlayCard");
+     
+           
+        // NOUVEL ORDRE PENDING
+        $nextplayer = $first_player_play;
+        $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+        for ($i = 1; $i <= $count_players; $i++) {
+            game::$instance->addPendingFirst($nextplayer, "PlayCard");
+            $nextplayer = game::$instance->getPlayerAfter($nextplayer);
         }
+
+        $this->addPending($first_player_play, "FirstPlay");
+        $this->addPending($first_player_quest, "Quest");
+        $this->addPending($first_player_deal, "Deal");
+
     }
 
 /////////////////////////////////////////////////////////////////////////////////  

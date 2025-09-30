@@ -31,8 +31,8 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} blabla2');
-        $ret['titleyou'] = clienttranslate('${you} blabla1');
+        $ret['title'] = clienttranslate('');
+        $ret['titleyou'] = clienttranslate('');
 
                        
         return $ret;
@@ -40,6 +40,16 @@ class Pending extends APP_GameClass
 
     function Deal($parg1, $parg2, $varg1, $varg2)
     {
+        
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} deals the cards and reveals the special card of the round'),
+                array(
+                    'player_name' => $this->player_name,
+
+                )
+            );
         
         
     }
@@ -59,6 +69,41 @@ class Pending extends APP_GameClass
 
     function Quest($parg1, $parg2, $varg1, $varg2)
     {
+         game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} chooses the quest'),
+                array(
+                    'player_name' => $this->player_name,
+
+                )
+            );
+        
+        
+    }
+
+    function argFirstPlay($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} blabla2');
+        $ret['titleyou'] = clienttranslate('${you} blabla1');
+
+                       
+        return $ret;
+    }
+
+    function FirstPlay($parg1, $parg2, $varg1, $varg2)
+    {
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} starts the round'),
+                array(
+                    'player_name' => $this->player_name,
+
+                )
+            );
         
         
     }
