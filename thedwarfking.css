@@ -20,6 +20,24 @@
   border: 0;
 }
 
+body {
+  background-image: url('img/background1.png');
+  background-repeat: repeat;
+  background-size: 500px 352px;
+    
+}
+
+@font-face {
+  font-family: 'BuenaPark';
+  font-style: normal;
+  font-weight: normal;
+  src: local('BuenaPark'),
+      url('img/BuenaPark.woff2') format('woff2'),
+      url('img/BuenaPark.woff') format('woff'),
+      url('img/BuenaPark.ttf') format('truetype');
+}
+
+
 
 #board_id {
   
@@ -37,19 +55,23 @@
 }
 
 #nb_round {
-
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 25px;
-  font-weight: bold;
+  
   text-align: center;
   margin-top: 10px;
+  color: white;
+  cursor: default;
 
 }
 
 .titre {
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 20px;
-  font-weight: bold;
+  
   margin-bottom: 30px;
   cursor: default;
+  color: white;
 }
 
 .cards-container {
