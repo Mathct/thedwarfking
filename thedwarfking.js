@@ -430,7 +430,7 @@ updateLayout: function () {
 
                     
                     <div id="hand_container" class="cards-container">
-                        <div class="titre" id="my_cards_title">${_("My cards")}:</div>
+                        <div class="titre" id="my_cards_title">${_("My hand")}:</div>
                         <div id="my_cards" class="cards"></div>
                     </div>
                         
@@ -440,6 +440,14 @@ updateLayout: function () {
 
         const gamePlayArea = document.getElementById("board_id");
         gamePlayArea.insertAdjacentHTML("beforeend", gameBoardHTML);
+
+        if(this.isSpectator ) {
+        
+        dojo.addClass('hand_container', 'hidden');
+        
+        let board = document.getElementById("board_id");
+        board.style.height = "700px";
+        }
 
         this.setupStocks();
 
@@ -613,6 +621,8 @@ updateLayout: function () {
             
             dojo.subscribe( 'playCard', this, "notif_playCard" );
             dojo.subscribe( 'endTurn', this, "notif_endTurn" );
+            this.notifqueue.setSynchronous( 'playCard', 1500 );
+            this.notifqueue.setSynchronous( 'endTurn', 1500 );
         },  
         
         notif_playCard: function(notif) {

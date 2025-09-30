@@ -51,6 +51,7 @@ body {
   border-radius: 10px;
   z-index: 1;
   position: relative;
+  margin-bottom: 100px;
    
 }
 
@@ -114,7 +115,9 @@ body {
 
 
 
-
+.hidden {
+  display: none !important;
+}
 
 
 
