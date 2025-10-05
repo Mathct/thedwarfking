@@ -86,6 +86,7 @@ function (dojo, declare) {
          
             //// CONNECTIONS CLICK
             dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
+            dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
 
             console.log( "Ending game setup" );
         },
@@ -205,6 +206,10 @@ function (dojo, declare) {
                                 if(args.buttons[nb] == "pass")
                                 {
                                 this.addActionButton( 'pass', _("Pass") ,'onOpButton', null, null, 'gray' );
+                                }
+                                if(args.buttons[nb] == "continue")
+                                {
+                                this.addActionButton( 'continue', _("Continue") ,'onOpButton', null, null, 'gray' );
                                 }
                                 if(args.buttons[nb] == "yes") 
                                 {
@@ -420,7 +425,10 @@ updateLayout: function () {
         
         const gameBoardHTML = `
             
+                    <div id="round">
                     <div id="nb_round">${_("Round")}: ${this.no_round} / 7</div>
+                    <div id="btn_round"><div class="icon1_btn"></div><div>/</div><div class="icon2_btn"></div></div>
+                    </div>
 
                     <div id="table_cards_container" class="cards-container">
                         <div class="titre">${_("Cards played")}:</div>
@@ -433,13 +441,33 @@ updateLayout: function () {
                         <div class="titre" id="my_cards_title">${_("My hand")}:</div>
                         <div id="my_cards" class="cards"></div>
                     </div>
+
+                    <div id="modal_round_container">
+                        <div id="modal_round">
+                        <div id="modal_section_1" class="modal_section"></div>
+                        <div id="modal_section_2" class="modal_section"></div>
+                        <div id="croix">X</div>
+                        </div>
+                    </div>
                         
         `
         
-
-
+        
         const gamePlayArea = document.getElementById("board_id");
         gamePlayArea.insertAdjacentHTML("beforeend", gameBoardHTML);
+
+        var choiceQuest = this.gamedatas.active_quest_card;
+        if(choiceQuest[0].validate == 0)
+        {
+            var croix = document.getElementById("croix");
+            croix.classList.add("hidden");
+        }
+        else
+        {
+            var modal_round_container = document.getElementById("modal_round_container");
+            modal_round_container.classList.add("hidden");
+            this.addEventListenerModal();
+        }
 
         if(this.isSpectator ) {
         
@@ -449,8 +477,43 @@ updateLayout: function () {
         board.style.height = "700px";
         }
 
+        this.setupSpecialModal(this.gamedatas.active_special_card);
+        this.setupQuestModal(this.gamedatas.active_quest_card);
         this.setupStocks();
 
+        },
+        
+        addEventListenerModal: function() {
+            var modal_round_container = document.getElementById("modal_round_container");
+            var croix = document.getElementById("croix");
+            var btn = document.getElementById("btn_round");
+
+            // On stocke les handlers dans this pour pouvoir les enlever après
+            this._croixHandler = () => {
+                modal_round_container.classList.add("hidden");
+            };
+
+            this._btnHandler = () => {
+                modal_round_container.classList.toggle("hidden");
+            };
+
+            croix.addEventListener("click", this._croixHandler);
+            btn.addEventListener("click", this._btnHandler);
+        },
+
+        removeEventListenerModal: function() {
+            var croix = document.getElementById("croix");
+            var btn = document.getElementById("btn_round");
+
+            if (this._croixHandler) {
+                croix.removeEventListener("click", this._croixHandler);
+                this._croixHandler = null; // optionnel
+            }
+
+            if (this._btnHandler) {
+                btn.removeEventListener("click", this._btnHandler);
+                this._btnHandler = null; // optionnel
+            }
         },
 
         createStockForCards: function(page, element)
@@ -561,6 +624,8 @@ updateLayout: function () {
     this.handStock = this.createStockForCards(this, $('my_cards'));
     this.handStock.setSelectionMode(0);
     this.handStock.setOverlap(60, 0);
+    this.handStock.use_vertical_overlap_as_offset = false;
+    this.handStock.vertical_overlap = -5;
     for( var card_id = 1; card_id <= 53; card_id++) {
         this.handStock.addItemType(card_id, card_id, g_gamethemeurl + 'img/cards.jpg', card_id-1);
     }
@@ -604,6 +669,150 @@ updateLayout: function () {
 
 },
 
+setupSpecialModal: function(data)
+{
+    /* SPECIAL CARD*/
+    const parent = document.getElementById("modal_section_1");
+
+    var type = data[0].type;
+    var type_arg = data[0].type_arg;
+    var type_arg_2 = data[0].type_arg_2;
+
+    if(type == 4)
+    {
+        var variableX = (type_arg - 1)*(-100);
+        var variableY = 0;
+    }
+
+    if(type == 1)
+    {
+        if(type_arg == 1)
+        {
+            var variableX = -500;
+            var variableY = 0;
+
+        }
+        if((type_arg == 11)&&(type_arg_2 == 1))
+        {
+            var variableX = -600;
+            var variableY = 0;
+            
+        }
+        if((type_arg == 11)&&(type_arg_2 == 2))
+        {
+            var variableX = 0;
+            var variableY = -100;
+            
+        }       
+        
+    }
+
+    if(type == 2)
+    {
+        if(type_arg == 1)
+        {
+            var variableX = -100;
+            var variableY = -100;
+
+        }
+        if((type_arg == 11)&&(type_arg_2 == 1))
+        {
+            var variableX = -200;
+            var variableY = -100;
+            
+        }
+        if((type_arg == 11)&&(type_arg_2 == 2))
+        {
+            var variableX = -300;
+            var variableY = -100;
+            
+        } 
+    
+    }
+
+    if(type == 3)
+    {
+        if(type_arg == 1)
+        {
+            var variableX = -400;
+            var variableY = -100;
+
+        }
+        if((type_arg == 11)&&(type_arg_2 == 1))
+        {
+            var variableX = -500;
+            var variableY = -100;
+            
+        }
+        if((type_arg == 11)&&(type_arg_2 == 2))
+        {
+            var variableX = -600;
+            var variableY = -100;
+            
+        } 
+        
+    }
+
+    const enfantspecialcard = document.createElement("div");
+    enfantspecialcard.id = "specialcardmodal";
+    enfantspecialcard.className = "specialcardmodal";
+    enfantspecialcard.style.backgroundPositionX = variableX + "%";
+    enfantspecialcard.style.backgroundPositionY = variableY + "%";
+
+    parent.appendChild(enfantspecialcard);
+
+
+},
+
+
+setupQuestModal: function(data)
+{
+    /* QUEST CARD */
+
+    var type = data[0].rand;
+    var validate = data[0].validate;
+
+    if(type >=1 && type <=10)
+    {
+
+        var variableX = -100*(Number(type) - 1);
+        var variableY = 0;
+
+    }
+
+    if(type >=11 && type <=20)
+    {
+
+        var variableX = -100*(Number(type) - 11);
+        var variableY = -200;
+
+    }
+
+    const parent2 = document.getElementById("modal_section_2");
+
+    if(validate == 0 || validate == 1)
+    {
+        const enfantquestcard1 = document.createElement("div");
+        enfantquestcard1.id = "questcardmodal1";
+        enfantquestcard1.className = "questcardmodal";
+        enfantquestcard1.style.backgroundPositionX = variableX + "%";
+        enfantquestcard1.style.backgroundPositionY = variableY + "%";
+        parent2.appendChild(enfantquestcard1);
+    }
+
+    if(validate == 0 || validate == 2)
+    {
+        const enfantquestcard2 = document.createElement("div");
+        enfantquestcard2.id = "questcardmodal2";
+        enfantquestcard2.className = "questcardmodal";
+        enfantquestcard2.style.backgroundPositionX = variableX + "%";
+        enfantquestcard2.style.backgroundPositionY = (variableY-100) + "%";
+        parent2.appendChild(enfantquestcard2);
+    }
+
+
+
+},
         
 ///////////////////////////////////////////////////////////////////////////////// 
 //       _   _       _   _  __ _           _   _                 
@@ -621,8 +830,10 @@ updateLayout: function () {
             
             dojo.subscribe( 'playCard', this, "notif_playCard" );
             dojo.subscribe( 'endTurn', this, "notif_endTurn" );
-            this.notifqueue.setSynchronous( 'playCard', 1500 );
-            this.notifqueue.setSynchronous( 'endTurn', 1500 );
+            dojo.subscribe( 'ChoiceQuest', this, "notif_ChoiceQuest" );
+
+            this.notifqueue.setSynchronous( 'endTurn', 1000 );
+            
         },  
         
         notif_playCard: function(notif) {
@@ -650,9 +861,30 @@ updateLayout: function () {
 
         notif_endTurn: function(notif) {
             const winner_id = notif.args.winner_id;
+            setTimeout(() => {
             this.tableStock.removeAllTo('overall_player_board_' + winner_id);
+            }, "1000");
    
         },
+
+        notif_ChoiceQuest: function(notif) {
+            const questremove = notif.args.questremove;
+            var card = document.getElementById('questcardmodal'+questremove);
+            var modal_round_container = document.getElementById("modal_round_container");
+            modal_round_container.classList.add("hidden");
+
+
+            var croix = document.getElementById("croix");
+            croix.classList.remove("hidden");
+
+            card.remove();
+            this.addEventListenerModal();
+
+   
+        },
+
+
+        
 
 
 

@@ -158,52 +158,68 @@ class Game extends \Table
         if($rand>=1 && $rand<=5)
         {
             self::DbQuery("UPDATE cards set card_type_arg = $rand WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 4, $rand, 0)");
         }
 
         if($rand == 6)
         {
             self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 1, 0)");
         }
 
         if($rand == 7)
         {
             self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 11, 1)");
         }
 
         if($rand==8)
         {
             self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 11, 2)");
         }
 
         if($rand == 9)
         {
             self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 1, 0)");
         }
 
          if($rand == 10)
         {
             self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 11, 1)");
         }
 
         if($rand == 11)
         {
             self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 11, 2)");
         }
 
         if($rand == 12)
         {
             self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 1, 0)");
         }
 
          if($rand == 13)
         {
             self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 11, 1)");
         }
 
         if($rand == 14)
         {
             self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 11, 2)");
         }
+
+        //QUEST FIRST ROUND
+
+        $rand2 = bga_rand(1, 20);
+        self::DbQuery("INSERT INTO quest (round, rand) VALUES (1, $rand2)");
+
 
         // distribution des cartes pour le first round
 
@@ -291,6 +307,8 @@ protected function getAllDatas()
     $result['first_player_play'] = $this->getGameStateValue('first_player_play');
     $result['my_hand'] = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$current_player_id}'" );
     $result['table'] = $this->getCardsOnTableOrdered();
+    $result['active_special_card'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$result['no_round']}'" );
+    $result['active_quest_card'] = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$result['no_round']}'" );
 
 
     return $result;
@@ -381,23 +399,138 @@ public function getCardsOnTableOrdered()
 function winnerOfTurn()
     {
         $color_request = game::$instance->getGameStateValue("color_request");
-
-        // $first_player_play = game::$instance->getGameStateValue("first_player_play");
-
-        // $ordre_players[] = intval($first_player_play);
-        // $next = game::$instance->getPlayerAfter($first_player_play);
-        // $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
-        // for ($i = 1; $i <= $count_players - 1; $i++) {
-        //     $ordre_players[] = $next;
-        //     $next = game::$instance->getPlayerAfter($next);
-        // }
-
         $player_win = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_location = 'table' AND card_type ='{$color_request}' ORDER BY card_type_arg DESC LIMIT 1");
-
         return $player_win;
+    }
 
+
+
+/// LOGS
+
+function getLogSpecial($card)
+{
+    $type = $card[0]['type'];
+    $type_arg = $card[0]['type_arg'];
+    $type_arg_2 = $card[0]['type_arg_2'];
+
+    if($type == 4)
+    {
+        $variableX = ($type_arg - 1)*(-100);
+        $variableY = 0;
+    }
+
+    if($type == 1)
+    {
+        if($type_arg == 1)
+        {
+            $variableX = -500;
+            $variableY = 0;
+
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 1))
+        {
+            $variableX = -600;
+            $variableY = 0;
+            
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 2))
+        {
+            $variableX = 0;
+            $variableY = -100;
+            
+        }       
+        
+    }
+
+    if($type == 2)
+    {
+        if($type_arg == 1)
+        {
+            $variableX = -100;
+            $variableY = -100;
+
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 1))
+        {
+            $variableX = -200;
+            $variableY = -100;
+            
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 2))
+        {
+            $variableX = -300;
+            $variableY = -100;
+            
+        } 
+       
+    }
+
+    if($type == 3)
+    {
+        if($type_arg == 1)
+        {
+            $variableX = -400;
+            $variableY = -100;
+
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 1))
+        {
+            $variableX = -500;
+            $variableY = -100;
+            
+        }
+        if(($type_arg == 11)&&($type_arg_2 == 2))
+        {
+            $variableX = -600;
+            $variableY = -100;
+            
+        } 
+        
+    }
+
+    return "<div class='specialcardlog' title='' style='background-position-x: {$variableX}%; background-position-y: {$variableY}%;'></div>";
+    
+}
+
+
+function getLogQuest($card)
+{
+    $type = $card[0]['rand'];
+    $validate = $card[0]['validate'];
+    
+    if($type >=1 && $type <=10)
+    {
+        $variableX = -100*(intval($type) - 1);
+        if($validate == 1)
+        {
+            $variableY = 0;
+        }
+        if($validate == 2)
+        {
+            $variableY = -100;
+        }
+        
 
     }
+
+    if($type >=11 && $type <=20)
+    {
+        $variableX = -100*(intval($type) - 11);
+        if($validate == 1)
+        {
+            $variableY = -200;
+        }
+        if($validate == 2)
+        {
+            $variableY = -300;
+        }
+
+    }
+
+   
+    return "<div class='questcardlog' title='' style='background-position-x: {$variableX}%; background-position-y: {$variableY}%;'></div>";
+    
+}
 
 
 

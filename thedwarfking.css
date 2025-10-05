@@ -21,7 +21,7 @@
 }
 
 body {
-  background-image: url('img/background1.png');
+  background-image: url('img/background2.png');
   background-repeat: repeat;
   background-size: 500px 352px;
     
@@ -55,21 +55,66 @@ body {
    
 }
 
+#round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: default;
+  z-index: 200;
+}
+
 #nb_round {
   font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 25px;
-  
-  text-align: center;
   margin-top: 10px;
   color: white;
-  cursor: default;
+  margin-bottom: 10px;
+  
 
+}
+
+#btn_round {
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 15px;
+  color: white;
+  background-color: #732525;
+  padding: 4px 20px;
+  border: 2px solid white;
+  border-radius: 10px;
+  cursor: pointer;
+   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+    -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  display: flex;
+  gap: 10px;
+
+
+}
+
+.icon1_btn {
+  width: 25px;
+  height: 25px;
+  background-image: url('img/iconhelp.png');
+  background-size: 200% 100%;
+  background-position-x: 0;
+
+}
+
+.icon2_btn {
+  width: 25px;
+  height: 25px;
+  background-image: url('img/iconhelp.png');
+  background-size: 200% 100%;
+  background-position-x: -100%;
+
+}
+
+#btn_round:hover {
+  background-color: #8f3535;
 }
 
 .titre {
   font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 20px;
-  
   margin-bottom: 30px;
   cursor: default;
   color: white;
@@ -88,6 +133,7 @@ body {
 }
 
 .stockitem .player-title {
+  /* font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif; */
 	position: absolute;
 	top: -1.3em;
   font-size: 16pt;
@@ -119,7 +165,7 @@ body {
   display: none !important;
 }
 
-
+/* SELECT */
 
 .selectable {
   cursor: pointer !important;
@@ -131,6 +177,152 @@ body {
 .selected {
   outline: 3px solid yellow; 
   box-shadow: 0 0 3px black;
+}
+
+/* LOGS*/
+
+.specialcardlog {
+
+  width: 120px;
+  height: 189px;
+  background-image: url('img/specards.jpg');
+  background-size: 700% 200%;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius: 5%;
+  margin: 5px auto;
+
+}
+
+.questcardlog {
+
+  width: 120px;
+  height: 140px;
+  background-image: url('img/quest.jpg');
+  background-size: 1000% 400%;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius: 5%;
+  margin: 5px auto;
+
+}
+
+.log_newRound {
+  background: #60371d;
+  text-align: center;
+  color: #efd5ab;
+  border: 1px solid black;
+  font-weight: bold;
+  padding: 5px 2px 2px;
+  font-size: 24px;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  display: block;
+  position: relative; 
+  
+}
+
+.log_newTrick {
+  background: #4d4d4d;
+  text-align: center;
+  color: #efd5ab;
+  border: 1px solid black;
+  font-weight: bold;
+  padding: 5px 2px 2px;
+  font-size: 24px;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  display: block;
+  position: relative; 
+  
+}
+
+
+
+/* SHOW HELP MODAL ROUND */
+
+#modal_round_container{
+  width: 100%;
+  height: calc(100% + 100px);
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 105px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  border-radius: 10px;
+}
+
+#modal_round {
+  width: 600px;
+  height: auto;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius:20px;
+  background-color: #c7a5a5;
+  border: 2px solid white;
+  display: flex;
+  padding: 20px 0;
+  position: relative;
+}
+
+.modal_section {
+  width: 50%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.specialcardmodal {
+
+  width: 200px;
+  height: 315px;
+  background-image: url('img/specards.jpg');
+  background-size: 700% 200%;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius: 5%;
+  margin: 5px auto;
+
+}
+
+.questcardmodal {
+
+  width: 200px;
+  height: 233px;
+  background-image: url('img/quest.jpg');
+  background-size: 1000% 400%;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius: 5%;
+  margin: 5px auto;
+
+}
+
+#croix {
+  top: 5px;
+  right: 5px;
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  background-color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #954e4e;
+  color: #954e4e;
+  padding: 15px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+#croix:hover {
+  transform: scale(1.1);
 }
 
 

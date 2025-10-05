@@ -62,4 +62,34 @@ CREATE TABLE IF NOT EXISTS `cards` (
 --   `card_location`     deck, id joueur (hand), board ou discard
 --   `card_location_arg` non utilisé
 
+CREATE TABLE IF NOT EXISTS `specialcard` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `round` int(11) NOT NULL,
+  `rand` int(11) NOT NULL,
+  `type` int(11) NOT NULL,
+  `type_arg` int(11) NOT NULL,
+  `type_arg_2` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `quest` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `round` int(11) NOT NULL,
+  `rand` int(11) NOT NULL,
+  `validate` int(11) unsigned DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `tricks` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `round` int(11) NOT NULL,
+  `trick` int(11) NOT NULL,
+  `player_id` int(11) NOT NULL,
+  `type` int(11) NOT NULL,
+  `type_arg` int(11) NOT NULL,
+  `type_arg_2` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
 ALTER TABLE `player` ADD `player_turn` int(5) NOT NULL DEFAULT 0;

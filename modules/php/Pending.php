@@ -19,6 +19,11 @@ class Pending extends APP_GameClass
         $this->player_score = $p['player_score'];
         $this->player_color = $p['player_color'];
         $this->player_turn = $p['player_turn'];
+
+        $this->round_nb = game::$instance->getGameStateValue('no_round');
+        $this->trick_nb = game::$instance->getGameStateValue('no_trick');
+        $this->special = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$this->round_nb}'" );
+        $this->quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
     }
 
 
@@ -34,22 +39,38 @@ class Pending extends APP_GameClass
         $ret['title'] = clienttranslate('');
         $ret['titleyou'] = clienttranslate('');
 
-                       
+                    
         return $ret;
     }
 
     function Deal($parg1, $parg2, $varg1, $varg2)
     {
+        $round = game::$instance->getGameStateValue("no_round");
+        $specialcard = self::getObjectListFromDB( "SELECT round round, rand rand, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round ='{$round}'" );
         
+        $imageSpecialLog = game::$instance->getLogSpecial($specialcard);
+
+        game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+            'message' => [
+                'log' => '<div class="log_newRound">${round} ${nb}/7</div>',
+                'args' => [
+                    'round' => clienttranslate('Round'),
+                    'nb' => $this->round_nb,
+                    'i18n' => ['round']
+                ],
+            ]
+        ]);
 
         game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('${player_name} deals the cards and reveals the special card of the round'),
+                clienttranslate('${player_name} deals the cards and reveals the special card of the round: ${log}'),
                 array(
                     'player_name' => $this->player_name,
+                    'log' => $imageSpecialLog,
 
                 )
             );
+
         
         
     }
@@ -60,20 +81,43 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} blabla2');
-        $ret['titleyou'] = clienttranslate('${you} blabla1');
+        $ret['title'] = clienttranslate('${actplayer} must choose the quest for the round');
+        $ret['titleyou'] = clienttranslate('${you} must choose the quest for the round');
 
-                       
+        $ret["selectable"][] = 'questcardmodal1';
+        $ret["selectable"][] = 'questcardmodal2';
+       
         return $ret;
     }
 
     function Quest($parg1, $parg2, $varg1, $varg2)
     {
+        $questremove = 0;
+
+        if($varg1 == 'questcardmodal1')
+        {
+            $questremove = 2;
+            self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+        }
+
+        if($varg1 == 'questcardmodal2')
+        {
+            $questremove = 1;
+            self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
+            
+        }
+
+        $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+        $imageQuestLog = game::$instance->getLogQuest($quest);
+
          game::$instance->notifyAllPlayers(
-                'message',
-                clienttranslate('${player_name} chooses the quest'),
+                'ChoiceQuest',
+                clienttranslate('${player_name} chooses the quest: ${log}'),
                 array(
                     'player_name' => $this->player_name,
+                    'questremove' => $questremove,
+                    'log' => $imageQuestLog,
+                   
 
                 )
             );
@@ -104,6 +148,17 @@ class Pending extends APP_GameClass
 
                 )
             );
+
+        game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+            'message' => [
+                'log' => '<div class="log_newTrick">${trick} ${nb}</div>',
+                'args' => [
+                    'trick' => clienttranslate('Trick'),
+                    'nb' => $this->trick_nb,
+                    'i18n' => ['trick']
+                ],
+            ]
+        ]);
         
         
     }
@@ -268,6 +323,19 @@ class Pending extends APP_GameClass
             game::$instance->addPendingFirst($nextplayer, "PlayCard");
             $nextplayer = game::$instance->getPlayerAfter($nextplayer);
         }
+
+
+        $newtrick = game::$instance->incGameStateValue('no_trick', 1);
+        game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+            'message' => [
+                'log' => '<div class="log_newTrick">${trick} ${nb}</div>',
+                'args' => [
+                    'trick' => clienttranslate('Trick'),
+                    'nb' => $newtrick,
+                    'i18n' => ['trick']
+                ],
+            ]
+        ]);
 
         
         
