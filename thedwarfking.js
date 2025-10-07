@@ -831,6 +831,9 @@ setupQuestModal: function(data)
             dojo.subscribe( 'playCard', this, "notif_playCard" );
             dojo.subscribe( 'endTurn', this, "notif_endTurn" );
             dojo.subscribe( 'ChoiceQuest', this, "notif_ChoiceQuest" );
+            dojo.subscribe( 'majRound', this, "notif_majRound" );
+            dojo.subscribe( 'drawCards', this, "notif_drawCards" );
+            dojo.subscribe( 'majModal', this, "notif_majModal" );
 
             this.notifqueue.setSynchronous( 'endTurn', 1000 );
             
@@ -839,7 +842,6 @@ setupQuestModal: function(data)
         notif_playCard: function(notif) {
             
             const card = notif.args.card_play;
-            console.warn(card.id)
             // Add the card to the table
             this.table[card.id] = card; // remplacer l'indice par table.length si ça sert à quelque chose...
             const div_id = this.player_id == card.location_arg ? `my_cards_item_${card.id}` : undefined;
@@ -881,6 +883,52 @@ setupQuestModal: function(data)
             this.addEventListenerModal();
 
    
+        },
+
+        notif_majRound: function(notif) {
+
+            document.getElementById('nb_round').innerText = _('Round ')+': ' + notif.args.new_round + ' / 7';
+            
+        },
+
+        notif_drawCards: async function(notif) {
+            // chaque joueur reçoît des cartes lors de la nouvelle manche
+            Object.values(notif.args.cards).forEach(card => {
+                const card_type = this.getStockCardType(card);
+                this.handStock.addToStockWithId(card_type, card.id, undefined);
+            });
+        },
+
+
+        notif_majModal: function(notif) {
+            const special = document.getElementById("specialcardmodal");
+            special.remove();
+            const quest1 = document.getElementById("questcardmodal1");
+            if(quest1){
+                quest1.remove();
+            }
+            const quest2 = document.getElementById("questcardmodal2");
+            if(quest2)
+            {
+                quest2.remove();
+            }
+
+            this.removeEventListenerModal();
+            this.setupSpecialModal(notif.args.active_special_card);
+            this.setupQuestModal(notif.args.active_quest_card);
+            
+
+            var modal_round_container = document.getElementById("modal_round_container");
+            var croix = document.getElementById("croix");
+            modal_round_container.classList.remove('hidden');
+            croix.classList.add('hidden');
+
+            dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
+            dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
+
+
+            
+            
         },
 
 

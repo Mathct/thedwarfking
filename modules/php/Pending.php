@@ -22,8 +22,8 @@ class Pending extends APP_GameClass
 
         $this->round_nb = game::$instance->getGameStateValue('no_round');
         $this->trick_nb = game::$instance->getGameStateValue('no_trick');
-        $this->special = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$this->round_nb}'" );
-        $this->quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+        $this->special = self::getObjectListFromDB( "SELECT id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$this->round_nb}'");
+        $this->quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'");
     }
 
 
@@ -131,8 +131,8 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} blabla2');
-        $ret['titleyou'] = clienttranslate('${you} blabla1');
+        $ret['title'] = clienttranslate('');
+        $ret['titleyou'] = clienttranslate('');
 
                        
         return $ret;
@@ -169,8 +169,8 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} blabla2');
-        $ret['titleyou'] = clienttranslate('${you} blabla1');
+        $ret['title'] = clienttranslate('${actplayer} must play a card');
+        $ret['titleyou'] = clienttranslate('${you} must play a card');
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
         $color_request = game::$instance->getGameStateValue("color_request");
@@ -180,7 +180,7 @@ class Pending extends APP_GameClass
         $cards_3 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 3", true);
         $cards_4 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 4", true);
 
-        if ($this->player_turn != 1) // si le joueur n'a pas joué son tour
+        if ($this->player_turn != 1) // si le joueur n'a pas joué son tour 
         {
 
             if($color_request == 0) 
@@ -292,59 +292,68 @@ class Pending extends APP_GameClass
         // WINNER
         $winner = game::$instance->winnerOfTurn();
 
-        $winner_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$winner}'");
+        // MOVE CARD ET INSCRIPTION DU TRICK EN BD
 
-        game::$instance->notifyAllPlayers(
-                'endTurn',
-                clienttranslate('${player_name} wins the trick and begins the next trick'),
-                array(
-                    'winner_id' => $winner,
-                    'player_name' => $winner_name,
-                )
-        );
-
-        $cards_played = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'table'", true);
+        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2 FROM cards WHERE card_location = 'table'");
+        $trick_no = game::$instance->getGameStateValue('no_trick');
         foreach ($cards_played as $card_played) {
-            game::$instance->cards->moveCard($card_played, 'discard', $winner);
+            game::$instance->cards->moveCard($card_played['id'], 'discard', $winner);
+
+            self::DbQuery(
+            "INSERT INTO tricks (round, trick, player_id, type, type_arg, type_arg_2) VALUES ('"
+            . $this->round_nb . "', "
+            . $trick_no . ", "
+            . $winner . ", '"
+            . $card_played['type'] . "', '"
+            . $card_played['type_arg'] . "', '"
+            . $card_played['type_arg_2'] . "')"
+            );
         }
+
 
         //INIT TURN
         game::$instance->DbQuery("UPDATE player set player_turn = 0 ");
         game::$instance->setGameStateValue("color_request", 0);
 
-        // CHANGE FIRST PLAYER TRICK
-        game::$instance->setGameStateValue("first_player_play", $winner);
-        
-        // NOUVEL ORDRE PENDING
-        $nextplayer = $winner;
-        self::DbQuery("DELETE FROM `pending`;");
-        $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
-        for ($i = 1; $i <= $count_players; $i++) {
-            game::$instance->addPendingFirst($nextplayer, "PlayCard");
-            $nextplayer = game::$instance->getPlayerAfter($nextplayer);
+
+        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+
+        if($all_cards != null)
+        {
+
+                
+            // NOUVEL ORDRE PENDING
+            $nextplayer = $winner;
+            self::DbQuery("DELETE FROM `pending`;");
+            $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+            for ($i = 1; $i <= $count_players; $i++) {
+                game::$instance->addPendingFirst($nextplayer, "PlayCard");
+                $nextplayer = game::$instance->getPlayerAfter($nextplayer);
+            }
+
+
+            $newtrick = game::$instance->incGameStateValue('no_trick', 1);
+            game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+                'message' => [
+                    'log' => '<div class="log_newTrick">${trick} ${nb}</div>',
+                    'args' => [
+                        'trick' => clienttranslate('Trick'),
+                        'nb' => $newtrick,
+                        'i18n' => ['trick']
+                    ],
+                ]
+            ]);
+
         }
-
-
-        $newtrick = game::$instance->incGameStateValue('no_trick', 1);
-        game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
-            'message' => [
-                'log' => '<div class="log_newTrick">${trick} ${nb}</div>',
-                'args' => [
-                    'trick' => clienttranslate('Trick'),
-                    'nb' => $newtrick,
-                    'i18n' => ['trick']
-                ],
-            ]
-        ]);
+        else
+        {
+            game::$instance->addPending($this->player_id, "EndOfRound");
+            
+        }
 
         
         
     }
-
-
-
-
-
 
 
     function argEndOfRound($parg1, $parg2)
@@ -356,15 +365,245 @@ class Pending extends APP_GameClass
         $ret['title'] = clienttranslate('End of Round');
         $ret['titleyou'] = clienttranslate('End of Round');
 
-                       
+                
         return $ret;
     }
 
     function EndOfRound($parg1, $parg2, $varg1, $varg2)
     {
+
+        game::$instance->notifyAllPlayers( 'simplePause', '', [ 'time' => 1000] ); 
+
+        // tout le calcul de score à faire et voir si ce n'est pas la fin de partie
+
+
+
+        //// INIT NEW ROUND + INIT TRICK ////
+
+        // MAJ ROUND
+        game::$instance->incGameStateValue('no_round', 1);
+        $new_round = game::$instance->getGameStateValue('no_round');
+        game::$instance->setGameStateInitialValue('no_trick', 0);
+
+        game::$instance->notifyAllPlayers(
+                        'majRound',
+                        '',
+                        array(
+                            'new_round' => $new_round,
+                            
+                             
+                        )
+                    );
+
+        // MOVE DISCARD TO DECK
+        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
+        foreach($all_cards as $card)
+        {
+            game::$instance->cards->moveCard($card['id'], 'deck');
+
+        }
+
+        // INIT SPECIAL CARD
+        if($this->special[0]['type_arg'] == 1)
+        {
+            self::DbQuery("UPDATE cards set card_type = 4 WHERE card_type_arg = 1");
+            self::DbQuery("UPDATE cards set card_type_arg = 0 WHERE card_type = 4");
+            self::DbQuery("UPDATE cards set card_type_arg_2 = 0 WHERE card_type = 4");
+        }
+
+        if($this->special[0]['type_arg'] == 11)
+        {
+            self::DbQuery("UPDATE cards set card_type = 4 WHERE card_type_arg = 11");
+            self::DbQuery("UPDATE cards set card_type_arg = 0 WHERE card_type = 4");
+            self::DbQuery("UPDATE cards set card_type_arg_2 = 0 WHERE card_type = 4");
+        }
         
+        // SHUFFLE
+        game::$instance->cards->shuffle('deck');
+
+        //SELECT NEW SPECIAL CARD
+        $all_rand = [];
+        $all_cardspecial_play = self::getObjectListFromDB( "SELECT rand rand FROM specialcard" );
+        
+        foreach($all_cardspecial_play as $special)
+        {
+            $all_rand[] = $special['rand'];
+        }
+
+        $rand = bga_rand(1, 14);
+
+        while (in_array($rand, $all_rand))
+        {
+            $rand = bga_rand(1, 14);
+        }
+
+        if($rand>=1 && $rand<=5)
+        {
+            self::DbQuery("UPDATE cards set card_type_arg = $rand WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 4, $rand, 0)");
+        }
+
+        if($rand == 6)
+        {
+            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 1, 0)");
+        }
+
+        if($rand == 7)
+        {
+            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 11, 1)");
+        }
+
+        if($rand==8)
+        {
+            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 11, 2)");
+        }
+
+        if($rand == 9)
+        {
+            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 1, 0)");
+        }
+
+         if($rand == 10)
+        {
+            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 11, 1)");
+        }
+
+        if($rand == 11)
+        {
+            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 11, 2)");
+        }
+
+        if($rand == 12)
+        {
+            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 1, 0)");
+        }
+
+         if($rand == 13)
+        {
+            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 11, 1)");
+        }
+
+        if($rand == 14)
+        {
+            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
+            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 11, 2)");
+        }
+
+        //INIT NEW QUEST
+
+        $all_rand = [];
+        $all_cardsquest_play = self::getObjectListFromDB( "SELECT rand rand FROM quest" );
+        foreach($all_cardsquest_play as $quest)
+        {
+            $all_rand[] = $quest['rand'];
+        }
+
+        $rand = bga_rand(1, 20);
+
+        while (in_array($rand, $all_rand))
+        {
+            $rand = bga_rand(1, 20);
+            
+        }
+    
+        self::DbQuery("INSERT INTO quest (round, rand) VALUES ($new_round, $rand)");
+
+        //DISTRIBUTION DES CARTES
+
+        $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+        $nbreplayers = count($players);
+
+        if ($nbreplayers == 3)
+        {           
+           foreach ($players as $player) {
+                game::$instance->cards->pickCards(13, 'deck', $player);
+            }
+        }
+
+        if ($nbreplayers == 4)
+        {
+            foreach ($players as $player) {
+                game::$instance->cards->pickCards(10, 'deck', $player);
+            }
+        }
+
+        if ($nbreplayers == 5)
+        {
+            foreach ($players as $player) {
+                game::$instance->cards->pickCards(8, 'deck', $player);
+            }
+            
+        }
+
+        foreach ($players as $player) {
+
+        $cards = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+
+            game::$instance->notifyPlayer(
+                $player,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards,
+
+                )
+            );
+        }
+
+        $active_special_card = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$new_round}'" );
+        $active_quest_card = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$new_round}'" );
+
+        game::$instance->notifyAllPlayers(
+                        'majModal',
+                        '',
+                        array(
+                            'active_special_card' => $active_special_card,
+                            'active_quest_card' => $active_quest_card,
+                            
+                             
+                        )
+                    );
+
+        
+        // NOUVEL ORDRE PENDING
+        $first_player_deal = game::$instance->getGameStateValue("first_player_deal");
+        
+        $first_player_quest = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=2 AND card_type_arg = 5"));
+        game::$instance->setGameStateInitialValue("first_player_quest", $first_player_quest);
+
+        $first_player_play = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=3 AND card_type_arg = 5"));
+        game::$instance->setGameStateInitialValue("first_player_play", $first_player_play);
+
+        self::DbQuery("DELETE FROM `pending`;");
+        $nextplayer = $first_player_play;
+        $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+        for ($i = 1; $i <= $count_players; $i++) {
+            game::$instance->addPendingFirst($nextplayer, "PlayCard");
+            $nextplayer = game::$instance->getPlayerAfter($nextplayer);
+        }
+
+        game::$instance->addPending($first_player_play, "FirstPlay");
+        game::$instance->addPending($first_player_quest, "Quest");
+        game::$instance->addPending($first_player_deal, "Deal");
+
+
+
+
+              
         
     }
+    
+
+
 
 
 

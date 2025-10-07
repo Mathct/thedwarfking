@@ -34,6 +34,10 @@ class Game extends \Table
 
         require 'material.inc.php';
 
+        // EXPERIMENTAL to avoid deadlocks.  This locks the global table early in the game constructor.
+        $this->bSelectGlobalsForUpdate = true;
+
+
         $this->initGameStateLabels([
 
             "first_player_deal" => 10,
@@ -41,7 +45,7 @@ class Game extends \Table
             "first_player_play" => 12,
             "no_round" => 13,
             "no_trick" => 14, //no trick pour le round
-            "no_turn" => 15, //no turn pour le game
+            "no_turn" => 15, //no turn pour le game pas utilisé
             "color_request" => 16,
            
         ]);  
@@ -363,7 +367,7 @@ function checkArgs($arg1)
 
         if(!in_array($arg1,$ret['selectable']) && !in_array($arg1,$ret['buttons']))
         {
-            throw new feException( "Not a valid selection");
+            throw new \BgaSystemException("Not a valid selection");
         }
         
     }
@@ -400,6 +404,41 @@ function winnerOfTurn()
     {
         $color_request = game::$instance->getGameStateValue("color_request");
         $player_win = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_location = 'table' AND card_type ='{$color_request}' ORDER BY card_type_arg DESC LIMIT 1");
+
+        $winner_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$player_win}'");
+
+        game::$instance->notifyAllPlayers(
+                'endTurn',
+                clienttranslate('${player_name} wins the trick and begins the next trick'),
+                array(
+                    'winner_id' => $player_win,
+                    'player_name' => $winner_name,
+                )
+        );
+
+        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2 FROM cards WHERE card_location = 'table'");
+
+        foreach($cards_played as $card_played)
+        {
+            if($card_played['type'] == 1 && $card_played['type_arg'] == 5)
+            {
+                game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} wins le 4 vert et sera le dealer du prochain round'),
+                array(
+                    'winner_id' => $player_win,
+                    'player_name' => $winner_name,
+                )
+                );
+
+                game::$instance->setGameStateValue("first_player_deal", $player_win);
+
+            }
+
+
+
+        }
+
         return $player_win;
     }
 
