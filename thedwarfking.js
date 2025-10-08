@@ -459,15 +459,18 @@ updateLayout: function () {
         var choiceQuest = this.gamedatas.active_quest_card;
         if(choiceQuest[0].validate == 0)
         {
-            var croix = document.getElementById("croix");
-            croix.classList.add("hidden");
+            var modal_round_container = document.getElementById("modal_round_container");
+            modal_round_container.classList.remove("hidden");
+            
         }
         else
         {
             var modal_round_container = document.getElementById("modal_round_container");
             modal_round_container.classList.add("hidden");
-            this.addEventListenerModal();
+            
         }
+
+        this.addEventListenerModal();
 
         if(this.isSpectator ) {
         
@@ -501,20 +504,20 @@ updateLayout: function () {
             btn.addEventListener("click", this._btnHandler);
         },
 
-        removeEventListenerModal: function() {
-            var croix = document.getElementById("croix");
-            var btn = document.getElementById("btn_round");
+        // removeEventListenerModal: function() {
+        //     var croix = document.getElementById("croix");
+        //     var btn = document.getElementById("btn_round");
 
-            if (this._croixHandler) {
-                croix.removeEventListener("click", this._croixHandler);
-                this._croixHandler = null; // optionnel
-            }
+        //     if (this._croixHandler) {
+        //         croix.removeEventListener("click", this._croixHandler);
+        //         this._croixHandler = null; // optionnel
+        //     }
 
-            if (this._btnHandler) {
-                btn.removeEventListener("click", this._btnHandler);
-                this._btnHandler = null; // optionnel
-            }
-        },
+        //     if (this._btnHandler) {
+        //         btn.removeEventListener("click", this._btnHandler);
+        //         this._btnHandler = null; // optionnel
+        //     }
+        // },
 
         createStockForCards: function(page, element)
         {
@@ -875,14 +878,8 @@ setupQuestModal: function(data)
             var modal_round_container = document.getElementById("modal_round_container");
             modal_round_container.classList.add("hidden");
 
-
-            var croix = document.getElementById("croix");
-            croix.classList.remove("hidden");
-
             card.remove();
-            this.addEventListenerModal();
-
-   
+ 
         },
 
         notif_majRound: function(notif) {
@@ -913,7 +910,7 @@ setupQuestModal: function(data)
                 quest2.remove();
             }
 
-            this.removeEventListenerModal();
+            
             this.setupSpecialModal(notif.args.active_special_card);
             this.setupQuestModal(notif.args.active_quest_card);
             
