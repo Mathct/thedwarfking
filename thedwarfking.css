@@ -255,7 +255,7 @@ body {
 }
 
 #modal_round {
-  width: 600px;
+  width: auto;
   height: auto;
   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
   -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
@@ -263,17 +263,18 @@ body {
   background-color: #c7a5a5;
   border: 2px solid white;
   display: flex;
-  padding: 20px 0;
+  padding: 20px 20px;
   position: relative;
+  gap: 20px;
 }
 
 .modal_section {
-  width: 50%;
+  width: auto;
   height: auto;
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  align-items: center;
+  gap: 20px;
 }
 
 .specialcardmodal {
