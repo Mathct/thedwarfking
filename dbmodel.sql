@@ -85,9 +85,19 @@ CREATE TABLE IF NOT EXISTS `tricks` (
   `round` int(11) NOT NULL,
   `trick` int(11) NOT NULL,
   `player_id` int(11) NOT NULL,
+  `card_id` int(11) NOT NULL,
   `type` int(11) NOT NULL,
   `type_arg` int(11) NOT NULL,
   `type_arg_2` int(11) NOT NULL,
+  `card_win` int(11) unsigned DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `bonus` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `round` int(11) NOT NULL,
+  `player_id` int(11) NOT NULL,
+  `bonus` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

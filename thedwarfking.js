@@ -75,7 +75,7 @@ function (dojo, declare) {
             this.first_player_play = gamedatas.first_player_play;
             this.no_round = parseInt(gamedatas.no_round);
             this.no_trick = parseInt(gamedatas.no_trick);
-            this.no_turn = parseInt(gamedatas.no_turn);
+            
 
 
             this.setupBoard();

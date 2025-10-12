@@ -44,9 +44,10 @@ class Game extends \Table
             "first_player_quest" => 11,
             "first_player_play" => 12,
             "no_round" => 13,
-            "no_trick" => 14, //no trick pour le round
-            "no_turn" => 15, //no turn pour le game pas utilisé
-            "color_request" => 16,
+            "no_trick" => 14, //no trick pour le round actuel
+            "color_request" => 15,
+
+            "bricoleur" => 16,
            
         ]);  
         
@@ -112,8 +113,9 @@ class Game extends \Table
         // Init global values with their initial values.
         $this->setGameStateInitialValue("no_round", 1);
         $this->setGameStateInitialValue("no_trick", 1);
-        $this->setGameStateInitialValue("no_turn", 1);
         $this->setGameStateInitialValue("color_request", 0);
+
+        $this->setGameStateInitialValue("bricoleur", 0);
 
         // STATS
         
@@ -307,7 +309,6 @@ protected function getAllDatas()
 
     $result['no_round'] = $this->getGameStateValue('no_round');
     $result['no_trick'] = $this->getGameStateValue('no_trick');
-    $result['no_turn'] = $this->getGameStateValue('no_turn');
     $result['first_player_play'] = $this->getGameStateValue('first_player_play');
     $result['my_hand'] = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$current_player_id}'" );
     $result['table'] = $this->getCardsOnTableOrdered();
@@ -402,22 +403,175 @@ public function getCardsOnTableOrdered()
 
 function winnerOfTurn()
     {
-        $color_request = game::$instance->getGameStateValue("color_request");
-        $player_win = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_location = 'table' AND card_type ='{$color_request}' ORDER BY card_type_arg DESC LIMIT 1");
+        $round = game::$instance->getGameStateValue("no_round");
+        $trick = game::$instance->getGameStateValue("no_trick");
 
+
+        $color_request = game::$instance->getGameStateValue("color_request");
+        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
+        
+        // VARIABLES
+        $escalibur = 0;
+        $pe_green = 0;
+        $bouffon = 0;
+        
+
+        $ticks_max = 0;
+        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+        if($nbreplayers == 3)
+        {
+            $ticks_max = 13;
+        }
+        if($nbreplayers == 4)
+        {
+            $ticks_max = 10;
+        }
+        if($nbreplayers == 5)
+        {
+            $ticks_max = 8;
+        }
+
+
+
+
+        
+        // CALCUL WIN
+        $player_win = 0;
+        $maxValue = 0;
+        foreach ($cards_played as $card) {
+
+            //ESCALIBUR
+            if ($card['type'] == 4 && $card['type_arg'] == 5)
+            {
+                $player_win = $card['location_arg'];
+                $escalibur = 1;
+                break;
+            }
+
+            if ($card['type'] == $color_request) {
+                if ($card['type_arg'] > $maxValue) {
+                    $maxValue = $card['type_arg'];
+                    $player_win = $card['location_arg'];
+                    
+                }
+            }
+
+
+            // PORTE ETENDARD VERT (11 1)
+            if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
+            {
+                $pe_green = 1;
+                
+            }
+
+            // BRICOLEUR (11 2)
+            if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $ticks_max)
+            {
+                game::$instance->setGameStateValue("bricoleur", 1);
+                
+            }
+
+            // BOUFFON
+            if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $ticks_max)
+            {
+                $bouffon = $card['location_arg'];
+                
+            }
+
+
+            
+        }
+
+        
         $winner_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$player_win}'");
 
-        game::$instance->notifyAllPlayers(
-                'endTurn',
-                clienttranslate('${player_name} wins the trick and begins the next trick'),
-                array(
-                    'winner_id' => $player_win,
-                    'player_name' => $winner_name,
-                )
-        );
+        /////////////////////////////////// END OF TURN ////////////////////////////
+        // MESSAGE ET ENDTURN WIN
+        if($escalibur == 0)
+        {
+            game::$instance->notifyAllPlayers(
+                    'endTurn',
+                    clienttranslate('${player_name} wins the trick and begins the next trick'),
+                    array(
+                        'winner_id' => $player_win,
+                        'player_name' => $winner_name,
+                    )
+            );
+        }
 
-        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2 FROM cards WHERE card_location = 'table'");
+        if($escalibur == 1)
+        {
+            game::$instance->notifyAllPlayers(
+                    'endTurn',
+                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Escalibur'),
+                    array(
+                        'winner_id' => $player_win,
+                        'player_name' => $winner_name,
+                    )
+            );
+        }
+        ////////////////////////////////////////////////////////////////////////////
 
+
+        // BONUS PORTE ETENDARD VERT (11 1)
+        if($pe_green == 1)
+        {
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} wins 3 pv thanks to 11_vert'),
+                    array(
+                        'player_name' => $winner_name,
+                    )
+            );
+
+            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+
+        }
+
+        // BONUS BRICOLEUR (11 2)
+        $bricoleur = game::$instance->getGameStateValue("bricoleur");
+        if($bricoleur == 2)
+        {
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} wins 3 pv thanks to bricoleur joué au round precedent'),
+                    array(
+                        'player_name' => $winner_name,
+                    )
+            );
+
+            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+            game::$instance->setGameStateValue("bricoleur", 0);
+
+        }
+
+        if($bricoleur == 1)
+        {
+            game::$instance->setGameStateValue("bricoleur", 2);
+        }
+
+
+        // BONUS BOUFFON
+        if($bouffon != 0)
+        {
+            $bouffon_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$bouffon}'");
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} joue le bouffon sur le dernier pli et gagne 3 pv'),
+                    array(
+                        'player_name' => $bouffon_name,
+                    )
+            );
+
+            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$bouffon}' AND round = '{$round}'");
+
+        }
+
+
+
+
+        // VERIFIER SI 4 VERT A ETE REMPORTE ( => PROCHAIN DEALER)
         foreach($cards_played as $card_played)
         {
             if($card_played['type'] == 1 && $card_played['type_arg'] == 5)

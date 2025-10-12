@@ -71,6 +71,13 @@ class Pending extends APP_GameClass
                 )
             );
 
+        $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+
+        foreach ($players as $player) {
+
+            self::DbQuery("INSERT INTO bonus (round, player_id, bonus) VALUES ($round, $player, 0)");
+        
+        }
         
         
     }
@@ -172,6 +179,17 @@ class Pending extends APP_GameClass
         $ret['title'] = clienttranslate('${actplayer} must play a card');
         $ret['titleyou'] = clienttranslate('${you} must play a card');
 
+        // NB TRICK ACTUEL
+        $trick_no = game::$instance->getGameStateValue('no_trick');
+
+        // POUR MOMIE ET CLONE (POUR NE PAS ETRE JOUEES AU PREMIER PLI)
+        $momie = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+        $clone = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+
+        // ESACLIBUR
+        $escalibur = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 5 AND card_location = 'hand'");
+        
+
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
         $color_request = game::$instance->getGameStateValue("color_request");
 
@@ -183,35 +201,77 @@ class Pending extends APP_GameClass
         if ($this->player_turn != 1) // si le joueur n'a pas joué son tour 
         {
 
-            if($color_request == 0) 
+            if($color_request == 0) //si y a pas de couleur demandée il peut jouer ce qu'il veut dans ses all_cards
             {
                 foreach ($all_cards as $card) 
                 {
                     $ret["selectable"][] = 'my_cards_item_' . $card['id'];
+
+                }
+
+                if($trick_no == 1)
+                {
+                    if($momie != null)
+                    {
+                        $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                    }
+                    if($clone != null)
+                    {
+                        $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
+                    }
                 }
             }
 
-            else 
+            else //si y a une couleur demandée
             {
                 $cards = [];
                 
-                if(${'cards_'.$color_request} != null)
+                if(${'cards_'.$color_request} != null) //le joueur a la couleur demandée
                 {
                     $cards = array_merge(${'cards_'.$color_request}, $cards_4); 
 
                     foreach ($cards as $card) 
                     {
                         $ret["selectable"][] = 'my_cards_item_' . $card;
+
+                        if($trick_no == 1)
+                        {
+                            if($momie != null)
+                            {
+                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                            }
+                            if($clone != null)
+                            {
+                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
+                            }
+                        }
+                    }
+
+                    if($escalibur != null)
+                    {
+                        $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $escalibur]);
                     }
                     
-                    $player_color_request = 1; //le joueur a la couleur demandée
+                    
                 }
 
-                else //le joueur n'a pas la couleur demandée, il peut jouer ce qu'il veut dans ses all_cards
+                else //le joueur n'a pas la couleur demandée, il peut jouer ce qu'il veut
                 {
                     foreach ($all_cards as $card) 
                     {
                         $ret["selectable"][] = 'my_cards_item_' . $card['id'];
+
+                        if($trick_no == 1)
+                        {
+                            if($momie != null)
+                            {
+                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                            }
+                            if($clone != null)
+                            {
+                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
+                            }
+                        }
                     }
                 }
 
@@ -295,20 +355,24 @@ class Pending extends APP_GameClass
         // MOVE CARD ET INSCRIPTION DU TRICK EN BD
 
         $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2 FROM cards WHERE card_location = 'table'");
+        $card_id_win = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_location = 'table' AND card_location_arg = '{$winner}'");
         $trick_no = game::$instance->getGameStateValue('no_trick');
         foreach ($cards_played as $card_played) {
             game::$instance->cards->moveCard($card_played['id'], 'discard', $winner);
 
             self::DbQuery(
-            "INSERT INTO tricks (round, trick, player_id, type, type_arg, type_arg_2) VALUES ('"
+            "INSERT INTO tricks (round, trick, player_id, card_id, type, type_arg, type_arg_2) VALUES ('"
             . $this->round_nb . "', "
             . $trick_no . ", "
             . $winner . ", '"
+            . $card_played['id'] . "', '"
             . $card_played['type'] . "', '"
             . $card_played['type_arg'] . "', '"
             . $card_played['type_arg_2'] . "')"
             );
         }
+
+        self::DbQuery("UPDATE tricks set card_win = 1 WHERE card_id = '{$card_id_win}'");
 
 
         //INIT TURN
