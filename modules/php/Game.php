@@ -48,6 +48,7 @@ class Game extends \Table
             "color_request" => 15,
 
             "bricoleur" => 16,
+            "enchanteur" => 17, //id de celui remporte l'enchanteur... double les points
            
         ]);  
         
@@ -116,6 +117,7 @@ class Game extends \Table
         $this->setGameStateInitialValue("color_request", 0);
 
         $this->setGameStateInitialValue("bricoleur", 0);
+        $this->setGameStateInitialValue("enchanteur", 0);
 
         // STATS
         
@@ -414,6 +416,10 @@ function winnerOfTurn()
         $escalibur = 0;
         $pe_green = 0;
         $bouffon = 0;
+        $enchanteur = 0;
+        $eclaireur = 0;
+        $eclaireur_pv = 0;
+        $chaman = 0;
         
 
         $ticks_max = 0;
@@ -441,7 +447,7 @@ function winnerOfTurn()
         $maxValue = 0;
         foreach ($cards_played as $card) {
 
-            //ESCALIBUR
+            //ESCALIBUR (4 5 0)
             if ($card['type'] == 4 && $card['type_arg'] == 5)
             {
                 $player_win = $card['location_arg'];
@@ -458,24 +464,52 @@ function winnerOfTurn()
             }
 
 
-            // PORTE ETENDARD VERT (11 1)
+            // PORTE ETENDARD VERT (1 11 1)
             if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
             {
                 $pe_green = 1;
                 
             }
 
-            // BRICOLEUR (11 2)
+            // BRICOLEUR VERT (1 11 2)
             if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $ticks_max)
             {
                 game::$instance->setGameStateValue("bricoleur", 1);
                 
             }
 
-            // BOUFFON
+            // BOUFFON BLEU (2 1 0)
             if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $ticks_max)
             {
                 $bouffon = $card['location_arg'];
+                
+            }
+
+            // ENCHANTEUR BLEU (2 11 2)
+            if ($card['type'] == 2 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2)
+            {
+                $enchanteur = 1;
+                
+            }
+
+            // ECLAIREUR ROUGE (3 1 0)
+            // PV
+            if($card['type_arg'] == 12 || $card['type_arg'] == 13 || $card['type_arg'] == 14 || $card['type_arg'] == 15)
+            {
+                $eclaireur_pv = $eclaireur_pv +1;
+            }
+            //PLAY
+            if ($card['type'] == 3 && $card['type_arg'] == 1)
+            {
+                $eclaireur = $card['location_arg'];
+                
+             
+            }
+
+            // CHAMAN ROUGE (3 11 1)
+            if ($card['type'] == 3 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
+            {
+                $chaman = 1;
                 
             }
 
@@ -514,12 +548,12 @@ function winnerOfTurn()
         ////////////////////////////////////////////////////////////////////////////
 
 
-        // BONUS PORTE ETENDARD VERT (11 1)
+        // BONUS PORTE ETENDARD VERT (1 11 1)
         if($pe_green == 1)
         {
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} wins 3 pv thanks to 11_vert'),
+                    clienttranslate('${player_name} remporte 11_vert et wins 3 pv'),
                     array(
                         'player_name' => $winner_name,
                     )
@@ -529,11 +563,11 @@ function winnerOfTurn()
 
         }
 
-        // BONUS BRICOLEUR (11 2)
+        // BONUS BRICOLEUR VERT (1 11 2)
         $bricoleur = game::$instance->getGameStateValue("bricoleur");
         if($bricoleur == 2)
         {
-             game::$instance->notifyAllPlayers(
+            game::$instance->notifyAllPlayers(
                     'message',
                     clienttranslate('${player_name} wins 3 pv thanks to bricoleur joué au round precedent'),
                     array(
@@ -548,11 +582,19 @@ function winnerOfTurn()
 
         if($bricoleur == 1)
         {
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('Le bricoleur a été joué. Le jouer qui remporte le prochain pli gagne 3 pv'),
+                    array(
+                        
+                    )
+            );
+
             game::$instance->setGameStateValue("bricoleur", 2);
         }
 
 
-        // BONUS BOUFFON
+        // BONUS BOUFFON BLEU (2 1 0)
         if($bouffon != 0)
         {
             $bouffon_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$bouffon}'");
@@ -566,6 +608,56 @@ function winnerOfTurn()
 
             game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$bouffon}' AND round = '{$round}'");
 
+        }
+
+
+        // ENCHANTEUR BLEU (2 11 2)
+        if ($enchanteur == 1)
+        {
+
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} remporte l\'enchanteur. Il doublera ses points (gagnés ou perdus) à la fin de la manche'),
+                    array(
+                        'player_name' => $winner_name,
+                    )
+            );
+
+            game::$instance->setGameStateValue("enchanteur", $player_win);
+            
+            
+        }
+
+        // BONUS ECLAIREUR ROUGE (3 1 0)
+        if($eclaireur != 0)
+        {
+            $eclaireur_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$eclaireur}'");
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} joue l\'éclaireur et gagne ${pv} pv'),
+                    array(
+                        'player_name' => $eclaireur_name,
+                        'pv' => $eclaireur_pv,
+                    )
+            );
+
+            game::$instance->DbQuery("UPDATE bonus set bonus = $eclaireur_pv WHERE player_id = '{$eclaireur}' AND round = '{$round}'");
+
+        }
+
+        // BONUS CHAMAN ROUGE (3 11 1)
+        if ($chaman == 1)
+        {
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} remporte chaman et perd 3 pv'),
+                    array(
+                        'player_name' => $winner_name,
+                    )
+            );
+
+            game::$instance->DbQuery("UPDATE bonus set bonus = -3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+            
         }
 
 
