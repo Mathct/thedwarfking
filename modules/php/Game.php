@@ -422,6 +422,7 @@ function winnerOfTurn()
         $chaman = 0;
         
 
+        // TRICKS MAX
         $ticks_max = 0;
         $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
