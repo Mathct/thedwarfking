@@ -408,21 +408,7 @@ function winnerOfTurn()
         $round = game::$instance->getGameStateValue("no_round");
         $trick = game::$instance->getGameStateValue("no_trick");
 
-
-        $color_request = game::$instance->getGameStateValue("color_request");
-        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
-        
-        // VARIABLES
-        $escalibur = 0;
-        $pe_green = 0;
-        $bouffon = 0;
-        $enchanteur = 0;
-        $eclaireur = 0;
-        $eclaireur_pv = 0;
-        $chaman = 0;
-        
-
-        // TRICKS MAX
+        // TRICKS MAX POUR BOUFFON ET BRICOLEUR
         $ticks_max = 0;
         $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
@@ -439,30 +425,64 @@ function winnerOfTurn()
             $ticks_max = 8;
         }
 
-
-
-
+        // COLOR REQUEST ET CARDS PLAYED
+        $color_request = game::$instance->getGameStateValue("color_request");
+        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
         
+        // VARIABLES
+        $escalibur = 0;
+        $pe_green = 0;
+        $bouffon = 0;
+        $enchanteur = 0;
+
+        $eclaireur = 0;
+        $eclaireur_pv = 0;
+
+        $chaman = 0;
+
+        $hydre_play = 0; // Hydre (4 1 0)
+        $hydre_last_A = 0;
+        $ordered_cards = game::$instance->getCardsOnTableOrdered();
+        $PlayerHydre = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 1 AND card_location = 'table'");
+        if($PlayerHydre != null)
+        {
+            $hydre_play = 1;
+        }
+
+        $momie = 0;
+
+       
+
+
         // CALCUL WIN
         $player_win = 0;
         $maxValue = 0;
-        foreach ($cards_played as $card) {
 
-            //ESCALIBUR (4 5 0)
-            if ($card['type'] == 4 && $card['type_arg'] == 5)
+        if($hydre_play == 0) // l'Hydre n'est pas joué - BOUCLE GAIN NORMAL
+        {
+            foreach ($cards_played as $card) 
             {
-                $player_win = $card['location_arg'];
-                $escalibur = 1;
-                break;
-            }
 
-            if ($card['type'] == $color_request) {
-                if ($card['type_arg'] > $maxValue) {
-                    $maxValue = $card['type_arg'];
+                //ESCALIBUR (4 5 0)
+                if ($card['type'] == 4 && $card['type_arg'] == 5)
+                {
                     $player_win = $card['location_arg'];
-                    
+                    $escalibur = 1;
+                    break;
                 }
+
+                if ($card['type'] == $color_request) {
+                    
+                    if ($card['type_arg'] > $maxValue) {
+                        $maxValue = $card['type_arg'];
+                        $player_win = $card['location_arg'];
+                        
+                    }
+                    
+                }   
+
             }
+        
 
 
             // PORTE ETENDARD VERT (1 11 1)
@@ -513,9 +533,39 @@ function winnerOfTurn()
                 $chaman = 1;
                 
             }
-
-
             
+        }
+
+        if($hydre_play == 1)   // l'Hydre est joué (4 1 0)
+        {
+
+            foreach($ordered_cards as $card)
+            {
+                if ($card['type'] == $color_request && $card['type_arg'] == 15) // l'A de la couleur demandée est joué
+                {
+                    $player_win = $card['location_arg'];
+                    break;
+                    
+                }
+
+                if ($card['type'] != $color_request && $card['type_arg'] == 15) // l'A d'une autre couleur est joué
+                {
+                    $hydre_last_A = $card['location_arg'];
+                        
+                }
+
+            }
+
+            if($player_win == 0 && $hydre_last_A == 0)
+            {
+                $player_win = $PlayerHydre;
+            }
+
+            if($player_win == 0 && $hydre_last_A != 0)
+            {
+                $player_win = $hydre_last_A;
+            }
+
         }
 
         
@@ -523,7 +573,7 @@ function winnerOfTurn()
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
-        if($escalibur == 0)
+        if($escalibur == 0 && $hydre_play == 0)
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
@@ -540,6 +590,19 @@ function winnerOfTurn()
             game::$instance->notifyAllPlayers(
                     'endTurn',
                     clienttranslate('${player_name} wins the trick and begins the next trick thanks to Escalibur'),
+                    array(
+                        'winner_id' => $player_win,
+                        'player_name' => $winner_name,
+                    )
+            );
+        }
+
+
+        if($hydre_play == 1)
+        {
+            game::$instance->notifyAllPlayers(
+                    'endTurn',
+                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Dragon'),
                     array(
                         'winner_id' => $player_win,
                         'player_name' => $winner_name,
