@@ -449,11 +449,24 @@ function winnerOfTurn()
             $hydre_play = 1;
         }
 
-        $momie = 0;
+        //momie (4 2 0)
+        $momie_player = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'"));
+        if($momie_player != null)
+        {
+            $last_trick = $trick - 1;
+            $type_last_card_win = intval(self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1"));
+            $typearg_last_card_win = intval(self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1"));
+            foreach ($cards_played as &$card) { 
+                if ($card['location_arg'] == $momie_player) {
+                    $card['type'] = $type_last_card_win; 
+                    $card['type_arg'] = $typearg_last_card_win; 
+                    break;
+                }
+            }
+            unset($card);
+        }
 
        
-
-
         // CALCUL WIN
         $player_win = 0;
         $maxValue = 0;
@@ -573,7 +586,7 @@ function winnerOfTurn()
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
-        if($escalibur == 0 && $hydre_play == 0)
+        if($escalibur == 0 && $hydre_play == 0 && $player_win != $momie_player)
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
@@ -609,6 +622,22 @@ function winnerOfTurn()
                     )
             );
         }
+
+        if($player_win == $momie_player)
+        {
+
+             game::$instance->notifyAllPlayers(
+                    'endTurn',
+                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Momie'),
+                    array(
+                        'winner_id' => $player_win,
+                        'player_name' => $winner_name,
+                    )
+            );
+
+        }
+
+
         ////////////////////////////////////////////////////////////////////////////
 
 
