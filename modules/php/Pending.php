@@ -78,6 +78,19 @@ class Pending extends APP_GameClass
             self::DbQuery("INSERT INTO bonus (round, player_id, bonus) VALUES ($round, $player, 0)");
         
         }
+
+        $players_id_quest = game::$instance->getGameStateValue("first_player_quest");
+        $player_name_quest = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$players_id_quest}'");
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} has ${log} and must choose the quest for this round'),
+                array(
+                    'player_name' => $player_name_quest,
+                    'log' => game::$instance->getLogIcon('2_5'),
+
+                )
+            );
         
         
     }
@@ -119,7 +132,7 @@ class Pending extends APP_GameClass
 
          game::$instance->notifyAllPlayers(
                 'ChoiceQuest',
-                clienttranslate('${player_name} chooses the quest: ${log}'),
+                clienttranslate('${player_name} chooses this quest: ${log}'),
                 array(
                     'player_name' => $this->player_name,
                     'questremove' => $questremove,
@@ -149,9 +162,10 @@ class Pending extends APP_GameClass
     {
         game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('${player_name} starts the round'),
+                clienttranslate('${player_name} has ${log} and starts the round'),
                 array(
                     'player_name' => $this->player_name,
+                    'log' => game::$instance->getLogIcon('3_5'),
 
                 )
             );
@@ -302,13 +316,17 @@ class Pending extends APP_GameClass
             $card_play = self::getObjectFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = {$card_id}");
 
             game::$instance->cards->moveCard($card_id, 'table', $this->player_id);
+
+            $log = $type.'_'.$type_arg;
+            $image_log = game::$instance->getLogIcon($log);
             
             game::$instance->notifyAllPlayers(
                         'playCard',
-                        clienttranslate('${player_name} plays card'),
+                        clienttranslate('${player_name} plays ${log}'),
                         array(
                             'player_name' => $this->player_name,
                             'card_play' => $card_play,
+                            'log' => $image_log,
                              
                         )
                     );

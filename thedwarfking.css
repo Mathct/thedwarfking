@@ -326,6 +326,30 @@ body {
   transform: scale(1.1);
 }
 
+/* ICON LOG */
+
+.icon_log {
+    
+    width: 35px;
+    height: 35px;
+    background-image: url('img/logicon.png');
+    background-size: 1500% 400%;
+    display: inline-block;
+    vertical-align: middle; 
+}
+
+.log_pv {
+    
+    width: 20px;
+    height: 20px;
+    background-image: url(img/log_pv.png);
+    background-size: 100% 100%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 5px;
+}
+
+
 
 
 

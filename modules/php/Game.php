@@ -494,57 +494,54 @@ function winnerOfTurn()
                     
                 }   
 
-            }
-        
 
+                // PORTE ETENDARD VERT (1 11 1)
+                if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
+                {
+                    $pe_green = 1;
+                    
+                }
 
-            // PORTE ETENDARD VERT (1 11 1)
-            if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
-            {
-                $pe_green = 1;
-                
-            }
+                // BRICOLEUR VERT (1 11 2)
+                if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $ticks_max)
+                {
+                    game::$instance->setGameStateValue("bricoleur", 1);
+                    
+                }
 
-            // BRICOLEUR VERT (1 11 2)
-            if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $ticks_max)
-            {
-                game::$instance->setGameStateValue("bricoleur", 1);
-                
-            }
+                // BOUFFON BLEU (2 1 0)
+                if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $ticks_max)
+                {
+                    $bouffon = $card['location_arg'];
+                    
+                }
 
-            // BOUFFON BLEU (2 1 0)
-            if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $ticks_max)
-            {
-                $bouffon = $card['location_arg'];
-                
-            }
+                // ENCHANTEUR BLEU (2 11 2)
+                if ($card['type'] == 2 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2)
+                {
+                    $enchanteur = 1;
+                    
+                }
 
-            // ENCHANTEUR BLEU (2 11 2)
-            if ($card['type'] == 2 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2)
-            {
-                $enchanteur = 1;
-                
-            }
+                // ECLAIREUR ROUGE (3 1 0)
+                // PV
+                if($card['type_arg'] == 12 || $card['type_arg'] == 13 || $card['type_arg'] == 14 || $card['type_arg'] == 15)
+                {
+                    $eclaireur_pv = $eclaireur_pv +1;
+                }
+                //PLAY
+                if ($card['type'] == 3 && $card['type_arg'] == 1)
+                {
+                    $eclaireur = $card['location_arg'];
 
-            // ECLAIREUR ROUGE (3 1 0)
-            // PV
-            if($card['type_arg'] == 12 || $card['type_arg'] == 13 || $card['type_arg'] == 14 || $card['type_arg'] == 15)
-            {
-                $eclaireur_pv = $eclaireur_pv +1;
-            }
-            //PLAY
-            if ($card['type'] == 3 && $card['type_arg'] == 1)
-            {
-                $eclaireur = $card['location_arg'];
-                
-             
-            }
+                }
 
-            // CHAMAN ROUGE (3 11 1)
-            if ($card['type'] == 3 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
-            {
-                $chaman = 1;
-                
+                // CHAMAN ROUGE (3 11 1)
+                if ($card['type'] == 3 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
+                {
+                    $chaman = 1;
+                    
+                }
             }
             
         }
@@ -602,10 +599,11 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
-                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Escalibur'),
+                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
                     array(
                         'winner_id' => $player_win,
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('4_5'),
                     )
             );
         }
@@ -615,10 +613,11 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
-                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Dragon'),
+                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
                     array(
                         'winner_id' => $player_win,
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('4_1'),
                     )
             );
         }
@@ -628,16 +627,19 @@ function winnerOfTurn()
 
              game::$instance->notifyAllPlayers(
                     'endTurn',
-                    clienttranslate('${player_name} wins the trick and begins the next trick thanks to Momie'),
+                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
                     array(
                         'winner_id' => $player_win,
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('4_2'),
                     )
             );
 
         }
 
 
+        ////////////////////////////////////////////////////////////////////////////
+        //    BONUS
         ////////////////////////////////////////////////////////////////////////////
 
 
@@ -646,9 +648,11 @@ function winnerOfTurn()
         {
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} remporte 11_vert et wins 3 pv'),
+                    clienttranslate('${player_name} wins ${log} and gains 3 ${log2}'),
                     array(
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('1_11'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -662,9 +666,11 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} wins 3 pv thanks to bricoleur joué au round precedent'),
+                    clienttranslate('${player_name} wins 3 ${log2} thanks to ${log} played in the previous trick'),
                     array(
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('1_11'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -677,9 +683,10 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('Le bricoleur a été joué. Le jouer qui remporte le prochain pli gagne 3 pv'),
+                    clienttranslate('${log} has been played. The player who wins the next trick wins 3 ${log2}'),
                     array(
-                        
+                        'log' => game::$instance->getLogIcon('1_11'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -693,9 +700,11 @@ function winnerOfTurn()
             $bouffon_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$bouffon}'");
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} joue le bouffon sur le dernier pli et gagne 3 pv'),
+                    clienttranslate('${player_name} plays ${log} on the last trick and wins 3 ${log2}'),
                     array(
                         'player_name' => $bouffon_name,
+                        'log' => game::$instance->getLogIcon('2_1'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -710,9 +719,11 @@ function winnerOfTurn()
 
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} remporte l\'enchanteur. Il doublera ses points (gagnés ou perdus) à la fin de la manche'),
+                    clienttranslate('${player_name} wins ${log} and will double ${log2} (won or lost) at the end of the round'),
                     array(
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('2_11'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -727,10 +738,12 @@ function winnerOfTurn()
             $eclaireur_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$eclaireur}'");
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} joue l\'éclaireur et gagne ${pv} pv'),
+                    clienttranslate('${player_name} plays ${log} and wins ${pv} ${log2}'),
                     array(
                         'player_name' => $eclaireur_name,
                         'pv' => $eclaireur_pv,
+                        'log' => game::$instance->getLogIcon('3_1'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -743,9 +756,11 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} remporte chaman et perd 3 pv'),
+                    clienttranslate('${player_name} wins ${log} and loses 3 ${log2}'),
                     array(
                         'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('3_11'),
+                        'log2' => game::$instance->getLogPv(),
                     )
             );
 
@@ -754,19 +769,20 @@ function winnerOfTurn()
         }
 
 
+        ///////////////////////////////////////////////////////////////////////////////
 
-
-        // VERIFIER SI 4 VERT A ETE REMPORTE ( => PROCHAIN DEALER)
+        // VERIFIER SI 5 VERT A ETE REMPORTE ( => PROCHAIN DEALER)
         foreach($cards_played as $card_played)
         {
             if($card_played['type'] == 1 && $card_played['type_arg'] == 5)
             {
                 game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('${player_name} wins le 4 vert et sera le dealer du prochain round'),
+                clienttranslate('${player_name} wins ${log} and will be the dealer for the next round'),
                 array(
                     'winner_id' => $player_win,
                     'player_name' => $winner_name,
+                    'log' => game::$instance->getLogIcon('1_5'),
                 )
                 );
 
@@ -907,6 +923,46 @@ function getLogQuest($card)
 
    
     return "<div class='questcardlog' title='' style='background-position-x: {$variableX}%; background-position-y: {$variableY}%;'></div>";
+    
+}
+
+function getLogIcon($icon)
+{
+    $explode = explode('_', $icon);
+    $type = $explode[0];
+    $type_arg = $explode[1];
+
+    if($type == 1)
+    {
+        $variableY = 0;
+    }
+
+    if($type == 2)
+    {
+        $variableY = -100;
+    }
+
+    if($type == 3)
+    {
+        $variableY = -200;
+    }
+
+    if($type == 4)
+    {
+        $variableY = -300;
+    }
+
+    $variableX = ($type_arg-1)*(-100);
+
+
+    return "<div class='icon_log' title='' style='background-position-x: {$variableX}%; background-position-y: {$variableY}%;'></div>";
+    
+}
+
+function getLogPv()
+{
+    
+    return "<div class='log_pv title=''></div>";
     
 }
 
