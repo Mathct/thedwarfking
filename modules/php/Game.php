@@ -317,6 +317,14 @@ protected function getAllDatas()
     $result['active_special_card'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$result['no_round']}'" );
     $result['active_quest_card'] = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$result['no_round']}'" );
 
+    //momie
+    $result['momie_id'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+    $result['momie_id_table'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'");
+    $result['momie_player'] = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+    $round = $this->getGameStateValue('no_round');
+    $last_trick = $this->getGameStateValue('no_trick') - 1;
+    $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+    $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
 
     return $result;
 }
@@ -450,7 +458,7 @@ function winnerOfTurn()
         }
 
         //momie (4 2 0)
-        $momie_player = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'"));
+        $momie_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'");
         if($momie_player != null)
         {
             $last_trick = $trick - 1;

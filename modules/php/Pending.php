@@ -195,13 +195,19 @@ class Pending extends APP_GameClass
 
         // NB TRICK ACTUEL
         $trick_no = game::$instance->getGameStateValue('no_trick');
+        // NB ROUND ACTUEL
+        $round = game::$instance->getGameStateValue('no_round');
 
-        // POUR MOMIE ET CLONE (POUR NE PAS ETRE JOUEES AU PREMIER PLI)
-        $momie = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
-        $clone = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+        // MOMIE
+        $momie = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+        $last_trick = $trick_no - 1;
+        $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+        
+        // CLONE
+        $clone = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
 
         // ESACLIBUR
-        $escalibur = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 5 AND card_location = 'hand'");
+        $escalibur = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 5 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
         
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
@@ -239,25 +245,40 @@ class Pending extends APP_GameClass
             else //si y a une couleur demandée
             {
                 $cards = [];
-                
-                if(${'cards_'.$color_request} != null) //le joueur a la couleur demandée
+
+                if($momie != null && $trick_no >= 2)
                 {
-                    $cards = array_merge(${'cards_'.$color_request}, $cards_4); 
+                    if($color_request == $type_last_card_win)
+                    {
+                        $cards = array_merge(${'cards_'.$color_request}, $cards_4);
+                    }
+                    else {
+                        $cards = ${'cards_'.$color_request};
+                    }
+                }
+                else 
+                {
+                    $cards = array_merge(${'cards_'.$color_request}, $cards_4);
+                }
+                
+                if($cards != null) //le joueur a la couleur demandée
+                {
 
                     foreach ($cards as $card) 
                     {
                         $ret["selectable"][] = 'my_cards_item_' . $card;
 
-                        if($trick_no == 1)
+                    }
+
+                    if($trick_no == 1)
+                    {
+                        if($momie != null)
                         {
-                            if($momie != null)
-                            {
-                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
-                            }
-                            if($clone != null)
-                            {
-                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
-                            }
+                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                        }
+                        if($clone != null)
+                        {
+                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
                         }
                     }
 
@@ -274,17 +295,17 @@ class Pending extends APP_GameClass
                     foreach ($all_cards as $card) 
                     {
                         $ret["selectable"][] = 'my_cards_item_' . $card['id'];
+                    }
 
-                        if($trick_no == 1)
+                    if($trick_no == 1)
+                    {
+                        if($momie != null)
                         {
-                            if($momie != null)
-                            {
-                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
-                            }
-                            if($clone != null)
-                            {
-                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
-                            }
+                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                        }
+                        if($clone != null)
+                        {
+                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
                         }
                     }
                 }
@@ -319,6 +340,20 @@ class Pending extends APP_GameClass
 
             $log = $type.'_'.$type_arg;
             $image_log = game::$instance->getLogIcon($log);
+
+            // pour Momie
+            $momie = 0;
+            if (($type == 4) && ($type_arg == 2))
+            {
+                $momie = 1;
+            }
+
+            $trick_no = game::$instance->getGameStateValue('no_trick');
+            $round = game::$instance->getGameStateValue('no_round');
+            $last_trick = $trick_no - 1;
+            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+
             
             game::$instance->notifyAllPlayers(
                         'playCard',
@@ -327,17 +362,34 @@ class Pending extends APP_GameClass
                             'player_name' => $this->player_name,
                             'card_play' => $card_play,
                             'log' => $image_log,
+                            'momie' => $momie,
+                            'type_last_card_win' => $type_last_card_win,
+                            'typearg_last_card_win' => $typearg_last_card_win,
+
                              
                         )
                     );
 
-        
+            
+           
+
+
+
+            
+
+
+                    
             // Test si color_request doit être modifiée
             if (game::$instance->getGameStateValue("color_request") == 0)
             {
                 if (($type == 1) || ($type == 2) || ($type == 3))
                 {
                     game::$instance->setGameStateValue("color_request", $type);
+                }
+
+                if (($type == 4) && ($type_arg == 2))
+                {
+                    game::$instance->setGameStateValue("color_request", $type_last_card_win);
                 }
 
             }
@@ -396,6 +448,7 @@ class Pending extends APP_GameClass
         //INIT TURN
         game::$instance->DbQuery("UPDATE player set player_turn = 0 ");
         game::$instance->setGameStateValue("color_request", 0);
+        game::$instance->setGameStateValue('first_player_play', $winner);
 
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
@@ -415,6 +468,7 @@ class Pending extends APP_GameClass
 
 
             $newtrick = game::$instance->incGameStateValue('no_trick', 1);
+
             game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
                 'message' => [
                     'log' => '<div class="log_newTrick">${trick} ${nb}</div>',
@@ -425,6 +479,36 @@ class Pending extends APP_GameClass
                     ],
                 ]
             ]);
+
+
+
+            // MOMIE DISPLAY SI PAS JOUEE
+            $momie_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+            $momie_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+            $round = game::$instance->getGameStateValue('no_round');
+            $trick = game::$instance->getGameStateValue('no_trick');
+            $last_trick = game::$instance->getGameStateValue('no_trick') - 1;
+            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            
+            if($momie_id != null)
+            {
+                game::$instance->notifyPlayer(
+                    $momie_player,
+                    'momieChange',
+                    '',
+                    array(
+                        'trick' => $trick,
+                        'momie_id' => $momie_id,
+                        'momie_player' => $momie_player,
+                        'type_last_card_win' => $type_last_card_win,
+                        'typearg_last_card_win' => $typearg_last_card_win
+
+                    )
+                );
+
+
+            }
 
         }
         else

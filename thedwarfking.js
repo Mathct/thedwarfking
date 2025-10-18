@@ -504,21 +504,7 @@ updateLayout: function () {
             btn.addEventListener("click", this._btnHandler);
         },
 
-        // removeEventListenerModal: function() {
-        //     var croix = document.getElementById("croix");
-        //     var btn = document.getElementById("btn_round");
-
-        //     if (this._croixHandler) {
-        //         croix.removeEventListener("click", this._croixHandler);
-        //         this._croixHandler = null; // optionnel
-        //     }
-
-        //     if (this._btnHandler) {
-        //         btn.removeEventListener("click", this._btnHandler);
-        //         this._btnHandler = null; // optionnel
-        //     }
-        // },
-
+     
         createStockForCards: function(page, element)
         {
             let stock = new ebg.stock();
@@ -657,7 +643,7 @@ updateLayout: function () {
     //Cards in table
     Object.values(this.table).forEach((card) => {
 
-        console.log('this_table_card', card);
+        console.warn('this_table_card', card);
 
 
         const card_type = this.getStockCardType(card);
@@ -668,8 +654,124 @@ updateLayout: function () {
         const card_div = document.getElementById('table_cards_item_' + card.id);
         dojo.place('<div class="player-title" style="color: #' + player.color + '">' + player.name + '</div>', card_div);
     });
+
+
+    //momie
+    if(this.gamedatas.momie_id_table != null)
+    {
+        this.addMomieTable(this.gamedatas.momie_id_table, this.gamedatas.type_last_card_win, this.gamedatas.typearg_last_card_win);
+    }
+    else
+    {
+        this.addMomie(this.gamedatas.no_trick, this.gamedatas.momie_id, this.gamedatas.momie_player, this.gamedatas.type_last_card_win, this.gamedatas.typearg_last_card_win);
+    }
+    
     
 
+},
+
+
+addMomie: function(trick, momie_id, momie_player, type_last_card_win, typearg_last_card_win)
+{
+    var momie_last = document.getElementById('last_card_momie');
+    if(momie_last)
+    {
+        momie_last.remove();
+    }
+    
+    if(trick >= 2 && momie_id != null && momie_player == this.getCurrentPlayerId())
+    {
+    
+        var momie = document.getElementById('my_cards_item_' + momie_id);
+        var type = type_last_card_win;
+        var type_arg = typearg_last_card_win;
+
+        if(type == 1)
+        {
+            var variableY = 0;
+            var color = 'vert';
+        }
+
+        if(type == 2)
+        {
+            var variableY = -100;
+            var color = 'bleu';
+        }
+
+        if(type == 3)
+        {
+            var variableY = -200;
+            var color = 'rouge';
+        }
+
+        if(type == 4)
+        {
+            var variableY = -300;
+        }
+
+        var variableX = (type_arg-1)*(-100);
+
+        const newDiv = document.createElement('div');
+        newDiv.id = 'last_card_momie';
+        newDiv.classList.add('last_card_momie', color);
+        newDiv.style.backgroundPositionX = variableX + '%';
+        newDiv.style.backgroundPositionY = variableY + '%';
+        momie.appendChild(newDiv);
+
+
+    }
+    
+},
+
+
+addMomieTable: function(momie_id, type_last_card_win, typearg_last_card_win)
+{
+    var momie_last = document.getElementById('last_card_momie');
+    if(momie_last)
+    {
+        momie_last.remove();
+    }
+    
+        
+        var momie = document.getElementById('table_cards_item_' + momie_id);
+        var type = type_last_card_win;
+        var type_arg = typearg_last_card_win;
+
+        if(type == 1)
+        {
+            var variableY = 0;
+            var color = 'vert';
+        }
+
+        if(type == 2)
+        {
+            var variableY = -100;
+            var color = 'bleu';
+        }
+
+        if(type == 3)
+        {
+            var variableY = -200;
+            var color = 'rouge';
+        }
+
+        if(type == 4)
+        {
+            var variableY = -300;
+        }
+
+        var variableX = (type_arg-1)*(-100);
+
+        const newDiv = document.createElement('div');
+        newDiv.id = 'last_card_momie';
+        newDiv.classList.add('last_card_momie', color);
+        newDiv.style.backgroundPositionX = variableX + '%';
+        newDiv.style.backgroundPositionY = variableY + '%';
+        momie.appendChild(newDiv);
+
+
+    
+    
 },
 
 setupSpecialModal: function(data)
@@ -837,6 +939,7 @@ setupQuestModal: function(data)
             dojo.subscribe( 'majRound', this, "notif_majRound" );
             dojo.subscribe( 'drawCards', this, "notif_drawCards" );
             dojo.subscribe( 'majModal', this, "notif_majModal" );
+            dojo.subscribe( 'momieChange', this, "notif_momieChange" );
 
             this.notifqueue.setSynchronous( 'endTurn', 1000 );
             
@@ -854,6 +957,10 @@ setupQuestModal: function(data)
             const card_div = document.getElementById('table_cards_item_' + card.id);
             dojo.place('<div class="player-title" style="color: #' + player.color + '">' + player.name + '</div>', card_div);
 
+            if (notif.args.momie == 1)
+            {
+                this.addMomieTable(card.id, notif.args.type_last_card_win, notif.args.typearg_last_card_win);
+            }
 
             // Destroy the card for the current player
             if (this.player_id == card.location_arg) {
@@ -922,10 +1029,12 @@ setupQuestModal: function(data)
 
             dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
             dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
+ 
+        },
 
-
-            
-            
+        notif_momieChange: function(notif) {
+            this.addMomie(notif.args.trick, notif.args.momie_id, notif.args.momie_player, notif.args.type_last_card_win, notif.args.typearg_last_card_win)
+   
         },
 
 
