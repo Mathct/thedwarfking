@@ -211,6 +211,7 @@ class Pending extends APP_GameClass
         
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+        $count_cards = count($all_cards);
         $color_request = game::$instance->getGameStateValue("color_request");
 
         $cards_1 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 1", true);
@@ -235,10 +236,12 @@ class Pending extends APP_GameClass
                     {
                         $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
                     }
-                    if($clone != null)
-                    {
-                        $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
-                    }
+                    
+                }
+
+                if($clone != null && $count_cards >= 2)
+                {
+                    $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
                 }
             }
 
@@ -276,10 +279,7 @@ class Pending extends APP_GameClass
                         {
                             $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
                         }
-                        if($clone != null)
-                        {
-                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
-                        }
+                        
                     }
 
                     if($escalibur != null)
@@ -290,22 +290,27 @@ class Pending extends APP_GameClass
                     
                 }
 
-                else //le joueur n'a pas la couleur demandée, il peut jouer ce qu'il veut
+                else //le joueur n'a pas la couleur demandée, il peut jouer ce qu'il veut sauf si il a le clone
                 {
-                    foreach ($all_cards as $card) 
+                    if($clone != null)
                     {
-                        $ret["selectable"][] = 'my_cards_item_' . $card['id'];
+                        $ret["selectable"][] = 'my_cards_item_' . $clone;
                     }
 
-                    if($trick_no == 1)
+                    else
                     {
-                        if($momie != null)
+                        foreach ($all_cards as $card) 
                         {
-                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                            $ret["selectable"][] = 'my_cards_item_' . $card['id'];
                         }
-                        if($clone != null)
+
+                        if($trick_no == 1)
                         {
-                            $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $clone]);
+                            if($momie != null)
+                            {
+                                $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $momie]);
+                            }
+                            
                         }
                     }
                 }
@@ -329,7 +334,7 @@ class Pending extends APP_GameClass
         {
 
             $explode = explode('_', $varg1);
-            $card_id = end($explode);
+            $card_id = intval(end($explode));
 
             $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
             $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
@@ -338,10 +343,8 @@ class Pending extends APP_GameClass
 
             game::$instance->cards->moveCard($card_id, 'table', $this->player_id);
 
-            $log = $type.'_'.$type_arg;
-            $image_log = game::$instance->getLogIcon($log);
-
-            // pour Momie
+            
+            // pour la Momie
             $momie = 0;
             if (($type == 4) && ($type_arg == 2))
             {
@@ -354,6 +357,27 @@ class Pending extends APP_GameClass
             $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
             $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
 
+            // pour le Clone: derniere card_id jouée (n'est pas mise à jour si le Clone est joué)
+            $last_type = 0;
+            $last_type_arg = 0;
+            if (($type == 4) && ($type_arg == 3))
+            {
+                game::$instance->setGameStateValue("clone_play", 1);
+                $last_card_id = game::$instance->getGameStateValue("last_card_play");
+                $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
+                $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$last_card_id}'");
+            }
+
+            if(game::$instance->getGameStateValue("clone_play") != 1)
+            {
+                game::$instance->setGameStateValue("last_card_play", $card_id);
+                
+            }
+
+
+
+            $log = $type.'_'.$type_arg;
+            $image_log = game::$instance->getLogIcon($log);
             
             game::$instance->notifyAllPlayers(
                         'playCard',
@@ -371,12 +395,27 @@ class Pending extends APP_GameClass
                     );
 
             
+            // message clone
+            if (($type == 4) && ($type_arg == 3))
+            {
+                $log2 = $last_type.'_'.$last_type_arg;
+                $image_log2 = game::$instance->getLogIcon($log2);
+
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${log} is the same color as ${log2} (with a slightly higher value)'),
+                        array(
+                            
+                            'log' => $image_log,
+                            'log2' => $image_log2,
+                             
+                        )
+                    );
+
+            }
            
 
-
-
             
-
 
                     
             // Test si color_request doit être modifiée
@@ -392,7 +431,16 @@ class Pending extends APP_GameClass
                     game::$instance->setGameStateValue("color_request", $type_last_card_win);
                 }
 
+                if (($type == 4) && ($type_arg == 3))
+                {
+                    game::$instance->setGameStateValue("color_request", $last_type);
+                }
+
+
             }
+
+
+            
 
             
             game::$instance->DbQuery("UPDATE player set player_turn = 1 WHERE player_id = '{$this->player_id}'");

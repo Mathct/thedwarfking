@@ -49,6 +49,8 @@ class Game extends \Table
 
             "bricoleur" => 16,
             "enchanteur" => 17, //id de celui remporte l'enchanteur... double les points
+            "last_card_play" => 18, // id pour le clone
+            "clone_play" => 19, 
            
         ]);  
         
@@ -118,6 +120,8 @@ class Game extends \Table
 
         $this->setGameStateInitialValue("bricoleur", 0);
         $this->setGameStateInitialValue("enchanteur", 0);
+        $this->setGameStateInitialValue("last_card_play", 0);
+        $this->setGameStateInitialValue("clone_play", 0);
 
         // STATS
         
@@ -474,6 +478,24 @@ function winnerOfTurn()
             unset($card);
         }
 
+        //clone (4 3 0)
+        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'table'");
+        if($clone_player != null)
+        {
+            $last_card_play = game::$instance->getGameStateValue("last_card_play");
+            $type_last_card_play = intval(self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id ='{$last_card_play}'"));
+            $typearg_last_card_play = intval(self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id ='{$last_card_play}'"));
+            foreach ($cards_played as &$card) { 
+                if ($card['location_arg'] == $clone_player) {
+                    $card['type'] = $type_last_card_play; 
+                    $card['type_arg'] = $typearg_last_card_play + 0.5; 
+                    break;
+                }
+            }
+            unset($card);
+        }
+
+
        
         // CALCUL WIN
         $player_win = 0;
@@ -591,7 +613,7 @@ function winnerOfTurn()
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
-        if($escalibur == 0 && $hydre_play == 0 && $player_win != $momie_player)
+        if($escalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
@@ -640,6 +662,21 @@ function winnerOfTurn()
                         'winner_id' => $player_win,
                         'player_name' => $winner_name,
                         'log' => game::$instance->getLogIcon('4_2'),
+                    )
+            );
+
+        }
+
+        if($player_win == $clone_player)
+        {
+
+             game::$instance->notifyAllPlayers(
+                    'endTurn',
+                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
+                    array(
+                        'winner_id' => $player_win,
+                        'player_name' => $winner_name,
+                        'log' => game::$instance->getLogIcon('4_3'),
                     )
             );
 
