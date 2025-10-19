@@ -447,6 +447,30 @@ class Pending extends APP_GameClass
             game::$instance->giveExtraTime($this->player_id);
             game::$instance->addPendingFirst($this->player_id, "PlayCard");
 
+
+            //DRUIDE
+
+            $ticks_max = 0;
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+            if($nbreplayers == 3)
+            {
+                $ticks_max = 13;
+            }
+            if($nbreplayers == 4)
+            {
+                $ticks_max = 10;
+            }
+            if($nbreplayers == 5)
+            {
+                $ticks_max = 8;
+            }
+
+            if ($trick_no != $ticks_max && $type == 1 && $type_arg == 1)
+            {
+                game::$instance->setGameStateValue("druide_player", $this->player_id);
+            } 
+
         }
         
     }
@@ -558,6 +582,13 @@ class Pending extends APP_GameClass
 
             }
 
+            //DRUIDE
+
+            if(game::$instance->getGameStateValue("druide_player") != 0)
+            {
+                game::$instance->addPending(game::$instance->getGameStateValue("druide_player"), "Druide");
+            }
+
         }
         else
         {
@@ -597,7 +628,8 @@ class Pending extends APP_GameClass
         // MAJ ROUND
         game::$instance->incGameStateValue('no_round', 1);
         $new_round = game::$instance->getGameStateValue('no_round');
-        game::$instance->setGameStateInitialValue('no_trick', 0);
+        game::$instance->setGameStateValue('no_trick', 1);
+        game::$instance->setGameStateValue("druide_player", 0);
 
         game::$instance->notifyAllPlayers(
                         'majRound',
@@ -792,10 +824,10 @@ class Pending extends APP_GameClass
         $first_player_deal = game::$instance->getGameStateValue("first_player_deal");
         
         $first_player_quest = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=2 AND card_type_arg = 5"));
-        game::$instance->setGameStateInitialValue("first_player_quest", $first_player_quest);
+        game::$instance->setGameStateValue("first_player_quest", $first_player_quest);
 
         $first_player_play = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=3 AND card_type_arg = 5"));
-        game::$instance->setGameStateInitialValue("first_player_play", $first_player_play);
+        game::$instance->setGameStateValue("first_player_play", $first_player_play);
 
         self::DbQuery("DELETE FROM `pending`;");
         $nextplayer = $first_player_play;
@@ -808,12 +840,166 @@ class Pending extends APP_GameClass
         game::$instance->addPending($first_player_play, "FirstPlay");
         game::$instance->addPending($first_player_quest, "Quest");
         game::$instance->addPending($first_player_deal, "Deal");
-
-
-
-
-              
+         
         
+    }
+
+    ////////////////////////// DRUIDE /////////////////////
+
+    function argDruide($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('');
+        $ret['titleyou'] = clienttranslate('');
+
+        
+        return $ret;
+    }
+
+    function Druide($parg1, $parg2, $varg1, $varg2)
+    {
+        game::$instance->setGameStateValue("druide_active", $this->player_id);
+
+        $players = self::getObjectListFromDB( "SELECT player_id id, player_name name, player_color color FROM player WHERE player_id != '{$this->player_id}'" );
+        $player = $this->player_id;
+
+
+        game::$instance->notifyPlayer(
+                $player,
+                'showPlayersModal',
+                '',
+                array(
+
+                   'players'=> $players,
+                   'player' => $player, 
+
+                )
+        );
+
+
+        game::$instance->addPending($this->player_id, "DruideStep2");
+    }
+
+
+    function argDruideStep2($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must exchange their hand with that of another player');
+        $ret['titleyou'] = clienttranslate('${you} must exchange your hand with that of another player');
+
+        $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+        foreach($players as $player)
+        {
+            if( $player != $this->player_id)
+            {
+                $ret["selectable"][] = 'modal_player_'. $player;
+            }
+        }
+
+        return $ret;
+    }
+
+    function DruideStep2($parg1, $parg2, $varg1, $varg2)
+    {
+        $explode = explode('_', $varg1);
+        $nextplayer = $explode[2];
+        $player = $this->player_id;
+
+        $cards_before_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
+        $cards_before_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+
+        game::$instance->notifyPlayer(
+                $player,
+                'removeCards',
+                '',
+                array(
+
+                    'cards' => $cards_before_1,
+
+                )
+        );
+
+        game::$instance->notifyPlayer(
+                $nextplayer,
+                'removeCards',
+                '',
+                array(
+
+                    'cards' => $cards_before_2,
+
+                )
+        );
+
+        
+        self::DbQuery("UPDATE cards set card_location_arg = 1234 WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'");
+        self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'");
+        self::DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_location ='hand' AND card_location_arg=1234");
+
+        $cards_after_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
+        $cards_after_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+
+
+        game::$instance->notifyPlayer(
+                $player,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards_after_1,
+
+                )
+            );
+
+        game::$instance->notifyPlayer(
+                $nextplayer,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards_after_2,
+
+                )
+            );
+
+
+            game::$instance->setGameStateValue("druide_player", 0);
+            game::$instance->setGameStateValue("druide_active", 0);
+
+
+
+        game::$instance->notifyPlayer(
+                $player,
+                'removePlayersModal',
+                '',
+                array(
+
+                    
+
+                )
+        ); 
+        
+        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} and ${opponent} exchange hands'),
+                array(
+                    'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                        'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                    ],
+
+                    'player_name' => $this->player_name,
+                    
+                )
+            );
+
     }
     
 

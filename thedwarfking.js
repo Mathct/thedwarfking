@@ -449,6 +449,11 @@ updateLayout: function () {
                         <div id="croix">X</div>
                         </div>
                     </div>
+
+                    <div id="modal_players_container" class="hidden">
+                        <div id="modal_players">
+                        </div>
+                    </div>
                         
         `
         
@@ -472,6 +477,14 @@ updateLayout: function () {
 
         this.addEventListenerModal();
 
+
+        var druide = this.gamedatas.druide_player;
+        if((this.getCurrentPlayerId() == druide)&&(!this.isSpectator ))
+        {
+            this.addPlayersModal(this.players, druide);
+        }
+        
+
         if(this.isSpectator ) {
         
         dojo.addClass('hand_container', 'hidden');
@@ -484,6 +497,62 @@ updateLayout: function () {
         this.setupQuestModal(this.gamedatas.active_quest_card);
         this.setupStocks();
 
+        },
+
+        addPlayersModal: function(players, player_play)
+        {
+                        
+            Object.values(players).forEach((player) => {
+                if(player.id != player_play)
+                {
+
+                var parent = document.getElementById("modal_players");
+
+                const modal_player = document.createElement("div");
+                modal_player.id = 'modal_player_'+player.id; 
+                modal_player.classList.add('modal_player');
+
+                var avatar ='avatar_'+player.id;
+                var avatarImage = document.getElementById(avatar);
+                var avatarSrc = avatarImage.src;
+                var newImage = document.createElement('img');
+                newImage.src = avatarSrc;
+                newImage.id = 'newavatar_'+player.id; 
+                newImage.classList.add('newAvatar');
+                modal_player.appendChild(newImage);
+
+
+                const player_name = document.createElement("div");
+                player_name.id = "modal_player_name_"+player.id;
+                player_name.style.color = "#"+player.color;
+                player_name.textContent = player.name;
+                modal_player.appendChild(player_name);
+
+                parent.appendChild(modal_player);
+
+                }
+            });
+
+            var modal_players_container = document.getElementById("modal_players_container");
+            modal_players_container.classList.remove("hidden");
+            var round = document.getElementById("round");
+            round.classList.add("index");
+
+
+            dojo.query(".modal_player").connect('onclick', this, 'onSelect' )
+            
+        },
+
+        removePlayersModal: function()
+        {
+
+            var parent = document.getElementById("modal_players_container");
+            parent.remove(); 
+            
+            var round = document.getElementById("round");
+            round.classList.remove("index");
+            
+            
         },
         
         addEventListenerModal: function() {
@@ -940,6 +1009,11 @@ setupQuestModal: function(data)
             dojo.subscribe( 'drawCards', this, "notif_drawCards" );
             dojo.subscribe( 'majModal', this, "notif_majModal" );
             dojo.subscribe( 'momieChange', this, "notif_momieChange" );
+            dojo.subscribe( 'removeCards', this, "notif_removeCards" );
+            dojo.subscribe( 'showPlayersModal', this, "notif_showPlayersModal" );
+            dojo.subscribe( 'removePlayersModal', this, "notif_removePlayersModal" );
+
+            
 
             this.notifqueue.setSynchronous( 'endTurn', 1000 );
             
@@ -969,6 +1043,17 @@ setupQuestModal: function(data)
             }
 
 
+        },
+
+        notif_removeCards: async function(notif) {
+            // chaque joueur reçoît des cartes lors de la nouvelle manche
+            Object.values(notif.args.cards).forEach(card => {
+                // Destroy cards for the current player
+                if (this.player_id == card.location_arg) {
+
+                    this.handStock.removeFromStockById(card.id);
+                }
+            });
         },
 
         notif_endTurn: function(notif) {
@@ -1036,6 +1121,17 @@ setupQuestModal: function(data)
             this.addMomie(notif.args.trick, notif.args.momie_id, notif.args.momie_player, notif.args.type_last_card_win, notif.args.typearg_last_card_win)
    
         },
+
+        notif_showPlayersModal: function(notif) {
+            this.addPlayersModal(notif.args.players, notif.args.player);
+        },
+
+        notif_removePlayersModal: function(notif) {
+            this.removePlayersModal();
+        },
+
+
+        
 
 
         

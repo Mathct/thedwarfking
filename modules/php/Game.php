@@ -51,6 +51,8 @@ class Game extends \Table
             "enchanteur" => 17, //id de celui remporte l'enchanteur... double les points
             "last_card_play" => 18, // id pour le clone
             "clone_play" => 19, 
+            "druide_player" => 20,
+            "druide_active" => 21,
            
         ]);  
         
@@ -122,6 +124,8 @@ class Game extends \Table
         $this->setGameStateInitialValue("enchanteur", 0);
         $this->setGameStateInitialValue("last_card_play", 0);
         $this->setGameStateInitialValue("clone_play", 0);
+        $this->setGameStateInitialValue("druide_player", 0);
+        $this->setGameStateInitialValue("druide_active", 0);
 
         // STATS
         
@@ -166,6 +170,10 @@ class Game extends \Table
         //SPECAL CARD FIRST ROUND
 
         $rand = bga_rand(1, 14);
+
+        //TEST SPECIAL CARD A L'INIT
+        //$rand = 6;
+
 
         if($rand>=1 && $rand<=5)
         {
@@ -330,6 +338,10 @@ protected function getAllDatas()
     $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
     $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
 
+    //druide
+    $result['druide_player'] = $this->getGameStateValue('druide_active');
+
+
     return $result;
 }
 
@@ -451,6 +463,7 @@ function winnerOfTurn()
         $eclaireur_pv = 0;
 
         $chaman = 0;
+        $druide = 0;
 
         $hydre_play = 0; // Hydre (4 1 0)
         $hydre_last_A = 0;
@@ -570,6 +583,13 @@ function winnerOfTurn()
                 if ($card['type'] == 3 && $card['type_arg'] == 11 && $card['type_arg_2'] == 1)
                 {
                     $chaman = 1;
+                    
+                }
+
+                // DRUIDE VERT (1 1 0)
+                if ($card['type'] == 1 && $card['type_arg'] == 1)
+                {
+                    $druide = $card['location_arg'];
                     
                 }
             }
@@ -813,8 +833,8 @@ function winnerOfTurn()
             
         }
 
-
-        ///////////////////////////////////////////////////////////////////////////////
+        
+        /////////////////////////////////////////////////////////////////////////////////
 
         // VERIFIER SI 5 VERT A ETE REMPORTE ( => PROCHAIN DEALER)
         foreach($cards_played as $card_played)
@@ -837,6 +857,20 @@ function winnerOfTurn()
 
 
 
+        }
+
+        //MESSAGE DRUIDE VERT (1 1 0)
+        if($druide != 0) {
+
+            $druide_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$druide}'");
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} has played ${log} and must exchange their hand with that of another player'),
+                    array(
+                        'player_name' => $druide_name,
+                        'log' => game::$instance->getLogIcon('1_1'),
+                    )
+            );
         }
 
         return $player_win;
