@@ -989,7 +989,7 @@ class Pending extends APP_GameClass
 
         game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('${player_name} and ${opponent} exchange hands'),
+                clienttranslate('${player_name} exchanges their hand with ${opponent}'),
                 array(
                     'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
                                         'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
