@@ -1000,11 +1000,7 @@ class Pending extends APP_GameClass
             );
 
 
-            game::$instance->setGameStateValue("druide_player", 0);
-            game::$instance->setGameStateValue("druide_active", 0);
-
-
-
+        
         game::$instance->notifyPlayer(
                 $player,
                 'removePlayersModal',
@@ -1031,6 +1027,11 @@ class Pending extends APP_GameClass
                     
                 )
             );
+
+            
+        // INIT DRUIDE
+        game::$instance->setGameStateValue("druide_player", 0);
+        game::$instance->setGameStateValue("druide_active", 0);
 
     }
     
