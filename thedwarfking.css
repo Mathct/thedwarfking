@@ -405,7 +405,7 @@ body {
   padding: 20px 20px;
   position: relative;
   gap: 20px;
-  font-size: 25px;
+  font-size: 20px;
 }
 
 .newAvatar{
@@ -421,13 +421,30 @@ body {
   align-items: center;
   gap: 10px;
   padding: 10px 10px;
-  background-color: #73252500;
+  background-color: #cdbebe75;
   border-radius: 8px;
+  width: 150px;
 }
+
+
+.modal_player_name{
+  width: 100%;
+	text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 
 .modal_player:hover {
   background-color: #73252544;
   border-radius: 8px;
+}
+
+.modal_player.selectable{
+  border: 2px solid white;
+  outline: none; 
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
 }
 
 

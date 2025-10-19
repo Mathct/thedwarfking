@@ -525,6 +525,7 @@ updateLayout: function () {
                 const player_name = document.createElement("div");
                 player_name.id = "modal_player_name_"+player.id;
                 player_name.style.color = "#"+player.color;
+                player_name.classList.add('modal_player_name');
                 player_name.textContent = player.name;
                 modal_player.appendChild(player_name);
 
