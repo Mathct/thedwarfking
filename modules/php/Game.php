@@ -884,7 +884,7 @@ function winnerOfTurn()
             $pe_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$pe_blue}'");
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} has played ${log}. All players will pass their hand to their neighbor on the right or left'),
+                    clienttranslate('${player_name} has played ${log}. All players will pass their hand to their player on the right or left'),
                     array(
                         'player_name' => $pe_name,
                         'log' => game::$instance->getLogIcon('2_11'),
