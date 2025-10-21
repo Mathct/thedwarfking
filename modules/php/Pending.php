@@ -1177,10 +1177,11 @@ class Pending extends APP_GameClass
 
             game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('All players pass their hand to the next neighbor'),
+                clienttranslate('${player_name} with ${log}: All players pass their hand to the NEXT neighbor'),
                 array(
                     
-                    
+                    'player_name' => $this->player_name,
+                    'log' => game::$instance->getLogIcon('2_11'),
                 )
             );
           
@@ -1217,10 +1218,11 @@ class Pending extends APP_GameClass
 
             game::$instance->notifyAllPlayers(
                 'message',
-                clienttranslate('All players pass their hand to the previous neighbor'),
+                clienttranslate('${player_name} with ${log}: All players pass their hand to the PREVIOUS neighbor'),
                 array(
                     
-                    
+                    'player_name' => $this->player_name,
+                    'log' => game::$instance->getLogIcon('2_11'),
                 )
             );
 
