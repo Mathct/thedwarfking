@@ -53,6 +53,8 @@ class Game extends \Table
             "clone_play" => 19, 
             "druide_player" => 20,
             "druide_active" => 21,
+            "pe_bleu_player" => 22,
+            "pe_bleu_active" => 23,
            
         ]);  
         
@@ -126,6 +128,9 @@ class Game extends \Table
         $this->setGameStateInitialValue("clone_play", 0);
         $this->setGameStateInitialValue("druide_player", 0);
         $this->setGameStateInitialValue("druide_active", 0);
+        $this->setGameStateInitialValue("pe_bleu_player", 0);
+        $this->setGameStateInitialValue("pe_bleu_active", 0);
+
 
         // STATS
         
@@ -172,7 +177,7 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        //$rand = 6;
+        //$rand = 10;
 
 
         if($rand>=1 && $rand<=5)
@@ -341,6 +346,9 @@ protected function getAllDatas()
     //druide
     $result['druide_player'] = $this->getGameStateValue('druide_active');
 
+    //pe_bleu
+    $result['pe_blue_player'] = $this->getGameStateValue('pe_bleu_active');
+
 
     return $result;
 }
@@ -463,7 +471,8 @@ function winnerOfTurn()
         $eclaireur_pv = 0;
 
         $chaman = 0;
-        $druide = 0;
+        $druide = game::$instance->getGameStateValue("druide_player");
+        $pe_blue = game::$instance->getGameStateValue("pe_bleu_player");
 
         $hydre_play = 0; // Hydre (4 1 0)
         $hydre_last_A = 0;
@@ -586,12 +595,7 @@ function winnerOfTurn()
                     
                 }
 
-                // DRUIDE VERT (1 1 0)
-                if ($card['type'] == 1 && $card['type_arg'] == 1)
-                {
-                    $druide = $card['location_arg'];
-                    
-                }
+                
             }
             
         }
@@ -869,6 +873,21 @@ function winnerOfTurn()
                     array(
                         'player_name' => $druide_name,
                         'log' => game::$instance->getLogIcon('1_1'),
+                    )
+            );
+        }
+
+
+        //MESSAGE PE BLEU (2 11 1)
+        if($pe_blue != 0) {
+
+            $pe_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$pe_blue}'");
+             game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} has played ${log}. All players will pass their hand to their neighbor on the right or left'),
+                    array(
+                        'player_name' => $pe_name,
+                        'log' => game::$instance->getLogIcon('2_11'),
                     )
             );
         }

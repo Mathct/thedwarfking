@@ -454,6 +454,11 @@ updateLayout: function () {
                         <div id="modal_players">
                         </div>
                     </div>
+
+                    <div id="modal_fleches_container" class="hidden">
+                        <div id="modal_fleches">
+                        </div>
+                    </div>
                         
         `
         
@@ -482,6 +487,12 @@ updateLayout: function () {
         if((this.getCurrentPlayerId() == druide)&&(!this.isSpectator ))
         {
             this.addPlayersModal(this.players, druide);
+        }
+
+        var pe_blue = this.gamedatas.pe_blue_player;
+        if((this.getCurrentPlayerId() == pe_blue)&&(!this.isSpectator ))
+        {
+            this.addFlecheModal();
         }
         
 
@@ -546,9 +557,72 @@ updateLayout: function () {
 
         removePlayersModal: function()
         {
-
+            document.querySelectorAll('.modal_player').forEach(el => el.remove());
             var parent = document.getElementById("modal_players_container");
-            parent.remove(); 
+            parent.classList.add("hidden");
+            
+            var round = document.getElementById("round");
+            round.classList.remove("index");
+            
+            
+        },
+
+        addFlecheModal: function()
+        {
+            var parent = document.getElementById("modal_fleches");
+
+            const container_fleche1 = document.createElement("div");
+            container_fleche1.id = 'container_fleche_1'; 
+            container_fleche1.classList.add('container_fleche');
+            parent.appendChild(container_fleche1);
+
+            const container_fleche2 = document.createElement("div");
+            container_fleche2.id = 'container_fleche_2'; 
+            container_fleche2.classList.add('container_fleche');
+            parent.appendChild(container_fleche2);
+
+            
+            const fleche1 = document.createElement("div");
+            fleche1.id = 'fleche1'; 
+            fleche1.classList.add('fleche1');
+            container_fleche1.appendChild(fleche1);
+
+            const fleche2 = document.createElement("div");
+            fleche2.id = 'fleche2'; 
+            fleche2.classList.add('fleche2');
+            container_fleche2.appendChild(fleche2);
+
+            var text1 = _('Next Player');
+            var text2 = _('Previous Player');
+
+            const texte_fleche1 = document.createElement("div");
+            texte_fleche1.id = 'text_fleche1'; 
+            texte_fleche1.classList.add('texte_fleche');
+            texte_fleche1.innerHTML = text1;
+            container_fleche1.appendChild(texte_fleche1);
+
+            const texte_fleche2 = document.createElement("div");
+            texte_fleche2.id = 'text_fleche2'; 
+            texte_fleche2.classList.add('texte_fleche');
+            texte_fleche2.innerHTML = text2;
+            container_fleche2.appendChild(texte_fleche2);
+                    
+           
+            var modal_fleches_container = document.getElementById("modal_fleches_container");
+            modal_fleches_container.classList.remove("hidden");
+            var round = document.getElementById("round");
+            round.classList.add("index");
+
+
+            dojo.query(".container_fleche").connect('onclick', this, 'onSelect' )
+            
+        },
+
+        removeFlecheModal: function()
+        {
+            document.querySelectorAll('.container_fleche').forEach(el => el.remove());
+            var parent = document.getElementById("modal_fleches_container");
+            parent.classList.add("hidden");
             
             var round = document.getElementById("round");
             round.classList.remove("index");
@@ -1013,6 +1087,8 @@ setupQuestModal: function(data)
             dojo.subscribe( 'removeCards', this, "notif_removeCards" );
             dojo.subscribe( 'showPlayersModal', this, "notif_showPlayersModal" );
             dojo.subscribe( 'removePlayersModal', this, "notif_removePlayersModal" );
+            dojo.subscribe( 'showFlecheModal', this, "notif_showFlecheModal" );
+            dojo.subscribe( 'removeFlecheModal', this, "notif_removeFlecheModal" );
 
             
 
@@ -1087,6 +1163,8 @@ setupQuestModal: function(data)
                 const card_type = this.getStockCardType(card);
                 this.handStock.addToStockWithId(card_type, card.id, undefined);
             });
+
+            dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
         },
 
 
@@ -1130,6 +1208,15 @@ setupQuestModal: function(data)
         notif_removePlayersModal: function(notif) {
             this.removePlayersModal();
         },
+
+        notif_showFlecheModal: function(notif) {
+            this.addFlecheModal();
+        },
+
+        notif_removeFlecheModal: function(notif) {
+            this.removeFlecheModal();
+        },
+
 
 
         

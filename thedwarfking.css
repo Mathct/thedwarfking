@@ -447,6 +447,87 @@ body {
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
 }
 
+/* ROTATION FLECHES */
+
+#modal_fleches_container{
+  width: 100%;
+  height: calc(100% + 100px);
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 200px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  border-radius: 10px;
+}
+
+#modal_fleches{
+  width: auto;
+  max-width: 80%;
+  height: auto;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius:20px;
+  background-color: #c7a5a5;
+  border: 2px solid white;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20px 20px;
+  position: relative;
+  gap: 20px;
+}
+
+.container_fleche{
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+    
+}
+
+
+.fleche1{
+  width: 110px;
+  height: 100px;
+  background-image: url('img/fleche.png');
+  background-size: 200% 100%;
+  background-position-x: 0%;
+}
+
+.fleche2{
+  width: 110px;
+  height: 100px;
+  background-image: url('img/fleche.png');
+  background-size: 200% 100%;
+  background-position-x: -100%;
+}
+
+.container_fleche:hover {
+  background-color: #73252544;
+  border-radius: 8px;
+}
+
+.container_fleche.selectable{
+  border: 2px solid white;
+  outline: none; 
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
+  border-radius: 8px;
+}
+
+.texte_fleche {
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  color: white;
+  width: 70%;
+  text-align: center;
+}
+
+
 
 
 
