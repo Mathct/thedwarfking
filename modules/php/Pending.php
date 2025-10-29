@@ -1459,7 +1459,12 @@ class Pending extends APP_GameClass
         $ret["selectablemulti"] = array();
         $ret['buttons'] = array();
         $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
-        $ret['titleyou'] = clienttranslate('${you} must choose 2 cards to pass to the other player');
+        
+        $nextplayer_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$parg1}");
+        $nextplayer_color = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$parg1}");
+        $ret['opponent'] = '<span style="color: #' . $nextplayer_color . ';">' . $nextplayer_name . '</span>';
+
+        $ret['titleyou'] = clienttranslate('${you} must choose 2 cards to pass to #opponent#');
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
         
@@ -1510,6 +1515,22 @@ class Pending extends APP_GameClass
 
                     'cards' => $cards,
 
+                )
+            );
+
+        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} returns  2 cards to ${opponent}'),
+                array(
+                    'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                        'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                    ],
+
+                    'player_name' => $this->player_name,
+                    
                 )
             );
         
