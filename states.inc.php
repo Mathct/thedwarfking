@@ -78,7 +78,7 @@ $machinestates = [
         "descriptionmyturn" => clienttranslate('${you} must take an action'),
         "type" => "activeplayer",
         "args" => "argPlayerTurn",
-        "possibleactions" => array( "actSelect", "actButton"),
+        "possibleactions" => array( "actSelect", "actButton", "actValidateMulti"),
         "transitions" => array( "next" => 2, "zombiePass" => 2, "end" => 99)
     ), 
 

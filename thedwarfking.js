@@ -134,6 +134,18 @@ function (dojo, declare) {
                     }
                 }
 
+                if (this.args.selectablemulti) {
+                    
+                    for( var sid in this.args.selectablemulti)
+                    {
+                        if(this.isCurrentPlayerActive())
+                        {
+                            dojo.query("#"+this.args.selectablemulti[sid]).addClass("selectablemulti");
+                        }
+                    }
+   
+                }
+
           
 
                 if( this.isCurrentPlayerActive() )
@@ -172,6 +184,8 @@ function (dojo, declare) {
 
             dojo.query(".selectable").removeClass("selectable");
             dojo.query(".selected").removeClass("selected");
+            dojo.query(".selectablemulti").removeClass("selectablemulti");
+            dojo.query(".selectedmulti").removeClass("selectedmulti");
             
             switch( stateName )
             {
@@ -219,6 +233,12 @@ function (dojo, declare) {
                                 if(args.buttons[nb] == "no") 
                                 {
                                 this.addActionButton( 'no', _("No") ,'onOpButton', null, null, 'red' );
+                                }
+                                if(args.buttons[nb] == "validatemulti")
+                                {
+                                    this.addActionButton( 'validatemulti', _("Validate selection") ,'onOpValidateMulti', null, null, 'blue' );
+                                    dojo.addClass( 'validatemulti', 'disabled');
+                                            
                                 }
                             }
                                       
@@ -386,23 +406,80 @@ updateLayout: function () {
 //                        |___/                                                
 /////////////////////////////////////////////////////////////////////////////////  
         
-                
+        stopEvent:function (evt) {
+            if (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+        },
+                        
         onSelect: function(evt)
         {        	 
             // Preventing default browser reaction
              dojo.stopEvent( evt );
 
-            
-             
-            if( !this.isCurrentPlayerActive() || !(evt.currentTarget.classList.contains('selectable')) )
-            {   
-                return; 
-            }
-            
-            if(this.isCurrentPlayerActive() && evt.currentTarget.classList.contains('selectable'))
+            if(this.isCurrentPlayerActive())
             {
+                if(evt.currentTarget.classList.contains('selectable'))
+                {                    
+                        this.bgaPerformAction('actSelect', { arg1: evt.currentTarget.id });
+                }
+
+                else if(evt.currentTarget.classList.contains('selectablemulti'))
+                {
+                    const elementId = "#" + evt.currentTarget.id;
+
+                    dojo.query(elementId).removeClass("selectablemulti");
+                    setTimeout(function() {
+                    dojo.query(elementId).addClass("selectedmulti");
+                    }, 10);
+
+                    setTimeout(function() {
+                    var elements = document.querySelectorAll('.selectedmulti');
+                    var nombreElements = elements.length;
+                    var boutonvalidate = document.getElementById('validatemulti');
+                    if (boutonvalidate !== null)
+                    {
+                        if(nombreElements==2)
+                        {
+                            dojo.removeClass( 'validatemulti', 'disabled');
+                        }
+                        else
+                        {
+                            dojo.addClass( 'validatemulti', 'disabled');
+                        }
+                    }
+                    }, 50);
+
+                }
+
+                else if(evt.currentTarget.classList.contains('selectedmulti')) 
+                {
+                    const elementId = "#" + evt.currentTarget.id;
+
+                    dojo.query(elementId).removeClass("selectedmulti");
+                    setTimeout(function() {
+                    dojo.query(elementId).addClass("selectablemulti");
+                    }, 10);
                 
-                this.bgaPerformAction('actSelect', { arg1: evt.currentTarget.id });
+                    setTimeout(function() {
+                    var elements = document.querySelectorAll('.selectedmulti');
+                    var nombreElements = elements.length;
+                    var boutonvalidate = document.getElementById('validatemulti');
+                    if (boutonvalidate !== null)
+                    {
+                        if(nombreElements==2)
+                        {
+                            dojo.removeClass( 'validatemulti', 'disabled');
+                        }
+                        else
+                        {
+                            dojo.addClass( 'validatemulti', 'disabled');
+                        }
+                    }
+                    }, 50);
+                   
+                }
             }
 
         },
@@ -487,6 +564,12 @@ updateLayout: function () {
         if((this.getCurrentPlayerId() == druide)&&(!this.isSpectator ))
         {
             this.addPlayersModal(this.players, druide);
+        }
+
+        var pe_rouge = this.gamedatas.pe_rouge_player;
+        if((this.getCurrentPlayerId() == pe_rouge)&&(!this.isSpectator ))
+        {
+            this.addPlayersModal(this.players, pe_rouge);
         }
 
         var pe_blue = this.gamedatas.pe_blue_player;
@@ -1062,6 +1145,32 @@ setupQuestModal: function(data)
 
 
 },
+
+onOpValidateMulti: function(evt) {
+
+    // Preventing default browser reaction
+    this.stopEvent( evt );
+
+    
+
+     // Sélectionnez tous les éléments avec la classe spécifiée
+     const elementsAvecClasse = document.querySelectorAll(".selectedmulti");
+
+     // Convertissez la NodeList en un tableau et extrayez les IDs
+     const ids = Array.from(elementsAvecClasse, element => element.id);
+
+     let result = "";
+
+     ids.forEach(function(id) {
+        const parts = id.split("_"); // Split l'ID avec '_'
+        result += (result ? "_" : "") + parts[parts.length - 1]; // Ajoute _ sauf pour le premier élément
+    
+    });
+
+     
+    this.bgaPerformAction('actValidateMulti', { arg1: result});
+    
+},
         
 ///////////////////////////////////////////////////////////////////////////////// 
 //       _   _       _   _  __ _           _   _                 
@@ -1162,9 +1271,10 @@ setupQuestModal: function(data)
             Object.values(notif.args.cards).forEach(card => {
                 const card_type = this.getStockCardType(card);
                 this.handStock.addToStockWithId(card_type, card.id, undefined);
+                dojo.query("#my_cards_item_"+card.id).connect('onclick', this, 'onSelect' )
             });
 
-            dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
+            
         },
 
 
@@ -1192,7 +1302,7 @@ setupQuestModal: function(data)
             croix.classList.add('hidden');
 
             dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
-            dojo.query(".stockitem").connect('onclick', this, 'onSelect' )
+            
  
         },
 

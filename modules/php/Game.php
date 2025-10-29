@@ -55,6 +55,8 @@ class Game extends \Table
             "druide_active" => 21,
             "pe_bleu_player" => 22,
             "pe_bleu_active" => 23,
+            "pe_rouge_player" => 24,
+            "pe_rouge_active" => 25,
            
         ]);  
         
@@ -130,6 +132,8 @@ class Game extends \Table
         $this->setGameStateInitialValue("druide_active", 0);
         $this->setGameStateInitialValue("pe_bleu_player", 0);
         $this->setGameStateInitialValue("pe_bleu_active", 0);
+        $this->setGameStateInitialValue("pe_rouge_player", 0);
+        $this->setGameStateInitialValue("pe_rouge_active", 0);
 
 
         // STATS
@@ -177,7 +181,7 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        //$rand = 10;
+        $rand = 14;
 
 
         if($rand>=1 && $rand<=5)
@@ -348,6 +352,9 @@ protected function getAllDatas()
 
     //pe_bleu
     $result['pe_blue_player'] = $this->getGameStateValue('pe_bleu_active');
+
+    //pe_rouge
+    $result['pe_rouge_player'] = $this->getGameStateValue('pe_rouge_active');
 
 
     return $result;
@@ -1101,6 +1108,14 @@ function getLogPv()
         self::DbQuery("delete from pending where id=".$pending['id']);
         $this->gamestate->nextState( 'next');
         
+    }
+
+    public function actValidateMulti(string $arg1)
+    {
+        $pending =  self::getObjectFromDB("SELECT* FROM pending order by id desc limit 1");
+        $this->callPending($pending, true, $arg1);
+        self::DbQuery("delete from pending where id=" . $pending['id']);
+        $this->gamestate->nextState('next');
     }
 
 ///////////////////////////////////////////////////////////////////////////////// 

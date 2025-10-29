@@ -141,6 +141,15 @@ class Pending extends APP_GameClass
 
                 )
             );
+
+
+        // PE_ROUGE
+        $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
+        if($player_pe_rouge != null)
+        {
+            game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
+            game::$instance->addPending($player_pe_rouge, "PeRed");
+        }
         
         
     }
@@ -889,6 +898,8 @@ class Pending extends APP_GameClass
 
     function EndGame($parg1, $parg2, $varg1, $varg2)
     {
+        game::$instance->notifyAllPlayers( 'simplePause', '', [ 'time' => 1000] ); 
+
         game::$instance->gamestate->nextState('end');
     }
 
@@ -1097,7 +1108,6 @@ class Pending extends APP_GameClass
 
         $ret["selectable"][] = 'container_fleche_1';
         $ret["selectable"][] = 'container_fleche_2';
-        $ret['buttons'][] = 'cancel';
         
         return $ret;
     }
@@ -1263,6 +1273,246 @@ class Pending extends APP_GameClass
         game::$instance->setGameStateValue("pe_bleu_active", 0);
         
 
+    }
+
+
+
+    ////////////////////////// PE ROUGE /////////////////////
+
+    function argPeRed($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('');
+        $ret['titleyou'] = clienttranslate('');
+
+        
+        return $ret;
+    }
+
+    function PeRed($parg1, $parg2, $varg1, $varg2)
+    {
+        game::$instance->setGameStateValue("pe_rouge_active", $this->player_id);
+
+        $players = self::getObjectListFromDB( "SELECT player_id id, player_name name, player_color color FROM player WHERE player_id != '{$this->player_id}'" );
+        $player = $this->player_id;
+
+
+        game::$instance->notifyPlayer(
+                $player,
+                'showPlayersModal',
+                '',
+                array(
+
+                   'players'=> $players,
+                   'player' => $player, 
+
+                )
+        );
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} has ${log} and must exchange 2 cards with another player'),
+                array(
+                    'player_name' => $this->player_name,
+                    'log' => game::$instance->getLogIcon('3_11'),
+
+                )
+            );
+
+
+        game::$instance->addPending($this->player_id, "PeRedStep2");
+    }
+
+
+    function argPeRedStep2($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must must exchange 2 cards with another player');
+        $ret['titleyou'] = clienttranslate('${you} must choose a player from whom to take 2 cards');
+
+        $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+        foreach($players as $player)
+        {
+            if( $player != $this->player_id)
+            {
+                $ret["selectable"][] = 'modal_player_'. $player;
+            }
+        }
+
+        return $ret;
+    }
+
+    function PeRedStep2($parg1, $parg2, $varg1, $varg2)
+    {
+        $max_cards = 0;
+        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+        if($nbreplayers == 3)
+        {
+            $max_cards = 13;
+        }
+        if($nbreplayers == 4)
+        {
+            $max_cards = 10;
+        }
+        if($nbreplayers == 5)
+        {
+            $max_cards = 8;
+        }
+        
+        $rand1 = bga_rand(1, $max_cards);
+        $rand2 = bga_rand(1, $max_cards);
+
+        while($rand2 == $rand1)
+        {
+            $rand2 = bga_rand(1, $max_cards);
+        }
+
+
+        $explode = explode('_', $varg1);
+        $nextplayer = $explode[2];
+        $player = $this->player_id;
+
+        $cards = [];
+
+        $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
+        $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+        
+        $cards[] = $cards_before[$cards_id_before[$rand1-1]];
+        $cards[] = $cards_before[$cards_id_before[$rand2-1]];
+
+        game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
+        game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+
+
+       
+        game::$instance->notifyPlayer(
+                $nextplayer,
+                'removeCards',
+                '',
+                array(
+
+                    'cards' => $cards,
+
+                )
+        );
+
+        game::$instance->notifyPlayer(
+                $player,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards,
+
+                )
+            );
+
+        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+        game::$instance->notifyAllPlayers(
+                'message',
+                clienttranslate('${player_name} takes 2 cards from ${opponent}\'s hand'),
+                array(
+                    'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                        'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                    ],
+
+                    'player_name' => $this->player_name,
+                    
+                )
+            );
+
+        game::$instance->notifyPlayer(
+                $player,
+                'removePlayersModal',
+                '',
+                array(
+
+                    
+
+                )
+        ); 
+
+        
+        // INIT PE ROUGE
+        game::$instance->setGameStateValue("pe_rouge_player", 0);
+        game::$instance->setGameStateValue("pe_rouge_active", 0);
+
+        game::$instance->addPending($this->player_id, "PeRedStep3", $nextplayer);
+
+    }
+
+
+    function argPeRedStep3($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret["selectablemulti"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
+        $ret['titleyou'] = clienttranslate('${you} must choose 2 cards to pass to the other player');
+
+        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+        
+        foreach ($all_cards as $card) 
+        {
+            $ret["selectablemulti"][] = 'my_cards_item_' . $card['id'];
+
+        }
+
+        $ret['buttons'][] = 'validatemulti';
+
+        return $ret;
+    }
+
+    function PeRedStep3($parg1, $parg2, $varg1, $varg2)
+    {
+
+        $explode = explode('_', $varg1);
+        $player = $this->player_id;
+        $nextplayer = $parg1;
+
+        $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
+        $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
+        
+        $cards = [];
+        $cards[] = $cards_before1[$explode[0]];
+        $cards[] = $cards_before2[$explode[1]];
+
+        game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
+        game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
+
+        game::$instance->notifyPlayer(
+                $player,
+                'removeCards',
+                '',
+                array(
+
+                    'cards' => $cards,
+
+                )
+        );
+
+        game::$instance->notifyPlayer(
+                $nextplayer,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards,
+
+                )
+            );
+        
     }
     
     
