@@ -82,6 +82,39 @@ $machinestates = [
         "transitions" => array( "next" => 2, "zombiePass" => 2, "end" => 99)
     ), 
 
+    /*4 => [
+        "name" => "playerTurnMultiSorcier",
+        "description" => (''),
+        "descriptionmyturn" => (''),
+        "type" => "multipleactiveplayer",
+        "action" => "stplayerTurnMultiSorcier",
+        "initialprivate" => 50,
+        "transitions" => ["same" => 4, "zombiePass" => 4, "end" => 99]
+    ],
+
+    50 => [
+        "name" => "playerMultiRedirection",
+        "descriptionmyturn" => (''),
+        "type" => "private",
+        "transitions" => ["sorcier" => 51, "other" => 52, "zombiePass" => 4]
+    ],
+
+    51 => [
+        "name" => "playerSorcier",
+        "descriptionmyturn" => clienttranslate('${you} must sorcier'),
+        "type" => "private",
+        "args" => "argSorcier",
+        "possibleactions" => ["actSelectSorcier"],
+        "transitions" => ["zombiePass" => 4]
+    ],
+
+    52 => [
+        "name" => "playerOther",
+        "descriptionmyturn" => clienttranslate('${you} other'),
+        "type" => "private",
+        "transitions" => ["zombiePass" => 4]
+    ],*/
+
     // Final state.
     // Please do not modify (and do not overload action/args methods).
     99 => [

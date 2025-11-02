@@ -416,6 +416,7 @@ body {
   border: 2px solid white;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   padding: 20px 20px;
   position: relative;
   gap: 20px;
@@ -489,6 +490,7 @@ body {
   border: 2px solid white;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   padding: 20px 20px;
   position: relative;
   gap: 20px;
@@ -539,6 +541,50 @@ body {
   color: white;
   width: 70%;
   text-align: center;
+}
+
+
+/* MODAL PREVIOUS TRICK */
+
+#modal_previoustrick_container{
+  width: 100%;
+  height: calc(100% + 100px);
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 160px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  border-radius: 10px;
+}
+
+#modal_previoustrick{
+  width: auto;
+  max-width: 80%;
+  height: auto;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius:20px;
+  background-color: #c7a5a5;
+  border: 2px solid white;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 20px 20px;
+  position: relative;
+  gap: 20px;
+}
+
+.previous_card {
+    width: 150px;
+    height: 236px;
+    background-image: url('img/cards.jpg');
+    background-size: 1600% 400%;
+    box-shadow: 1px 2px 1px 1px rgba(0, 0, 0, 0.44);
+    border-radius: 5%;
 }
 
 

@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS `cards` (
 --  `card`
 --   `card_id` 
 --   `card_type`         1= green     2= blue   3= red    4=special
---   `card_type_arg`     2,3,4,5,6,7,8,9,10,12(J),13(Q),14(K),15(A) (le 1 et 11 sont des cartes speciales), 101 jusqu'à 114 pour les cartes speciales
+--   `card_type_arg`     1,2,3,4,5,6,7,8,9,10,11,12(J),13(Q),14(K),15(A)
+--   `card_type_arg_2`     0,1,2 (1 ou 2 pour card_type_arg = 11)
 --   `card_location`     deck, id joueur (hand), board ou discard
 --   `card_location_arg` non utilisé
 
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS `tricks` (
   `round` int(11) NOT NULL,
   `trick` int(11) NOT NULL,
   `player_id` int(11) NOT NULL,
+  `player_win` int(11) NOT NULL,
   `card_id` int(11) NOT NULL,
   `type` int(11) NOT NULL,
   `type_arg` int(11) NOT NULL,
@@ -98,6 +100,15 @@ CREATE TABLE IF NOT EXISTS `bonus` (
   `round` int(11) NOT NULL,
   `player_id` int(11) NOT NULL,
   `bonus` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `scores` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `round` int(11) NOT NULL,
+  `player_id` int(11) NOT NULL,
+  `score` int(11) NOT NULL,
+  `enchanteur` int(11) unsigned DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

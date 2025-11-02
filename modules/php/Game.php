@@ -57,6 +57,8 @@ class Game extends \Table
             "pe_bleu_active" => 23,
             "pe_rouge_player" => 24,
             "pe_rouge_active" => 25,
+            "sorcier_player" => 26,
+            "sorcier_active" => 27,
            
         ]);  
         
@@ -134,7 +136,8 @@ class Game extends \Table
         $this->setGameStateInitialValue("pe_bleu_active", 0);
         $this->setGameStateInitialValue("pe_rouge_player", 0);
         $this->setGameStateInitialValue("pe_rouge_active", 0);
-
+        $this->setGameStateInitialValue("sorcier_player", 0);
+        $this->setGameStateInitialValue("sorcier_active", 0);
 
         // STATS
         
@@ -181,7 +184,7 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        $rand = 14;
+        $rand = 4;
 
 
         if($rand>=1 && $rand<=5)
@@ -330,8 +333,12 @@ protected function getAllDatas()
 
     // TODO: Gather all information about current game situation (visible by player $current_player_id).
 
-    $result['no_round'] = $this->getGameStateValue('no_round');
-    $result['no_trick'] = $this->getGameStateValue('no_trick');
+    $round = $this->getGameStateValue('no_round');
+    $trick = $this->getGameStateValue('no_trick');
+    $previous_trick = $trick - 1;
+
+    $result['no_round'] = $round;
+    $result['no_trick'] = $trick;
     $result['first_player_play'] = $this->getGameStateValue('first_player_play');
     $result['my_hand'] = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$current_player_id}'" );
     $result['table'] = $this->getCardsOnTableOrdered();
@@ -342,10 +349,8 @@ protected function getAllDatas()
     $result['momie_id'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
     $result['momie_id_table'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'");
     $result['momie_player'] = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
-    $round = $this->getGameStateValue('no_round');
-    $last_trick = $this->getGameStateValue('no_trick') - 1;
-    $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
-    $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+    $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$previous_trick}' AND card_win = 1");
+    $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$previous_trick}' AND card_win = 1");
 
     //druide
     $result['druide_player'] = $this->getGameStateValue('druide_active');
@@ -355,6 +360,10 @@ protected function getAllDatas()
 
     //pe_rouge
     $result['pe_rouge_player'] = $this->getGameStateValue('pe_rouge_active');
+
+    //sorcier
+    $result['sorcier_player'] = $this->getGameStateValue('sorcier_active');
+    $result['previous_trick_cards'] = self::getCollectionFromDB( "SELECT card_id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM tricks WHERE round ='{$round}' AND trick='{$previous_trick}'" );
 
 
     return $result;
@@ -469,7 +478,7 @@ function winnerOfTurn()
         $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
         
         // VARIABLES
-        $escalibur = 0;
+        $excalibur = 0;
         $pe_green = 0;
         $bouffon = 0;
         $enchanteur = 0;
@@ -535,11 +544,11 @@ function winnerOfTurn()
             foreach ($cards_played as $card) 
             {
 
-                //ESCALIBUR (4 5 0)
+                //EXCALIBUR (4 5 0)
                 if ($card['type'] == 4 && $card['type_arg'] == 5)
                 {
                     $player_win = $card['location_arg'];
-                    $escalibur = 1;
+                    $excalibur = 1;
                     break;
                 }
 
@@ -644,7 +653,7 @@ function winnerOfTurn()
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
-        if($escalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
+        if($excalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
@@ -656,7 +665,7 @@ function winnerOfTurn()
             );
         }
 
-        if($escalibur == 1)
+        if($excalibur == 1)
         {
             game::$instance->notifyAllPlayers(
                     'endTurn',
@@ -1138,6 +1147,23 @@ function getLogPv()
         return $arg;
     }
 
+    // public function argSorcier($player)
+    // {
+    //     $args = array();
+
+    //     // $args["selectable"][$player] = array();
+
+    //     // $round = $this->getGameStateValue("round_max_bid");
+
+    //     // for ($i = 0; $i <= $round; $i++) {
+    //     //     $args["selectable"][$player][] = 'bid_' . $i;
+    //     // }
+
+
+
+    //     return $args;
+    // }
+
 
 ///////////////////////////////////////////////////////////////////////////////// 
 //      _____                            _        _                    _   _                 
@@ -1214,6 +1240,28 @@ public function stPending() {
    }
    
 }
+
+// public function stplayerTurnMultiSorcier()
+// {
+//     game::$instance->gamestate->setAllPlayersMultiactive();
+//     game::$instance->gamestate->initializePrivateStateForAllActivePlayers();
+
+//     $player_sorcier = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4 AND card_location = 'hand'");
+
+//     $players = self::getObjectListFromDB("SELECT player_id FROM player", true);
+
+    
+//     foreach ($players as $player_id) {
+
+//         if ($player_id == $player_sorcier) {
+//             $this->gamestate->nextPrivateState($player_id, "sorcier");
+//         } else {
+//             $this->gamestate->nextPrivateState($player_id, "other");
+//         }
+//     }
+// }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////// 
 //     _____  ____                                    _      

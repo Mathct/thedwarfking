@@ -496,6 +496,37 @@ updateLayout: function () {
 
         },
 
+        onOpValidateMulti: function(evt) {
+
+            // Preventing default browser reaction
+            this.stopEvent( evt );
+
+            
+
+            // Sélectionnez tous les éléments avec la classe spécifiée
+            const elementsAvecClasse = document.querySelectorAll(".selectedmulti");
+
+            // Convertissez la NodeList en un tableau et extrayez les IDs
+            const ids = Array.from(elementsAvecClasse, element => element.id);
+
+            let result = "";
+
+            ids.forEach(function(id) {
+                const parts = id.split("_"); // Split l'ID avec '_'
+                result += (result ? "_" : "") + parts[parts.length - 1]; // Ajoute _ sauf pour le premier élément
+            
+            });
+
+            
+            this.bgaPerformAction('actValidateMulti', { arg1: result});
+            
+        },
+
+
+        /////////////  BOARD, CARDS AND MODALS ///////////
+
+        /// BOARD
+
         setupBoard: function () {
         console.log('Setting up the board');
 
@@ -534,6 +565,11 @@ updateLayout: function () {
 
                     <div id="modal_fleches_container" class="hidden">
                         <div id="modal_fleches">
+                        </div>
+                    </div>
+
+                    <div id="modal_previoustrick_container" class="hidden">
+                        <div id="modal_previoustrick">
                         </div>
                     </div>
                         
@@ -577,6 +613,12 @@ updateLayout: function () {
         {
             this.addFlecheModal();
         }
+
+        var sorcier = this.gamedatas.sorcier_player;
+        if((this.getCurrentPlayerId() == sorcier)&&(!this.isSpectator ))
+        {
+            this.addPreviousTrickModal(this.gamedatas.previous_trick_cards);
+        }
         
 
         if(this.isSpectator ) {
@@ -592,6 +634,8 @@ updateLayout: function () {
         this.setupStocks();
 
         },
+
+        /// PLAYERS MODAL
 
         addPlayersModal: function(players, player_play)
         {
@@ -649,6 +693,8 @@ updateLayout: function () {
             
             
         },
+
+        /// FLECHES MODAL
 
         addFlecheModal: function()
         {
@@ -712,25 +758,65 @@ updateLayout: function () {
             
             
         },
-        
-        addEventListenerModal: function() {
-            var modal_round_container = document.getElementById("modal_round_container");
-            var croix = document.getElementById("croix");
-            var btn = document.getElementById("btn_round");
 
-            // On stocke les handlers dans this pour pouvoir les enlever après
-            this._croixHandler = () => {
-                modal_round_container.classList.add("hidden");
-            };
 
-            this._btnHandler = () => {
-                modal_round_container.classList.toggle("hidden");
-            };
+        /// PREVIOUS TRICK MODAL
 
-            croix.addEventListener("click", this._croixHandler);
-            btn.addEventListener("click", this._btnHandler);
+        addPreviousTrickModal: function(cards)
+        {
+            var parent = document.getElementById("modal_previoustrick");
+                        
+            Object.values(cards).forEach((card) => {
+                
+                var type = card.type;
+                var type_arg = card.type_arg;
+                
+                var variableY = (type-1)*(-100);
+
+                if(type_arg <= 10)
+                {
+                    var variableX = (type_arg-1)*(-100);
+                }
+                if(type_arg >= 12)
+                {
+                    var variableX = (type_arg)*(-100);
+                }
+
+                var previous_card = document.createElement("div");
+                previous_card.id = 'previous_card_'+card.id; 
+                previous_card.classList.add('previous_card');
+                previous_card.style.backgroundPositionX = variableX + '%';
+                previous_card.style.backgroundPositionY = variableY + '%';
+                parent.appendChild(previous_card);
+
+                
+            });
+
+            var modal_previoustrick_container = document.getElementById("modal_previoustrick_container");
+            modal_previoustrick_container.classList.remove("hidden");
+            var round = document.getElementById("round");
+            round.classList.add("index");
+
+
+            dojo.query(".previous_card").connect('onclick', this, 'onSelect' )
+            
         },
 
+        removePreviousTrick: function()
+        {
+            document.querySelectorAll('.previous_card').forEach(el => el.remove());
+            var parent = document.getElementById("modal_previoustrick_container");
+            parent.classList.add("hidden");
+            
+            var round = document.getElementById("round");
+            round.classList.remove("index");
+            
+            
+        },
+
+
+        
+        // CARDS AND STOCKS AND INFOS MOMIE
      
         createStockForCards: function(page, element)
         {
@@ -895,282 +981,277 @@ updateLayout: function () {
     
     
 
-},
+    },
 
 
-addMomie: function(trick, momie_id, momie_player, type_last_card_win, typearg_last_card_win)
-{
-    var momie_last = document.getElementById('last_card_momie');
-    if(momie_last)
+    addMomie: function(trick, momie_id, momie_player, type_last_card_win, typearg_last_card_win)
     {
-        momie_last.remove();
-    }
-    
-    if(trick >= 2 && momie_id != null && momie_player == this.getCurrentPlayerId())
-    {
-    
-        var momie = document.getElementById('my_cards_item_' + momie_id);
-        var type = type_last_card_win;
-        var type_arg = typearg_last_card_win;
-
-        if(type == 1)
+        var momie_last = document.getElementById('last_card_momie');
+        if(momie_last)
         {
-            var variableY = 0;
-            var color = 'vert';
+            momie_last.remove();
         }
-
-        if(type == 2)
-        {
-            var variableY = -100;
-            var color = 'bleu';
-        }
-
-        if(type == 3)
-        {
-            var variableY = -200;
-            var color = 'rouge';
-        }
-
-        if(type == 4)
-        {
-            var variableY = -300;
-        }
-
-        var variableX = (type_arg-1)*(-100);
-
-        const newDiv = document.createElement('div');
-        newDiv.id = 'last_card_momie';
-        newDiv.classList.add('last_card_momie', color);
-        newDiv.style.backgroundPositionX = variableX + '%';
-        newDiv.style.backgroundPositionY = variableY + '%';
-        momie.appendChild(newDiv);
-
-
-    }
-    
-},
-
-
-addMomieTable: function(momie_id, type_last_card_win, typearg_last_card_win)
-{
-    var momie_last = document.getElementById('last_card_momie');
-    if(momie_last)
-    {
-        momie_last.remove();
-    }
-    
         
-        var momie = document.getElementById('table_cards_item_' + momie_id);
-        var type = type_last_card_win;
-        var type_arg = typearg_last_card_win;
-
-        if(type == 1)
+        if(trick >= 2 && momie_id != null && momie_player == this.getCurrentPlayerId())
         {
-            var variableY = 0;
-            var color = 'vert';
-        }
-
-        if(type == 2)
-        {
-            var variableY = -100;
-            var color = 'bleu';
-        }
-
-        if(type == 3)
-        {
-            var variableY = -200;
-            var color = 'rouge';
-        }
-
-        if(type == 4)
-        {
-            var variableY = -300;
-        }
-
-        var variableX = (type_arg-1)*(-100);
-
-        const newDiv = document.createElement('div');
-        newDiv.id = 'last_card_momie';
-        newDiv.classList.add('last_card_momie', color);
-        newDiv.style.backgroundPositionX = variableX + '%';
-        newDiv.style.backgroundPositionY = variableY + '%';
-        momie.appendChild(newDiv);
-
-
-    
-    
-},
-
-setupSpecialModal: function(data)
-{
-    /* SPECIAL CARD*/
-    const parent = document.getElementById("modal_section_1");
-
-    var type = data[0].type;
-    var type_arg = data[0].type_arg;
-    var type_arg_2 = data[0].type_arg_2;
-
-    if(type == 4)
-    {
-        var variableX = (type_arg - 1)*(-100);
-        var variableY = 0;
-    }
-
-    if(type == 1)
-    {
-        if(type_arg == 1)
-        {
-            var variableX = -500;
-            var variableY = 0;
-
-        }
-        if((type_arg == 11)&&(type_arg_2 == 1))
-        {
-            var variableX = -600;
-            var variableY = 0;
-            
-        }
-        if((type_arg == 11)&&(type_arg_2 == 2))
-        {
-            var variableX = 0;
-            var variableY = -100;
-            
-        }       
         
-    }
+            var momie = document.getElementById('my_cards_item_' + momie_id);
+            var type = type_last_card_win;
+            var type_arg = typearg_last_card_win;
 
-    if(type == 2)
-    {
-        if(type_arg == 1)
-        {
-            var variableX = -100;
-            var variableY = -100;
+            if(type == 1)
+            {
+                var variableY = 0;
+                var color = 'vert';
+            }
+
+            if(type == 2)
+            {
+                var variableY = -100;
+                var color = 'bleu';
+            }
+
+            if(type == 3)
+            {
+                var variableY = -200;
+                var color = 'rouge';
+            }
+
+            if(type == 4)
+            {
+                var variableY = -300;
+            }
+
+            var variableX = (type_arg-1)*(-100);
+
+            const newDiv = document.createElement('div');
+            newDiv.id = 'last_card_momie';
+            newDiv.classList.add('last_card_momie', color);
+            newDiv.style.backgroundPositionX = variableX + '%';
+            newDiv.style.backgroundPositionY = variableY + '%';
+            momie.appendChild(newDiv);
+
 
         }
-        if((type_arg == 11)&&(type_arg_2 == 1))
-        {
-            var variableX = -200;
-            var variableY = -100;
-            
-        }
-        if((type_arg == 11)&&(type_arg_2 == 2))
-        {
-            var variableX = -300;
-            var variableY = -100;
-            
-        } 
-    
-    }
-
-    if(type == 3)
-    {
-        if(type_arg == 1)
-        {
-            var variableX = -400;
-            var variableY = -100;
-
-        }
-        if((type_arg == 11)&&(type_arg_2 == 1))
-        {
-            var variableX = -500;
-            var variableY = -100;
-            
-        }
-        if((type_arg == 11)&&(type_arg_2 == 2))
-        {
-            var variableX = -600;
-            var variableY = -100;
-            
-        } 
         
-    }
-
-    const enfantspecialcard = document.createElement("div");
-    enfantspecialcard.id = "specialcardmodal";
-    enfantspecialcard.className = "specialcardmodal";
-    enfantspecialcard.style.backgroundPositionX = variableX + "%";
-    enfantspecialcard.style.backgroundPositionY = variableY + "%";
-
-    parent.appendChild(enfantspecialcard);
+    },
 
 
-},
-
-
-setupQuestModal: function(data)
-{
-    /* QUEST CARD */
-
-    var type = data[0].rand;
-    var validate = data[0].validate;
-
-    if(type >=1 && type <=10)
+    addMomieTable: function(momie_id, type_last_card_win, typearg_last_card_win)
     {
+        var momie_last = document.getElementById('last_card_momie');
+        if(momie_last)
+        {
+            momie_last.remove();
+        }
+        
+            
+            var momie = document.getElementById('table_cards_item_' + momie_id);
+            var type = type_last_card_win;
+            var type_arg = typearg_last_card_win;
 
-        var variableX = -100*(Number(type) - 1);
-        var variableY = 0;
+            if(type == 1)
+            {
+                var variableY = 0;
+                var color = 'vert';
+            }
 
-    }
+            if(type == 2)
+            {
+                var variableY = -100;
+                var color = 'bleu';
+            }
 
-    if(type >=11 && type <=20)
-    {
+            if(type == 3)
+            {
+                var variableY = -200;
+                var color = 'rouge';
+            }
 
-        var variableX = -100*(Number(type) - 11);
-        var variableY = -200;
+            if(type == 4)
+            {
+                var variableY = -300;
+            }
 
-    }
+            var variableX = (type_arg-1)*(-100);
 
-    const parent2 = document.getElementById("modal_section_2");
-
-    if(validate == 0 || validate == 1)
-    {
-        const enfantquestcard1 = document.createElement("div");
-        enfantquestcard1.id = "questcardmodal1";
-        enfantquestcard1.className = "questcardmodal";
-        enfantquestcard1.style.backgroundPositionX = variableX + "%";
-        enfantquestcard1.style.backgroundPositionY = variableY + "%";
-        parent2.appendChild(enfantquestcard1);
-    }
-
-    if(validate == 0 || validate == 2)
-    {
-        const enfantquestcard2 = document.createElement("div");
-        enfantquestcard2.id = "questcardmodal2";
-        enfantquestcard2.className = "questcardmodal";
-        enfantquestcard2.style.backgroundPositionX = variableX + "%";
-        enfantquestcard2.style.backgroundPositionY = (variableY-100) + "%";
-        parent2.appendChild(enfantquestcard2);
-    }
+            const newDiv = document.createElement('div');
+            newDiv.id = 'last_card_momie';
+            newDiv.classList.add('last_card_momie', color);
+            newDiv.style.backgroundPositionX = variableX + '%';
+            newDiv.style.backgroundPositionY = variableY + '%';
+            momie.appendChild(newDiv);
 
 
+        
+        
+    },
 
-},
+    /// SCECIAL CARD + QUEST MODAL
+        
+        addEventListenerModal: function() {
+            var modal_round_container = document.getElementById("modal_round_container");
+            var croix = document.getElementById("croix");
+            var btn = document.getElementById("btn_round");
 
-onOpValidateMulti: function(evt) {
+            // On stocke les handlers dans this pour pouvoir les enlever après
+            this._croixHandler = () => {
+                modal_round_container.classList.add("hidden");
+            };
 
-    // Preventing default browser reaction
-    this.stopEvent( evt );
+            this._btnHandler = () => {
+                modal_round_container.classList.toggle("hidden");
+            };
 
-    
+            croix.addEventListener("click", this._croixHandler);
+            btn.addEventListener("click", this._btnHandler);
+        },
 
-     // Sélectionnez tous les éléments avec la classe spécifiée
-     const elementsAvecClasse = document.querySelectorAll(".selectedmulti");
+        setupSpecialModal: function(data)
+        {
+            /* SPECIAL CARD*/
+            const parent = document.getElementById("modal_section_1");
 
-     // Convertissez la NodeList en un tableau et extrayez les IDs
-     const ids = Array.from(elementsAvecClasse, element => element.id);
+            var type = data[0].type;
+            var type_arg = data[0].type_arg;
+            var type_arg_2 = data[0].type_arg_2;
 
-     let result = "";
+            if(type == 4)
+            {
+                var variableX = (type_arg - 1)*(-100);
+                var variableY = 0;
+            }
 
-     ids.forEach(function(id) {
-        const parts = id.split("_"); // Split l'ID avec '_'
-        result += (result ? "_" : "") + parts[parts.length - 1]; // Ajoute _ sauf pour le premier élément
-    
-    });
+            if(type == 1)
+            {
+                if(type_arg == 1)
+                {
+                    var variableX = -500;
+                    var variableY = 0;
 
-     
-    this.bgaPerformAction('actValidateMulti', { arg1: result});
-    
-},
+                }
+                if((type_arg == 11)&&(type_arg_2 == 1))
+                {
+                    var variableX = -600;
+                    var variableY = 0;
+                    
+                }
+                if((type_arg == 11)&&(type_arg_2 == 2))
+                {
+                    var variableX = 0;
+                    var variableY = -100;
+                    
+                }       
+                
+            }
+
+            if(type == 2)
+            {
+                if(type_arg == 1)
+                {
+                    var variableX = -100;
+                    var variableY = -100;
+
+                }
+                if((type_arg == 11)&&(type_arg_2 == 1))
+                {
+                    var variableX = -200;
+                    var variableY = -100;
+                    
+                }
+                if((type_arg == 11)&&(type_arg_2 == 2))
+                {
+                    var variableX = -300;
+                    var variableY = -100;
+                    
+                } 
+            
+            }
+
+            if(type == 3)
+            {
+                if(type_arg == 1)
+                {
+                    var variableX = -400;
+                    var variableY = -100;
+
+                }
+                if((type_arg == 11)&&(type_arg_2 == 1))
+                {
+                    var variableX = -500;
+                    var variableY = -100;
+                    
+                }
+                if((type_arg == 11)&&(type_arg_2 == 2))
+                {
+                    var variableX = -600;
+                    var variableY = -100;
+                    
+                } 
+                
+            }
+
+            const enfantspecialcard = document.createElement("div");
+            enfantspecialcard.id = "specialcardmodal";
+            enfantspecialcard.className = "specialcardmodal";
+            enfantspecialcard.style.backgroundPositionX = variableX + "%";
+            enfantspecialcard.style.backgroundPositionY = variableY + "%";
+
+            parent.appendChild(enfantspecialcard);
+
+
+        },
+
+
+        setupQuestModal: function(data)
+        {
+            /* QUEST CARD */
+
+            var type = data[0].rand;
+            var validate = data[0].validate;
+
+            if(type >=1 && type <=10)
+            {
+
+                var variableX = -100*(Number(type) - 1);
+                var variableY = 0;
+
+            }
+
+            if(type >=11 && type <=20)
+            {
+
+                var variableX = -100*(Number(type) - 11);
+                var variableY = -200;
+
+            }
+
+            const parent2 = document.getElementById("modal_section_2");
+
+            if(validate == 0 || validate == 1)
+            {
+                const enfantquestcard1 = document.createElement("div");
+                enfantquestcard1.id = "questcardmodal1";
+                enfantquestcard1.className = "questcardmodal";
+                enfantquestcard1.style.backgroundPositionX = variableX + "%";
+                enfantquestcard1.style.backgroundPositionY = variableY + "%";
+                parent2.appendChild(enfantquestcard1);
+            }
+
+            if(validate == 0 || validate == 2)
+            {
+                const enfantquestcard2 = document.createElement("div");
+                enfantquestcard2.id = "questcardmodal2";
+                enfantquestcard2.className = "questcardmodal";
+                enfantquestcard2.style.backgroundPositionX = variableX + "%";
+                enfantquestcard2.style.backgroundPositionY = (variableY-100) + "%";
+                parent2.appendChild(enfantquestcard2);
+            }
+
+
+
+        },
+
         
 ///////////////////////////////////////////////////////////////////////////////// 
 //       _   _       _   _  __ _           _   _                 
@@ -1198,6 +1279,8 @@ onOpValidateMulti: function(evt) {
             dojo.subscribe( 'removePlayersModal', this, "notif_removePlayersModal" );
             dojo.subscribe( 'showFlecheModal', this, "notif_showFlecheModal" );
             dojo.subscribe( 'removeFlecheModal', this, "notif_removeFlecheModal" );
+            dojo.subscribe( 'showPreviousTrick', this, "notif_showPreviousTrick" );
+            dojo.subscribe( 'removePreviousTrick', this, "notif_removePreviousTrick" );
 
             
 
@@ -1325,6 +1408,14 @@ onOpValidateMulti: function(evt) {
 
         notif_removeFlecheModal: function(notif) {
             this.removeFlecheModal();
+        },
+
+        notif_showPreviousTrick: function(notif) {
+            this.addPreviousTrickModal(notif.args.cards);
+        },
+
+        notif_removePreviousTrick: function(notif) {
+            this.removePreviousTrick();
         },
 
 
