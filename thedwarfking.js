@@ -956,9 +956,7 @@ updateLayout: function () {
     //Cards in table
     Object.values(this.table).forEach((card) => {
 
-        console.warn('this_table_card', card);
-
-
+        
         const card_type = this.getStockCardType(card);
         this.tableStock.addToStockWithId(card_type, card.id);
 
