@@ -816,7 +816,7 @@ updateLayout: function () {
 
 
         
-        // CARDS AND STOCKS AND INFOS MOMIE
+        // CARDS AND STOCKS AND INFOS MOMIE AND INFOS CLONE
      
         createStockForCards: function(page, element)
         {
@@ -978,6 +978,16 @@ updateLayout: function () {
     {
         this.addMomie(this.gamedatas.no_trick, this.gamedatas.momie_id, this.gamedatas.momie_player, this.gamedatas.type_last_card_win, this.gamedatas.typearg_last_card_win);
     }
+
+    //clone
+    if(this.gamedatas.clone_id_table != null)
+    {
+        this.addCloneTable(this.gamedatas.clone_id_table, this.gamedatas.type_last_card, this.gamedatas.typearg_last_card);
+    }
+    else if(this.gamedatas.type_last_card != null)
+    {
+        this.addClone(this.gamedatas.clone_id, this.gamedatas.clone_player, this.gamedatas.type_last_card, this.gamedatas.typearg_last_card);
+    }
     
     
 
@@ -1002,19 +1012,16 @@ updateLayout: function () {
             if(type == 1)
             {
                 var variableY = 0;
-                var color = 'vert';
             }
 
             if(type == 2)
             {
                 var variableY = -100;
-                var color = 'bleu';
             }
 
             if(type == 3)
             {
                 var variableY = -200;
-                var color = 'rouge';
             }
 
             if(type == 4)
@@ -1026,7 +1033,7 @@ updateLayout: function () {
 
             const newDiv = document.createElement('div');
             newDiv.id = 'last_card_momie';
-            newDiv.classList.add('last_card_momie', color);
+            newDiv.classList.add('last_card_momie');
             newDiv.style.backgroundPositionX = variableX + '%';
             newDiv.style.backgroundPositionY = variableY + '%';
             momie.appendChild(newDiv);
@@ -1053,19 +1060,16 @@ updateLayout: function () {
             if(type == 1)
             {
                 var variableY = 0;
-                var color = 'vert';
             }
 
             if(type == 2)
             {
                 var variableY = -100;
-                var color = 'bleu';
             }
 
             if(type == 3)
             {
                 var variableY = -200;
-                var color = 'rouge';
             }
 
             if(type == 4)
@@ -1077,10 +1081,107 @@ updateLayout: function () {
 
             const newDiv = document.createElement('div');
             newDiv.id = 'last_card_momie';
-            newDiv.classList.add('last_card_momie', color);
+            newDiv.classList.add('last_card_momie');
             newDiv.style.backgroundPositionX = variableX + '%';
             newDiv.style.backgroundPositionY = variableY + '%';
             momie.appendChild(newDiv);
+
+
+        
+        
+    },
+
+
+    addClone: function(clone_id, clone_player, type_last_card, typearg_last_card)
+    {
+        var clone_last = document.getElementById('last_card_clone');
+        if(clone_last)
+        {
+            clone_last.remove();
+        }
+        
+        if(clone_id != null && clone_player == this.getCurrentPlayerId())
+        {
+        
+            var clone = document.getElementById('my_cards_item_' + clone_id);
+            var type = type_last_card;
+            var type_arg = typearg_last_card;
+
+            if(type == 1)
+            {
+                var variableY = 0;
+            }
+
+            if(type == 2)
+            {
+                var variableY = -100;
+            }
+
+            if(type == 3)
+            {
+                var variableY = -200;
+            }
+
+            if(type == 4)
+            {
+                var variableY = -300;
+            }
+
+            var variableX = (type_arg-1)*(-100);
+
+            const newDiv = document.createElement('div');
+            newDiv.id = 'last_card_clone';
+            newDiv.classList.add('last_card_clone');
+            newDiv.style.backgroundPositionX = variableX + '%';
+            newDiv.style.backgroundPositionY = variableY + '%';
+            clone.appendChild(newDiv);
+
+
+        }
+        
+    },
+
+    addCloneTable: function(clone_id, type_last_card, typearg_last_card)
+    {
+        var clone_last = document.getElementById('last_card_clone');
+        if(clone_last)
+        {
+            clone_last.remove();
+        }
+        
+            
+            var clone = document.getElementById('table_cards_item_' + clone_id);
+            var type = type_last_card;
+            var type_arg = typearg_last_card;
+
+            if(type == 1)
+            {
+                var variableY = 0;
+            }
+
+            if(type == 2)
+            {
+                var variableY = -100;
+            }
+
+            if(type == 3)
+            {
+                var variableY = -200;
+            }
+
+            if(type == 4)
+            {
+                var variableY = -300;
+            }
+
+            var variableX = (type_arg-1)*(-100);
+
+            const newDiv = document.createElement('div');
+            newDiv.id = 'last_card_clone';
+            newDiv.classList.add('last_card_clone');
+            newDiv.style.backgroundPositionX = variableX + '%';
+            newDiv.style.backgroundPositionY = variableY + '%';
+            clone.appendChild(newDiv);
 
 
         
@@ -1281,6 +1382,7 @@ updateLayout: function () {
             dojo.subscribe( 'removeFlecheModal', this, "notif_removeFlecheModal" );
             dojo.subscribe( 'showPreviousTrick', this, "notif_showPreviousTrick" );
             dojo.subscribe( 'removePreviousTrick', this, "notif_removePreviousTrick" );
+            dojo.subscribe( 'cloneChange', this, "notif_cloneChange" );
 
             
 
@@ -1302,7 +1404,12 @@ updateLayout: function () {
 
             if (notif.args.momie == 1)
             {
-                this.addMomieTable(card.id, notif.args.type_last_card_win, notif.args.typearg_last_card_win);
+                this.addMomieTable(card.id, notif.args.type_last_card, notif.args.typearg_last_card);
+            }
+
+            if (notif.args.clone == 1)
+            {
+                this.addCloneTable(card.id, notif.args.type_last_card, notif.args.typearg_last_card);
             }
 
             // Destroy the card for the current player
@@ -1416,6 +1523,12 @@ updateLayout: function () {
 
         notif_removePreviousTrick: function(notif) {
             this.removePreviousTrick();
+        },
+
+        notif_cloneChange: function(notif) {
+
+            this.addClone(notif.args.clone_id, notif.args.clone_player, notif.args.type_last_card, notif.args.typearg_last_card)
+   
         },
 
 

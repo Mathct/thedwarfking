@@ -184,7 +184,7 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        $rand = 4;
+        $rand = 3;
 
 
         if($rand>=1 && $rand<=5)
@@ -365,6 +365,13 @@ protected function getAllDatas()
     $result['sorcier_player'] = $this->getGameStateValue('sorcier_active');
     $result['previous_trick_cards'] = self::getCollectionFromDB( "SELECT card_id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM tricks WHERE round ='{$round}' AND trick='{$previous_trick}'" );
 
+    //clone
+    $result['clone_id'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+    $result['clone_id_table'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'table'");
+    $result['clone_player'] = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+    $last_id = game::$instance->getGameStateValue("last_card_play");
+    $result['type_last_card'] = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id = '{$last_id}'");
+    $result['typearg_last_card'] = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id = '{$last_id}'");
 
     return $result;
 }

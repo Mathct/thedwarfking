@@ -381,8 +381,10 @@ class Pending extends APP_GameClass
             // pour le Clone: sauvergarde de la derniere card_id jouée (n'est pas mise à jour dès que le Clone est joué)
             $last_type = 0;
             $last_type_arg = 0;
+            $clone = 0;
             if (($type == 4) && ($type_arg == 3))
             {
+                $clone = 1;
                 game::$instance->setGameStateValue("clone_play", 1);
                 $last_card_id = game::$instance->getGameStateValue("last_card_play");
                 $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
@@ -392,6 +394,30 @@ class Pending extends APP_GameClass
             if(game::$instance->getGameStateValue("clone_play") != 1)
             {
                 game::$instance->setGameStateValue("last_card_play", $card_id);
+                $clone_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                if($clone_id != null)
+                    {
+                        
+                        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                        $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
+                        $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+
+                        game::$instance->notifyPlayer(
+                        $clone_player,
+                        'cloneChange',
+                        '',
+                        array(
+                            'clone_id' => $clone_id,
+                            'clone_player' => $clone_player,
+                            'type_last_card' => $last_type,
+                            'typearg_last_card' => $last_type_arg
+
+                        )
+                    );
+
+                }
+               
+
                 
             }
 
@@ -410,6 +436,9 @@ class Pending extends APP_GameClass
                             'momie' => $momie,
                             'type_last_card_win' => $type_last_card_win,
                             'typearg_last_card_win' => $typearg_last_card_win,
+                            'clone' => $clone,
+                            'type_last_card' => $last_type,
+                            'typearg_last_card' => $last_type_arg,
 
                              
                         )
