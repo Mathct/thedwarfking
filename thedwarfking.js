@@ -632,6 +632,7 @@ updateLayout: function () {
         this.setupSpecialModal(this.gamedatas.active_special_card);
         this.setupQuestModal(this.gamedatas.active_quest_card);
         this.setupStocks();
+        //this.addTooltipsInit();
 
         },
 
@@ -1346,8 +1347,34 @@ updateLayout: function () {
                 enfantquestcard2.style.backgroundPositionY = (variableY-100) + "%";
                 parent2.appendChild(enfantquestcard2);
             }
+        },
 
 
+        // TOOLTIPS
+
+        addTooltipsInit: function()
+        {            
+            Object.values(this.gamedatas.all_cards).forEach((card) => {
+                
+                let element = card.type+card.type_arg+card.type_arg_2;
+               
+                if(this.gamedatas.tooltips_cards[element])
+                {
+                    const html = this.gamedatas.tooltips_cards[element].name;
+                   
+                    if (card.location == 'table')
+                    {
+                        this.addTooltipHtml('table_cards_item_'+card.id, html, 500);
+                    }
+
+                    if(card.location == 'hand')
+                    {
+                        this.addTooltipHtml('my_cards_item_'+card.id, html, 500);
+                    }
+                
+                }
+       
+            });
 
         },
 

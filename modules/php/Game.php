@@ -40,6 +40,8 @@ class Game extends \Table
 
         $this->initGameStateLabels([
 
+            "game_mode" => 100,
+
             "first_player_deal" => 10,
             "first_player_quest" => 11,
             "first_player_play" => 12,
@@ -184,7 +186,19 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        $rand = 3;
+        if($this->gamestate->table_globals[100] == 2)
+        {
+            $rand = 4;
+        }
+
+        if($this->gamestate->table_globals[100] == 3)
+        {
+            while($rand == 4)
+            {
+                $rand = bga_rand(1, 14);
+            }
+        }
+        
 
 
         if($rand>=1 && $rand<=5)
@@ -373,6 +387,10 @@ protected function getAllDatas()
     $result['type_last_card'] = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id = '{$last_id}'");
     $result['typearg_last_card'] = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id = '{$last_id}'");
 
+    //all cards for tooltips
+    $result['all_cards'] = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
+    $result['tooltips_cards'] = $this->_CARDS;
+    
     return $result;
 }
 
@@ -1154,22 +1172,7 @@ function getLogPv()
         return $arg;
     }
 
-    // public function argSorcier($player)
-    // {
-    //     $args = array();
-
-    //     // $args["selectable"][$player] = array();
-
-    //     // $round = $this->getGameStateValue("round_max_bid");
-
-    //     // for ($i = 0; $i <= $round; $i++) {
-    //     //     $args["selectable"][$player][] = 'bid_' . $i;
-    //     // }
-
-
-
-    //     return $args;
-    // }
+   
 
 
 ///////////////////////////////////////////////////////////////////////////////// 
@@ -1248,25 +1251,7 @@ public function stPending() {
    
 }
 
-// public function stplayerTurnMultiSorcier()
-// {
-//     game::$instance->gamestate->setAllPlayersMultiactive();
-//     game::$instance->gamestate->initializePrivateStateForAllActivePlayers();
 
-//     $player_sorcier = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4 AND card_location = 'hand'");
-
-//     $players = self::getObjectListFromDB("SELECT player_id FROM player", true);
-
-    
-//     foreach ($players as $player_id) {
-
-//         if ($player_id == $player_sorcier) {
-//             $this->gamestate->nextPrivateState($player_id, "sorcier");
-//         } else {
-//             $this->gamestate->nextPrivateState($player_id, "other");
-//         }
-//     }
-// }
 
 
 
