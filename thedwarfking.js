@@ -632,7 +632,7 @@ updateLayout: function () {
         this.setupSpecialModal(this.gamedatas.active_special_card);
         this.setupQuestModal(this.gamedatas.active_quest_card);
         this.setupStocks();
-        //this.addTooltipsInit();
+        this.addTooltipsInit();
 
         },
 
@@ -789,6 +789,9 @@ updateLayout: function () {
                 previous_card.style.backgroundPositionX = variableX + '%';
                 previous_card.style.backgroundPositionY = variableY + '%';
                 parent.appendChild(previous_card);
+
+
+                this.addTooltipsCard('previous_card_'+card.id, type, type_arg, 0);
 
                 
             });
@@ -1187,7 +1190,7 @@ updateLayout: function () {
         
     },
 
-    /// SCECIAL CARD + QUEST MODAL
+    /// SPECIAL CARD + QUEST MODAL
         
         addEventListenerModal: function() {
             var modal_round_container = document.getElementById("modal_round_container");
@@ -1299,6 +1302,8 @@ updateLayout: function () {
 
             parent.appendChild(enfantspecialcard);
 
+            this.addTooltipsCard(specialcardmodal, type, type_arg, type_arg_2);
+
 
         },
 
@@ -1360,7 +1365,14 @@ updateLayout: function () {
                
                 if(this.gamedatas.tooltips_cards[element])
                 {
-                    const html = this.gamedatas.tooltips_cards[element].name;
+                    const name = _(this.gamedatas.tooltips_cards[element].name);
+                    const text = _(this.gamedatas.tooltips_cards[element].text);
+                    const html = `<div class="tooltips-container">
+                    <div class="tooltips">
+                    <div class="tooltips-title">- ${name} -</div>
+                    <div class="tooltips-text">${text}</div>
+                    </div>
+                    </div>`;
                    
                     if (card.location == 'table')
                     {
@@ -1375,6 +1387,33 @@ updateLayout: function () {
                 }
        
             });
+
+        },
+
+        addTooltipsCard: function(id, type, type_arg, type_arg_2)
+        {            
+            
+                
+            let element = type+type_arg+type_arg_2;
+            
+            if(this.gamedatas.tooltips_cards[element])
+            {
+                const name = _(this.gamedatas.tooltips_cards[element].name);
+                const text = _(this.gamedatas.tooltips_cards[element].text);
+                const html = `<div class="tooltips-container">
+                <div class="tooltips">
+                <div class="tooltips-title">- ${name} -</div>
+                <div class="tooltips-text">${text}</div>
+                </div>
+                </div>`;
+                
+                
+                this.addTooltipHtml(id, html, 500);
+                
+            
+            }
+       
+            
 
         },
 
@@ -1443,6 +1482,8 @@ updateLayout: function () {
                 this.handStock.removeFromStockById(card.id);
             }
 
+            
+            this.addTooltipsCard("table_cards_item_"+card.id, card.type, card.type_arg, card.type_arg_2);
 
         },
 
@@ -1487,6 +1528,8 @@ updateLayout: function () {
                 const card_type = this.getStockCardType(card);
                 this.handStock.addToStockWithId(card_type, card.id, undefined);
                 dojo.query("#my_cards_item_"+card.id).connect('onclick', this, 'onSelect' )
+                
+                this.addTooltipsCard("my_cards_item_"+card.id, card.type, card.type_arg, card.type_arg_2);
             });
 
             

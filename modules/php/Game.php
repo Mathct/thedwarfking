@@ -199,7 +199,8 @@ class Game extends \Table
             }
         }
         
-
+        //FORCE CARD SPECIAL FOR DEV
+        $rand = 4;
 
         if($rand>=1 && $rand<=5)
         {
@@ -457,7 +458,7 @@ public function getCardsOnTableOrdered()
         $ordered_ids = $this->getObjectListFromDB($sql, true);
         // ⬅️ Retourne un array simple [2037568, 2037569, ...]
 
-        $tableCards = $this->cards->getCardsInLocation('table');
+        $tableCards = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='table'" );
 
         // Indexe les cartes par player_id
         $cards_by_player = array_column($tableCards, null, 'location_arg');

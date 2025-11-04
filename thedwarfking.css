@@ -607,6 +607,44 @@ body {
 }
 
 
+/* TOOLTIPS */
+
+.tooltips-container
+{
+  width: 200px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 2px;
+  
+
+}
+
+.tooltips{
+  border: 1px solid black;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #c7a5a570;
+}
+
+
+.tooltips-title{
+  font-size: 20px;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  margin-bottom: 5px;
+}
+
+.tooltips-text{
+  font-size: 16px;
+  font-family: 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  text-align: justify;
+  text-align: center;
+}
+
 
 
 
