@@ -1341,6 +1341,8 @@ updateLayout: function () {
                 enfantquestcard1.style.backgroundPositionX = variableX + "%";
                 enfantquestcard1.style.backgroundPositionY = variableY + "%";
                 parent2.appendChild(enfantquestcard1);
+                this.addTooltipsQuest(1, type+'1');
+
             }
 
             if(validate == 0 || validate == 2)
@@ -1351,6 +1353,7 @@ updateLayout: function () {
                 enfantquestcard2.style.backgroundPositionX = variableX + "%";
                 enfantquestcard2.style.backgroundPositionY = (variableY-100) + "%";
                 parent2.appendChild(enfantquestcard2);
+                this.addTooltipsQuest(2, type+'2');
             }
         },
 
@@ -1409,6 +1412,37 @@ updateLayout: function () {
                 
                 
                 this.addTooltipHtml(id, html, 500);
+                
+            
+            }
+       
+            
+
+        },
+
+        addTooltipsQuest: function(id, quest)
+        {            
+                          
+                        
+            if(this.gamedatas.tooltips_quests[quest])
+            {
+                const name = _(this.gamedatas.tooltips_quests[quest].name);
+                const text = _(this.gamedatas.tooltips_quests[quest].text);
+                let text2 = '';
+                if(this.gamedatas.tooltips_quests[quest].text2)
+                {
+                    text2 = _(this.gamedatas.tooltips_quests[quest].text2);
+                }
+                const html = `<div class="tooltips-container">
+                <div class="tooltips">
+                <div class="tooltips-title">- ${name} -</div>
+                <div class="tooltips-text">${text}</div>
+                <div class="tooltips-text">${text2}</div>
+                </div>
+                </div>`;
+                
+                
+                this.addTooltipHtml('questcardmodal'+id, html, 500);
                 
             
             }

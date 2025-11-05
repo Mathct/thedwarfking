@@ -200,7 +200,7 @@ class Game extends \Table
         }
         
         //FORCE CARD SPECIAL FOR DEV
-        //$rand = 2;
+        $rand = 7;
 
         if($rand>=1 && $rand<=5)
         {
@@ -391,6 +391,7 @@ protected function getAllDatas()
     //all cards for tooltips
     $result['all_cards'] = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
     $result['tooltips_cards'] = $this->_CARDS;
+    $result['tooltips_quests'] = $this->_QUESTS;
     
     return $result;
 }

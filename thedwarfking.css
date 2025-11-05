@@ -652,11 +652,59 @@ body {
     width: 20px;
     height: 20px;
     background-image: url('img/icon_quest.png');
-    background-size: 100% 100%;
+    background-size: 1100% 100%;
     display: inline-block;
     vertical-align: middle;
+    background-position-y: 0%;
 
 }
+
+.green{
+  background-position-x: 0%;
+}
+
+.blue{
+  background-position-x: -100%;
+}
+
+.red{
+  background-position-x: -200%;
+}
+
+.jackb{
+  background-position-x: -300%;
+}
+
+.queenb{
+  background-position-x: -400%;
+}
+
+.kingb{
+  background-position-x: -500%;
+}
+
+.asb{
+  background-position-x: -600%;
+}
+
+.jackg{
+  background-position-x: -700%;
+}
+
+.queeng{
+  background-position-x: -800%;
+}
+
+.kingg{
+  background-position-x: -900%;
+}
+
+.asg{
+  background-position-x: -1000%;
+}
+
+
+
 
 
 
