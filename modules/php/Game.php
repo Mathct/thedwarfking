@@ -200,7 +200,7 @@ class Game extends \Table
         }
         
         //FORCE CARD SPECIAL FOR DEV
-        //$rand = 4;
+        //$rand = 2;
 
         if($rand>=1 && $rand<=5)
         {

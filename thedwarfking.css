@@ -361,11 +361,10 @@ body {
     
     width: 20px;
     height: 20px;
-    background-image: url(img/log_pv.png);
+    background-image: url('img/log_pv.png');
     background-size: 100% 100%;
     display: inline-block;
     vertical-align: middle;
-    margin-bottom: 5px;
 }
 
 /* MOMIE ICON */
@@ -646,7 +645,18 @@ body {
 }
 
 
+/* ICONE QUEST */
 
+.icon_quest {
+    
+    width: 20px;
+    height: 20px;
+    background-image: url('img/icon_quest.png');
+    background-size: 100% 100%;
+    display: inline-block;
+    vertical-align: middle;
+
+}
 
 
 

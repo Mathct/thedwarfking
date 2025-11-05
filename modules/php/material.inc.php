@@ -71,3 +71,15 @@ $this->_CARDS = [
     ]
     
 ];
+
+$this->_QUESTS = [
+    11 => [
+        "name" => clienttranslate(''),
+        "text" => clienttranslate("")
+    ],
+    12 => [
+        "name" => clienttranslate(''),
+        "text" => clienttranslate("")
+    ],
+
+];

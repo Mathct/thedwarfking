@@ -1468,7 +1468,7 @@ updateLayout: function () {
 
             if (notif.args.momie == 1)
             {
-                this.addMomieTable(card.id, notif.args.type_last_card, notif.args.typearg_last_card);
+                this.addMomieTable(card.id, notif.args.type_last_card_win, notif.args.typearg_last_card_win);
             }
 
             if (notif.args.clone == 1)
