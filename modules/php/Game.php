@@ -200,7 +200,7 @@ class Game extends \Table
         }
         
         //FORCE CARD SPECIAL FOR DEV
-        $rand = 7;
+        //$rand = 7;
 
         if($rand>=1 && $rand<=5)
         {
@@ -392,6 +392,13 @@ protected function getAllDatas()
     $result['all_cards'] = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
     $result['tooltips_cards'] = $this->_CARDS;
     $result['tooltips_quests'] = $this->_QUESTS;
+
+    //pannel
+    $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+    foreach ($players as $player)
+    {
+        $result['tricks_win'][$player] = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+    }
     
     return $result;
 }
@@ -1107,6 +1114,43 @@ function getLogPv()
     
 }
 
+
+function calculScore()
+{
+    $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+    $round = game::$instance->getGameStateValue("no_round");
+    $type_quest = self::getUniqueValueFromDB("SELECT rand FROM quest WHERE round = '{$round}'");
+    $face_quest = self::getUniqueValueFromDB("SELECT validate FROM quest WHERE round = '{$round}'");
+
+    $quest = $type_quest.$face_quest;
+
+    foreach($players as $player)
+    {
+        $score_quest = 0;
+        $score_bonus = self::getUniqueValueFromDB("SELECT bonus FROM bonus WHERE player_id = '{$player}' AND round = '{$round}'");
+        $bonus_enchanteur = 0;
+        if(game::$instance->getGameStateValue("enchanteur") == $player)
+        {
+            game::$instance->setGameStateValue("enchanteur", 0);
+            $bonus_enchanteur = 1;
+        }
+        
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+   // ne pas oublier le X2
+ 
+}
 
 
 

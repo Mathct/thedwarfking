@@ -549,6 +549,22 @@ class Pending extends APP_GameClass
         // WINNER
         $winner = game::$instance->winnerOfTurn();
 
+        // SCORE TRICK PANNEL
+
+        $round = game::$instance->getGameStateValue('no_round');
+        $before_tricks_win = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$winner}'", true ));
+        game::$instance->notifyAllPlayers(
+                            'majTricksWin',
+                            '',
+                            array(
+                                'player' => $winner,
+                                'newtricks' => $before_tricks_win + 1
+                                
+                                
+                            )
+                        );
+
+
         // MOVE CARD ET INSCRIPTION DU TRICK EN BD
 
         $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
@@ -691,12 +707,10 @@ class Pending extends APP_GameClass
 
         game::$instance->notifyAllPlayers( 'simplePause', '', [ 'time' => 1000] ); 
 
-        // calcul de score du round
+        // calcul score du round
+        game::$instance->calculScore();
 
 
-
-
-        
         $round = game::$instance->getGameStateValue('no_round');
         if($round < 7)
         {

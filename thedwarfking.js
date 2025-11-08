@@ -79,6 +79,7 @@ function (dojo, declare) {
 
 
             this.setupBoard();
+            this.setupPannel();
  
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -524,6 +525,51 @@ updateLayout: function () {
 
 
         /////////////  BOARD, CARDS AND MODALS ///////////
+
+        /// PANNEL
+
+         setupPannel: function () {
+
+            for (var player in this.players)
+            {
+                
+                    var parent = document.getElementById('player_board_'+player);
+
+                    const container = document.createElement("div");
+                    container.id = "infopannel_"+player;
+                    container.className = "container_pannel";
+
+                    const icon_trick = document.createElement("div");
+                    icon_trick.id = "icon_trick_"+player;
+                    icon_trick.className = "icon_trick";
+
+                    const trick_win = document.createElement("div");
+                    trick_win.id = "trick_win_"+player;
+                    trick_win.className = "trick_win";
+                    trick_win.textContent = this.gamedatas.tricks_win[player]; 
+                    
+                    parent.appendChild(container);
+
+                    var parent_player = document.getElementById("infopannel_"+player);
+                    parent_player.appendChild(icon_trick);
+                    parent_player.appendChild(trick_win);
+                
+
+                if(this.getCurrentPlayerId() == player)
+                {
+                    //container.classList.add("pointer");
+                }
+
+
+
+
+
+
+            }
+
+            
+        
+        },
 
         /// BOARD
 
@@ -1481,6 +1527,7 @@ updateLayout: function () {
             dojo.subscribe( 'showPreviousTrick', this, "notif_showPreviousTrick" );
             dojo.subscribe( 'removePreviousTrick', this, "notif_removePreviousTrick" );
             dojo.subscribe( 'cloneChange', this, "notif_cloneChange" );
+            dojo.subscribe( 'majTricksWin', this, "notif_majTricksWin" );
 
             
 
@@ -1630,6 +1677,15 @@ updateLayout: function () {
         notif_cloneChange: function(notif) {
 
             this.addClone(notif.args.clone_id, notif.args.clone_player, notif.args.type_last_card, notif.args.typearg_last_card)
+   
+        },
+
+        notif_majTricksWin: function(notif) {
+
+            var element = document.getElementById('trick_win_'+notif.args.player);
+            console.log(notif.args.newtricks)
+            element.textContent = notif.args.newtricks; 
+
    
         },
 

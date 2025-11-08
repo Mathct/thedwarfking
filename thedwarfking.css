@@ -610,7 +610,7 @@ body {
 
 .tooltips-container
 {
-  width: 200px;
+  width: 250px;
   height: auto;
   display: flex;
   flex-direction: column;
@@ -632,7 +632,7 @@ body {
 
 
 .tooltips-title{
-  font-size: 20px;
+  font-size: 16px;
   font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   margin-bottom: 5px;
 }
@@ -701,6 +701,39 @@ body {
 
 .asg{
   background-position-x: -1000%;
+}
+
+/* INFOS PANNEL */
+.container_pannel{
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 5px;
+  gap: 10px;
+  
+}
+
+.icon_trick {
+    
+    width: 70px;
+    height: 70px;
+    background-image: url('img/trick.png');
+    background-size: 100% 100%;
+    
+    
+}
+
+.trick_win{
+    font-family: 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+    font-size:30px;
+    font-weight: bold;
+    color: #9c6f6f;
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 

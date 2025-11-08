@@ -107,8 +107,10 @@ CREATE TABLE IF NOT EXISTS `scores` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `round` int(11) NOT NULL,
   `player_id` int(11) NOT NULL,
-  `score` int(11) NOT NULL,
-  `enchanteur` int(11) unsigned DEFAULT 0,
+  `score_quest` int(11) NOT NULL,
+  `score_bonus` int(11) NOT NULL,
+  `bonus_enchanteur` int(11) NOT NULL,
+  `score_round` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
