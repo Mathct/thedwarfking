@@ -785,7 +785,7 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} wins 3 ${log2} thanks to ${log} played in the previous trick'),
+                    clienttranslate('${player_name} will score 3 ${log2} thanks to ${log} played in the previous trick'),
                     array(
                         'player_name' => $winner_name,
                         'log' => game::$instance->getLogIcon('1_11'),
@@ -802,7 +802,7 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${log} has been played. The player who wins the next trick wins 3 ${log2}'),
+                    clienttranslate('${log} has been played. The player who wins the next trick will score 3 ${log2}'),
                     array(
                         'log' => game::$instance->getLogIcon('1_11'),
                         'log2' => game::$instance->getLogPv(),
@@ -819,7 +819,7 @@ function winnerOfTurn()
             $bouffon_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$bouffon}'");
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} plays ${log} on the last trick and wins 3 ${log2}'),
+                    clienttranslate('${player_name} plays ${log} on the last trick and will score 3 ${log2}'),
                     array(
                         'player_name' => $bouffon_name,
                         'log' => game::$instance->getLogIcon('2_1'),
@@ -857,7 +857,7 @@ function winnerOfTurn()
             $eclaireur_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$eclaireur}'");
              game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} plays ${log} and wins ${pv} ${log2}'),
+                    clienttranslate('${player_name} plays ${log} and will score ${pv} ${log2}'),
                     array(
                         'player_name' => $eclaireur_name,
                         'pv' => $eclaireur_pv,
@@ -875,7 +875,7 @@ function winnerOfTurn()
         {
             game::$instance->notifyAllPlayers(
                     'message',
-                    clienttranslate('${player_name} wins ${log} and loses 3 ${log2}'),
+                    clienttranslate('${player_name} wins ${log} and will lose 3 ${log2}'),
                     array(
                         'player_name' => $winner_name,
                         'log' => game::$instance->getLogIcon('3_11'),
