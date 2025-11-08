@@ -1683,7 +1683,6 @@ updateLayout: function () {
         notif_majTricksWin: function(notif) {
 
             var element = document.getElementById('trick_win_'+notif.args.player);
-            console.log(notif.args.newtricks)
             element.textContent = notif.args.newtricks; 
 
    
