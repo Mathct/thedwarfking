@@ -50,16 +50,33 @@ class Pending extends APP_GameClass
         
         $imageSpecialLog = game::$instance->getLogSpecial($specialcard);
 
-        game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
-            'message' => [
-                'log' => '<div class="log_newRound">${round} ${nb}/7</div>',
-                'args' => [
-                    'round' => clienttranslate('Round'),
-                    'nb' => $this->round_nb,
-                    'i18n' => ['round']
-                ],
-            ]
-        ]);
+        if($round <= 7)
+        {       
+            game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+                'message' => [
+                    'log' => '<div class="log_newRound">${round} ${nb}/7</div>',
+                    'args' => [
+                        'round' => clienttranslate('Round'),
+                        'nb' => $this->round_nb,
+                        'i18n' => ['round']
+                    ],
+                ]
+            ]);
+        }
+
+        if( $round > 7)
+        {
+            game::$instance->notifyAllPlayers('message', clienttranslate('${message}'), [
+                'message' => [
+                    'log' => '<div class="log_newRound">${round}</div>',
+                    'args' => [
+                        'round' => clienttranslate('Tiebreaker Round'),
+                        'i18n' => ['round']
+                    ],
+                ]
+            ]);
+
+        }
 
         game::$instance->notifyAllPlayers(
                 'message',
@@ -712,7 +729,16 @@ class Pending extends APP_GameClass
 
 
         $round = game::$instance->getGameStateValue('no_round');
-        if($round < 7)
+
+        $count_players_max_score = count(self::getObjectListFromDB(
+            "SELECT player_id AS id
+            FROM player
+            WHERE player_score = (SELECT MAX(player_score) FROM player)",
+            true
+        ));
+
+
+        if (($round < 7)||($round >=7 && $count_players_max_score >=2))
         {
             //// INIT NEW ROUND + INIT TRICK ////
 
