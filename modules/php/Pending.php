@@ -985,6 +985,7 @@ class Pending extends APP_GameClass
 
         else
         {
+            game::$instance->setGameStateValue("end_game", 1);
             game::$instance->addPending($this->player_id, "EndGame");
         }
          

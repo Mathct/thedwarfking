@@ -61,6 +61,8 @@ class Game extends \Table
             "pe_rouge_active" => 25,
             "sorcier_player" => 26,
             "sorcier_active" => 27,
+
+            "end_game" => 28,
            
         ]);  
         
@@ -140,6 +142,8 @@ class Game extends \Table
         $this->setGameStateInitialValue("pe_rouge_active", 0);
         $this->setGameStateInitialValue("sorcier_player", 0);
         $this->setGameStateInitialValue("sorcier_active", 0);
+
+        $this->setGameStateInitialValue("end_game", 0);
 
         // STATS
         
@@ -417,9 +421,28 @@ protected function getAllDatas()
 
 public function getGameProgression()
 {
-    // TODO: compute and return the game progression
+    $round = game::$instance->getGameStateValue("no_round");
+    $end = game::$instance->getGameStateValue("end_game");
 
-    return 0;
+    if($end == 0)
+    {
+        if($round <= 7)
+        {
+            return floor(($round*100)/7);
+        }
+
+        else{
+
+            return 100;
+        }
+
+    }
+
+    else{
+        return 100;
+    }
+
+    
 }
 
 
