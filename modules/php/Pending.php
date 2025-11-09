@@ -908,6 +908,16 @@ class Pending extends APP_GameClass
 
                     )
                 );
+
+                game::$instance->notifyAllPlayers(
+                    'initPannel',
+                    '',
+                    array(
+
+                        'player' => $player,
+
+                    )
+                );
             }
 
             $active_special_card = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$new_round}'" );

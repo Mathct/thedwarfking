@@ -1528,6 +1528,8 @@ updateLayout: function () {
             dojo.subscribe( 'removePreviousTrick', this, "notif_removePreviousTrick" );
             dojo.subscribe( 'cloneChange', this, "notif_cloneChange" );
             dojo.subscribe( 'majTricksWin', this, "notif_majTricksWin" );
+            dojo.subscribe( 'initPannel', this, "notif_initPannel" );
+            dojo.subscribe( 'score', this, "notif_score" );
 
             
 
@@ -1686,6 +1688,20 @@ updateLayout: function () {
             element.textContent = notif.args.newtricks; 
 
    
+        },
+
+        notif_initPannel: function(notif) {
+
+            var element = document.getElementById('trick_win_'+notif.args.player);
+            element.textContent = 0; 
+
+   
+        },
+
+        notif_score: async function( notif ){
+    
+            this.scoreCtrl[ notif.args.player ].toValue( notif.args.score );
+
         },
 
 

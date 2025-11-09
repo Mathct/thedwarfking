@@ -1123,23 +1123,708 @@ function calculScore()
     $face_quest = self::getUniqueValueFromDB("SELECT validate FROM quest WHERE round = '{$round}'");
 
     $quest = $type_quest.$face_quest;
+    
 
     foreach($players as $player)
     {
+        $player_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$player}'");
+        $pv = 0;
         $score_quest = 0;
         $score_bonus = self::getUniqueValueFromDB("SELECT bonus FROM bonus WHERE player_id = '{$player}' AND round = '{$round}'");
-        $bonus_enchanteur = 0;
+        $bonus_enchanteur = 1;
         if(game::$instance->getGameStateValue("enchanteur") == $player)
         {
             game::$instance->setGameStateValue("enchanteur", 0);
-            $bonus_enchanteur = 1;
+            $bonus_enchanteur = 2;
+        }
+
+        if($quest == '11')
+        {
+
+            
+            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $max = 0;
+            $count = 0;
+
+            foreach ($tab as $value) {
+                if ($value == 1) {
+                    $count++;
+                    if ($count > $max) {
+                        $max = $count;
+                    }
+                } else {
+                    $count = 0;
+                }
+            }
+            $pv = $max * 2;
+            
+        }
+
+        if($quest == '12')
+        {
+            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $max = 0;
+            $count = 0;
+
+            foreach ($tab as $value) {
+                if ($value == 1) {
+                    $count++;
+                    if ($count > $max) {
+                        $max = $count;
+                    }
+                } else {
+                    $count = 0;
+                }
+            }
+            $pv = $max * (-2);
+                    
+        }
+
+        if($quest == '21')
+        {
+            
+            
+        }
+
+        if($quest == '22')
+        {
+            
+            
+        }
+
+        if($quest == '31')
+        {
+            // $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 3 OR type_arg = 4)", true ));
+            // $pv = $nb_tricks * 4;
+            
+        }
+
+        if($quest == '32')
+        {
+            // $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 6 OR type_arg = 7)", true ));
+            // $pv = $nb_tricks * 4;
+            
+        }
+
+        if($quest == '41')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+            $pv = $nb_tricks * (-1);
+            
+        }
+
+        if($quest == '42')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 3", true ));
+            $pv = $nb_tricks * (-1);
+            
+        }
+
+        if($quest == '51')
+        {
+            $beforeplayer = game::$instance->getPlayerBefore($player);
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            $pv = $nb_tricks;
+            
+        }
+
+        if($quest == '52')
+        {
+            $nextplayer = game::$instance->getPlayerAfter($player);
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+            $pv = $nb_tricks;
+            
+            
+        }
+
+        if($quest == '61')
+        {
+            $sum_player = 0;
+            $max = 1;
+
+            $sum = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11  AND type <= 3 AND round = '{$round}' AND player_win = '{$player}'");
+            if($sum != null)
+            {
+                $sum_player = $sum;
+            } 
+
+            
+
+            foreach($players as $player_test)
+            {
+                $sum2 = 0;
+
+                if($player_test != $player)
+                {
+                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND type <= 3 AND round = '{$round}' AND player_win = '{$player_test}'");
+                    if($sum_player_other != null)
+                    {
+                        $sum2 = $sum_player_other;
+                    }
+
+                    if($sum <= $sum2)
+                    {
+                        $max = 0;
+                        break;
+                    }
+
+                }
+            }
+
+            if($max == 1)
+            {
+                $pv = 5;
+            }
+            
+        }
+
+        if($quest == '62')
+        {
+            $sum_player = 0;
+            $max = 1;
+
+            $sum = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND round = '{$round}' AND player_win = '{$player}'");
+            if($sum != null)
+            {
+                $sum_player = $sum;
+            } 
+            
+
+            foreach($players as $player_test)
+            {
+                $sum2 = 0;
+
+                if($player_test != $player)
+                {
+                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND round = '{$round}' AND player_win = '{$player_test}'");
+                    if($sum_player_other != null)
+                    {
+                        $sum2 = $sum_player_other;
+                    }
+
+                    if($sum <= $sum2)
+                    {
+                        $max = 0;
+                        break;
+                    }
+
+                }
+            }
+
+            if($max == 1)
+            {
+                $pv = -5;
+            } 
+            
+        }
+        
+        if($quest == '71')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $pv = $nb_tricks;
+            
+        }
+
+        if($quest == '72')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $pv = $nb_tricks * (-1);
+            
+        }
+
+        if($quest == '81')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks == 3)
+            {
+                $pv = 5;
+            }
+            
+            
+        }
+
+        if($quest == '82')
+        {
+
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks == 1)
+            {
+                $pv = 5;
+            }
+            
+            
+        }
+
+        if($quest == '91')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks == 4)
+            {
+                $pv = 5;
+            }
+            
+        }
+
+        if($quest == '92')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks == 2)
+            {
+                $pv = 5;
+            }
+            
+        }
+
+        if($quest == '101')
+        {
+
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks % 2 == 0)
+            {
+                $pv = 5;
+            }
+            
+            
+        }
+
+        if($quest == '102')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            if ($nb_tricks % 2 != 0)
+            {
+                $pv = 5;
+            }
+            
+        }
+
+        if($quest == '111')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $ok = 1;
+
+            foreach($players as $player_test)
+            {                
+                if($player_test != $player)
+                {
+                    $trick2 = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player_test}'", true ));
+                    if($trick2 == $nb_tricks)
+                    {
+                        $ok = 0;
+                        break;
+                    }
+
+                }
+            }
+
+            if($ok == 1)
+            {
+                $pv = 5;
+            }
+        }
+
+        if($quest == '112')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $ok = 0;
+
+            foreach($players as $player_test)
+            {                
+                if($player_test != $player)
+                {
+                    $trick2 = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player_test}'", true ));
+                    if($trick2 == $nb_tricks)
+                    {
+                        $ok = 1;
+                        break;
+                    }
+
+                }
+            }
+
+            if($ok == 1)
+            {
+                $pv = 5;
+            }
+
+        }
+
+        if($quest == '121')
+        {
+
+            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+
+            $pv = $nb_bleu - $nb_vert;
+        }
+
+        if($quest == '122')
+        {
+            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+
+            $pv = $nb_vert - $nb_bleu;
+
+        }
+
+        if($quest == '131')
+        {
+            $nb_k = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 14", true ));
+            $nb_q = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 13", true ));
+
+            $pv = (3*$nb_k) - (3*$nb_q);
+
+        }
+
+        if($quest == '132')
+        {
+            $nb_k = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 14", true ));
+            $nb_q = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 13", true ));
+
+            $pv = (3*$nb_q) - (3*$nb_k);
+
+        }
+
+        if($quest == '141')
+        {
+            $players_win_tricks = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$round}' AND card_win = 1 ORDER BY id ASC", true );
+            $players_ordre = [];
+            
+            foreach($players as $player_test)
+            {
+                $players_tricks[$player_test] = [0];
+            }
+
+            foreach($players_win_tricks as $player_win_trick)
+            {
+
+                $players_tricks[$player_win_trick][0] = $players_tricks[$player_win_trick][0] + 1;
+
+                if($players_tricks[$player_win_trick][0] == 3)
+                {
+                    $players_ordre[] = $player_win_trick;
+                }
+                
+            }
+
+            if (($index = array_search($player, $players_ordre)) !== false) {
+            
+                $pv = 3 +  $index;
+            }
+
+            
+        }
+
+        if($quest == '142')
+        {
+
+            $players_win_tricks = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$round}' AND card_win = 1 ORDER BY id ASC", true );
+            $players_ordre = [];
+            
+            foreach($players as $player_test)
+            {
+                $players_tricks[$player_test] = [0];
+            }
+
+            foreach($players_win_tricks as $player_win_trick)
+            {
+
+                $players_tricks[$player_win_trick][0] = $players_tricks[$player_win_trick][0] + 1;
+
+                if($players_tricks[$player_win_trick][0] == 3)
+                {
+                    $players_ordre[] = $player_win_trick;
+                }
+                
+            }
+
+            if (($index = array_search($player, $players_ordre)) !== false) {
+            
+                $pv = -3 - $index;
+            }
+
+            
+        }
+
+        if($quest == '151')
+        {
+            $player_win_type_arg = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type <= 3 ORDER BY id ASC", true );
+            $card1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            $card2 = [0, 0, 0, 0];
+
+            foreach($player_win_type_arg as $type_arg)
+            {
+                if($type_arg <= 11)
+                {
+                    $card1[$type_arg-1] = $card1[$type_arg-1] +1;
+                }
+
+                else {
+
+                    $card2[$type_arg-12] = $card2[$type_arg-12] +1;
+                }
+            }
+
+            foreach ($card1 as $card)
+            {
+                if($card == 3)
+                {
+                    $pv = $pv + 1;
+                }
+            }
+
+            foreach ($card2 as $card)
+            {
+                if($card == 3)
+                {
+                    $pv = $pv + 2;
+                }
+            }
+        }
+
+        if($quest == '152')
+        {
+
+            $player_win_type_arg = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type <= 3 ORDER BY id ASC", true );
+            $card1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            $card2 = [0, 0, 0, 0];
+
+            foreach($player_win_type_arg as $type_arg)
+            {
+                if($type_arg <= 11)
+                {
+                    $card1[$type_arg-1] = $card1[$type_arg-1] +1;
+                }
+
+                else {
+
+                    $card2[$type_arg-12] = $card2[$type_arg-12] +1;
+                }
+            }
+
+            foreach ($card1 as $card)
+            {
+                if($card == 3)
+                {
+                    $pv = $pv - 1;
+                }
+            }
+
+            foreach ($card2 as $card)
+            {
+                if($card == 3)
+                {
+                    $pv = $pv - 2;
+                }
+            }
+
+        }
+
+        if($quest == '161')
+        {
+            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $max = 0;
+            $count = 0;
+
+            foreach ($tab as $value) {
+                if ($value == 1) {
+                    $count++;
+                    if ($count > $max) {
+                        $max = $count;
+                    }
+                } else {
+                    $count = 0;
+                }
+            }
+
+            if($max >= 4)
+            {
+                $pv = 5;
+            }
+
+        }
+
+        if($quest == '162')
+        {
+            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $max = 0;
+            $count = 0;
+
+            foreach ($tab as $value) {
+                if ($value == 0) {
+                    $count++;
+                    if ($count > $max) {
+                        $max = $count;
+                    }
+                } else {
+                    $count = 0;
+                }
+            }
+
+            if($max >= 4)
+            {
+                $pv = 5;
+            }
+
+        }
+
+        if($quest == '171')
+        {
+            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 1 AND player_win = '{$player}'", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 2 AND player_win = '{$player}'", true ));
+            $nb_rouge = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 3 AND player_win = '{$player}'", true ));
+
+            $tab = [$nb_vert, $nb_bleu, $nb_rouge];
+
+            $pv = min($tab);
+        }
+
+        if($quest == '172')
+        {
+            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 1 AND player_win = '{$player}'", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 2 AND player_win = '{$player}'", true ));
+            $nb_rouge = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 3 AND player_win = '{$player}'", true ));
+
+            $tab = [$nb_vert, $nb_bleu, $nb_rouge];
+
+            $pv = max($tab);
+
+        }
+
+        if($quest == '181')
+        { 
+            $valeur = self::getUniqueValueFromDB("SELECT MIN(type_arg) AS valeur_min FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1 AND type_arg <= 11");
+            if ($valeur != null)
+            {
+                $pv = $valeur;
+            }
+        }
+
+        if($quest == '182')
+        {
+            $valeur = self::getUniqueValueFromDB("SELECT MIN(type_arg) AS valeur_min FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg <= 11");
+            if ($valeur != null)
+            {
+                $pv = $valeur;
+            }
         }
         
 
+        if($quest == '191')
+        {
 
+            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
+            $player_win_type_arg_blue2 = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg >= 12 ORDER BY id ASC", true );
+            $count1 = count($player_win_type_arg_blue);
+            $count2 = count($player_win_type_arg_blue2);
 
+            $pv = $count1 + $count2;
 
+        }
 
+        if($quest == '192')
+        {
+            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
+            $player_win_type_arg_blue2 = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg >= 12 ORDER BY id ASC", true );
+            $count1 = count($player_win_type_arg_blue);
+            $count2 = count($player_win_type_arg_blue2);
+
+            $pv = -($count1) - $count2;
+
+        }
+
+        if($quest == '201')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+
+            $beforeplayer = game::$instance->getPlayerBefore($player);
+            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            
+            $nextplayer = game::$instance->getPlayerAfter($player);
+            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+
+            if($nb_tricks < $nb_tricks_before)
+            {
+                $pv = $pv + 3;
+            }
+
+            if($nb_tricks > $nb_tricks_after)
+            {
+                $pv = $pv + 3;
+            }
+
+        }
+
+        if($quest == '202')
+        {
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+
+            $beforeplayer = game::$instance->getPlayerBefore($player);
+            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            
+            $nextplayer = game::$instance->getPlayerAfter($player);
+            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+
+            if($nb_tricks > $nb_tricks_before)
+            {
+                $pv = $pv + 3;
+            }
+
+            if($nb_tricks > $nb_tricks_after)
+            {
+                $pv = $pv + 3;
+            }
+
+        }
+
+        
+
+        $pv_round = $pv * $bonus_enchanteur + $score_bonus;
+        self::DbQuery("INSERT INTO scores (round, player_id, score_quest, score_bonus, bonus_enchanteur, score_round) VALUES ($round, $player, $pv, $score_bonus, $bonus_enchanteur, $pv_round)");
+        self::DbQuery("UPDATE player set player_score = player_score + $pv_round WHERE player_id = '{$player}'");
+
+        if($bonus_enchanteur == 1)
+        {
+            game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} scores ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log})'),
+                        array(
+                            'player_name' => $player_name,
+                            'pv' => $pv_round,
+                            'quest' => $pv,
+                            'bonus' => $score_bonus,
+                            'log' => game::$instance->getLogPv(),
+                        )
+            );
+        }
+
+        if($bonus_enchanteur == 2)
+        {
+            game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} scores ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log}) x2 ${log2}'),
+                        array(
+                            'player_name' => $player_name,
+                            'pv' => $pv_round,
+                            'quest' => $pv,
+                            'bonus' => $score_bonus,
+                            'log' => game::$instance->getLogPv(),
+                            'log2' => game::$instance->getLogIcon('2_11'),
+                        )
+            );
+        }
+
+        
+
+        $new_score = self::getUniqueValueFromDB("SELECT player_score FROM player WHERE player_id = '{$player}'");
+        game::$instance->notifyAllPlayers(
+                'score',
+                '',
+                array(
+                    'player' => $player,
+                    'score' => $new_score,
+                 
+                )
+                );
 
     }
 
@@ -1148,7 +1833,7 @@ function calculScore()
 
 
 
-   // ne pas oublier le X2
+   
  
 }
 
