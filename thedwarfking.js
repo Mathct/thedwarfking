@@ -576,11 +576,15 @@ updateLayout: function () {
         setupBoard: function () {
         console.log('Setting up the board');
 
+        const textRound = this.no_round > 7
+        ? `${_("Tiebreaker Round")}`
+        : `${_("Round")} : ${this.no_round} / 7`;
+
         
         const gameBoardHTML = `
             
                     <div id="round">
-                    <div id="nb_round">${_("Round")}: ${this.no_round} / 7</div>
+                    <div id="nb_round">${textRound}</div>
                     <div id="btn_round"><div class="icon1_btn"></div><div>/</div><div class="icon2_btn"></div></div>
                     </div>
 
@@ -1601,7 +1605,14 @@ updateLayout: function () {
 
         notif_majRound: function(notif) {
 
-            document.getElementById('nb_round').innerText = _('Round ')+': ' + notif.args.new_round + ' / 7';
+            if(notif.args.new_round <= 7)
+            {
+                document.getElementById('nb_round').innerText = _('Round')+' : ' + notif.args.new_round + ' / 7';
+            }
+            else
+            {
+                document.getElementById('nb_round').innerText = _('Tiebreaker Round');
+            }
             
         },
 
