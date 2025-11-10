@@ -1205,27 +1205,57 @@ function calculScore()
 
         if($quest == '21')
         {
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+            if($nbreplayers == 3)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 10", true ));
+            }
+            if($nbreplayers == 4)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 7", true ));
+            }
+            if($nbreplayers == 5)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 5", true ));
+            }
             
-            
+            $pv = $nb_tricks * 2;
         }
 
         if($quest == '22')
         {
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+            if($nbreplayers == 3)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 10", true ));
+            }
+            if($nbreplayers == 4)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 7", true ));
+            }
+            if($nbreplayers == 5)
+            {
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 5", true ));
+            }
+            
+            $pv = $nb_tricks * (-2);
             
             
         }
 
         if($quest == '31')
         {
-            // $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 3 OR type_arg = 4)", true ));
-            // $pv = $nb_tricks * 4;
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 3 OR type_arg = 4)", true ));
+            $pv = $nb_tricks * 4;
             
         }
 
         if($quest == '32')
         {
-            // $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 6 OR type_arg = 7)", true ));
-            // $pv = $nb_tricks * 4;
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 6 OR type_arg = 7)", true ));
+            $pv = $nb_tricks * 4;
             
         }
 

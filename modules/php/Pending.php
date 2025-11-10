@@ -517,28 +517,28 @@ class Pending extends APP_GameClass
 
             //DRUIDE OU PE_BLEU
 
-            $ticks_max = 0;
+            $tricks_max = 0;
             $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
             if($nbreplayers == 3)
             {
-                $ticks_max = 13;
+                $tricks_max = 13;
             }
             if($nbreplayers == 4)
             {
-                $ticks_max = 10;
+                $tricks_max = 10;
             }
             if($nbreplayers == 5)
             {
-                $ticks_max = 8;
+                $tricks_max = 8;
             }
 
-            if ($trick_no != $ticks_max && $type == 1 && $type_arg == 1)
+            if ($trick_no != $tricks_max && $type == 1 && $type_arg == 1)
             {
                 game::$instance->setGameStateValue("druide_player", $this->player_id);
             }
             
-            if ($trick_no != $ticks_max && $type == 2 && $type_arg == 11 && $type_arg_2 == 1)
+            if ($trick_no != $tricks_max && $type == 2 && $type_arg == 11 && $type_arg_2 == 1)
             {
                 game::$instance->setGameStateValue("pe_bleu_player", $this->player_id);
             } 
@@ -1680,20 +1680,20 @@ class Pending extends APP_GameClass
         // NB ROUND ACTUEL
         $round = game::$instance->getGameStateValue('no_round');
 
-        $ticks_max = 0;
+        $tricks_max = 0;
         $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
         if($nbreplayers == 3)
         {
-            $ticks_max = 13;
+            $tricks_max = 13;
         }
         if($nbreplayers == 4)
         {
-            $ticks_max = 10;
+            $tricks_max = 10;
         }
         if($nbreplayers == 5)
         {
-            $ticks_max = 8;
+            $tricks_max = 8;
         }
 
 
@@ -1710,7 +1710,7 @@ class Pending extends APP_GameClass
                 )
         );
 
-        if($trick_no < $ticks_max)
+        if($trick_no < $tricks_max)
         {
             game::$instance->notifyAllPlayers(
                     'message',
@@ -1723,7 +1723,7 @@ class Pending extends APP_GameClass
                 );
         }
 
-        if($trick_no == $ticks_max)
+        if($trick_no == $tricks_max)
         {
             game::$instance->notifyAllPlayers(
                     'message',
@@ -1756,30 +1756,30 @@ class Pending extends APP_GameClass
         // NB ROUND ACTUEL
         $round = game::$instance->getGameStateValue('no_round');
 
-        $ticks_max = 0;
+        $tricks_max = 0;
         $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
         if($nbreplayers == 3)
         {
-            $ticks_max = 13;
+            $tricks_max = 13;
         }
         if($nbreplayers == 4)
         {
-            $ticks_max = 10;
+            $tricks_max = 10;
         }
         if($nbreplayers == 5)
         {
-            $ticks_max = 8;
+            $tricks_max = 8;
         }
 
-        if($trick_no < $ticks_max)
+        if($trick_no < $tricks_max)
         {
             $ret['title'] = clienttranslate('${actplayer} can exchange the Sorcerer for a card from the previous trick');
             $ret['titleyou'] = clienttranslate('${you} can exchange the Sorcerer for a card from the previous trick or');
             $ret['buttons'][] = 'pass';
         }
 
-        if($trick_no == $ticks_max)
+        if($trick_no == $tricks_max)
         {
             $ret['title'] = clienttranslate('${actplayer} must exchange the Sorcerer for a card from the previous trick');
             $ret['titleyou'] = clienttranslate('${you} must exchange the Sorcerer for a card from the previous trick');
