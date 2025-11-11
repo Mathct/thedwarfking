@@ -111,11 +111,11 @@ $this->_QUESTS = [
 
     51 => [
         "name" => clienttranslate("To the Right"),
-        "text" => clienttranslate("+1 <div class='log_pv'></div> for each trick won by the player to your right.")
+        "text" => clienttranslate("+1 <div class='log_pv'></div> for each trick won by the previous player.")
     ],
     52 => [
         "name" => clienttranslate("To the Left"),
-        "text" => clienttranslate("+1 <div class='log_pv'></div> for each trick won by the player to your lef")
+        "text" => clienttranslate("+1 <div class='log_pv'></div> for each trick won by the next player.")
     ],
 
     61 => [
@@ -256,13 +256,13 @@ $this->_QUESTS = [
 
     201 => [
         "name" => clienttranslate("In Line"),
-        "text" => clienttranslate("+3 <div class='log_pv'></div> if you win fewer tricks than the player to your right."),
-        "text2" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the player to your left.")
+        "text" => clienttranslate("+3 <div class='log_pv'></div> if you win fewer tricks than the previous player."),
+        "text2" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the next player.")
     ],
     202 => [
         "name" => clienttranslate("Sandwich"),
-        "text" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the player to your right."),
-        "text2" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the player to your left.")
+        "text" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the previous player."),
+        "text2" => clienttranslate("+3 <div class='log_pv'></div> if you win more tricks than the next player.")
     ]
 
 ];

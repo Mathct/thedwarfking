@@ -617,6 +617,19 @@ class Pending extends APP_GameClass
         if($all_cards != null)
         {
 
+            // MAJ LAST TRICK PANNEL FOR THE PLAYER
+            $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+
+            game::$instance->notifyPlayer(
+                        $winner,
+                        'majLastTrickWin',
+                        '',
+                        array(
+                            'player' => $winner,
+                            'trick' => $cards_trick,
+                        )
+            );
+
                 
             // NOUVEL ORDRE PENDING
             $nextplayer = $winner;
@@ -944,6 +957,18 @@ class Pending extends APP_GameClass
 
                     )
                 );
+
+                // RESET LAST TRICK WIN PANNEL
+
+                game::$instance->notifyPlayer(
+                    $player,
+                    'removeLastTrickWin',
+                    '',
+                    array(
+                        'player' => $player,
+                        
+                    )
+        );
             }
 
             $active_special_card = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$new_round}'" );
@@ -1831,15 +1856,20 @@ class Pending extends APP_GameClass
 
         else {
 
+            $round = game::$instance->getGameStateValue('no_round');
             $player = $this->player_id;
             $explode = explode('_', $varg1);
             $card_id = $explode[2];
+                        
             $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
 
             // INVERSION DES CARTES EN BD
-            self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}'");
-            self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}'");
-            self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}'");
+            
+
+            self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+            self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+            self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
+
             
             self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
             self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
@@ -1883,6 +1913,21 @@ class Pending extends APP_GameClass
                         'log2' => game::$instance->getLogIcon($log),
 
                     )
+            );
+
+            // MAJ LAST TRICK PANNEL FOR THE PLAYER
+            $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
+            $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
+            $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+
+            game::$instance->notifyPlayer(
+                        $player_maj,
+                        'majLastTrickWin',
+                        '',
+                        array(
+                            'player' => $player_maj,
+                            'trick' => $cards_trick,
+                        )
             );
 
             // INIT SORCIER

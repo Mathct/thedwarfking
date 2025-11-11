@@ -397,12 +397,21 @@ protected function getAllDatas()
     $result['tooltips_cards'] = $this->_CARDS;
     $result['tooltips_quests'] = $this->_QUESTS;
 
-    //pannel
+    //pannel last trick win
     $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
     foreach ($players as $player)
     {
         $result['tricks_win'][$player] = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+
+        if ($result['tricks_win'][$player] > 0)
+        {
+            $list_tricks = self::getObjectListFromDB( "SELECT trick FROM tricks WHERE card_win = 1 AND player_win = '{$player}' ORDER BY id ASC", true );
+            $last_trick = end($list_tricks);
+            $result['last_trick_win'][$player] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND player_win = '{$player}'" );
+        }
     }
+
+
     
     return $result;
 }
@@ -514,20 +523,21 @@ function winnerOfTurn()
         $trick = game::$instance->getGameStateValue("no_trick");
 
         // TRICKS MAX POUR BOUFFON ET BRICOLEUR
-        $ticks_max = 0;
+        // UTILISE AUSSI POUR LE DERNIER MESSAGE DU ROUND
+        $tricks_max = 0;
         $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
         if($nbreplayers == 3)
         {
-            $ticks_max = 13;
+            $tricks_max = 13;
         }
         if($nbreplayers == 4)
         {
-            $ticks_max = 10;
+            $tricks_max = 10;
         }
         if($nbreplayers == 5)
         {
-            $ticks_max = 8;
+            $tricks_max = 8;
         }
 
         // COLOR REQUEST ET CARDS PLAYED
@@ -628,14 +638,14 @@ function winnerOfTurn()
                 }
 
                 // BRICOLEUR VERT (1 11 2)
-                if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $ticks_max)
+                if ($card['type'] == 1 && $card['type_arg'] == 11 && $card['type_arg_2'] == 2 && $trick != $tricks_max)
                 {
                     game::$instance->setGameStateValue("bricoleur", 1);
                     
                 }
 
                 // BOUFFON BLEU (2 1 0)
-                if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $ticks_max)
+                if ($card['type'] == 2 && $card['type_arg'] == 1 && $trick == $tricks_max)
                 {
                     $bouffon = $card['location_arg'];
                     
@@ -710,73 +720,149 @@ function winnerOfTurn()
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
-        if($excalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
+
+        if($trick < $tricks_max)
         {
-            game::$instance->notifyAllPlayers(
-                    'endTurn',
-                    clienttranslate('${player_name} wins the trick and begins the next trick'),
-                    array(
-                        'winner_id' => $player_win,
-                        'player_name' => $winner_name,
-                    )
-            );
+            if($excalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the trick and begins the next trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                        )
+                );
+            }
+
+            if($excalibur == 1)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_5'),
+                        )
+                );
+            }
+
+
+            if($hydre_play == 1)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_1'),
+                        )
+                );
+            }
+
+            if($player_win == $momie_player)
+            {
+
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_2'),
+                        )
+                );
+
+            }
+
+            if($player_win == $clone_player)
+            {
+
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_3'),
+                        )
+                );
+
+            }
         }
 
-        if($excalibur == 1)
+        else
         {
-            game::$instance->notifyAllPlayers(
-                    'endTurn',
-                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
-                    array(
-                        'winner_id' => $player_win,
-                        'player_name' => $winner_name,
-                        'log' => game::$instance->getLogIcon('4_5'),
-                    )
-            );
-        }
+            if($excalibur == 0 && $hydre_play == 0 && $player_win != $momie_player && $player_win != $clone_player)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the last trick'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                        )
+                );
+            }
+
+            if($excalibur == 1)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the last trick thanks to ${log}'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_5'),
+                        )
+                );
+            }
 
 
-        if($hydre_play == 1)
-        {
-            game::$instance->notifyAllPlayers(
-                    'endTurn',
-                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
-                    array(
-                        'winner_id' => $player_win,
-                        'player_name' => $winner_name,
-                        'log' => game::$instance->getLogIcon('4_1'),
-                    )
-            );
-        }
+            if($hydre_play == 1)
+            {
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the last trick thanks to ${log}'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_1'),
+                        )
+                );
+            }
 
-        if($player_win == $momie_player)
-        {
+            if($player_win == $momie_player)
+            {
 
-             game::$instance->notifyAllPlayers(
-                    'endTurn',
-                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
-                    array(
-                        'winner_id' => $player_win,
-                        'player_name' => $winner_name,
-                        'log' => game::$instance->getLogIcon('4_2'),
-                    )
-            );
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the last trick thanks to ${log}'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_2'),
+                        )
+                );
 
-        }
+            }
 
-        if($player_win == $clone_player)
-        {
+            if($player_win == $clone_player)
+            {
 
-             game::$instance->notifyAllPlayers(
-                    'endTurn',
-                    clienttranslate('${player_name} wins the trick thanks to ${log} and begins the next trick'),
-                    array(
-                        'winner_id' => $player_win,
-                        'player_name' => $winner_name,
-                        'log' => game::$instance->getLogIcon('4_3'),
-                    )
-            );
+                game::$instance->notifyAllPlayers(
+                        'endTurn',
+                        clienttranslate('${player_name} wins the last trick thanks to ${log}'),
+                        array(
+                            'winner_id' => $player_win,
+                            'player_name' => $winner_name,
+                            'log' => game::$instance->getLogIcon('4_3'),
+                        )
+                );
 
+            }
         }
 
 
@@ -1154,6 +1240,7 @@ function calculScore()
         $pv = 0;
         $score_quest = 0;
         $score_bonus = self::getUniqueValueFromDB("SELECT bonus FROM bonus WHERE player_id = '{$player}' AND round = '{$round}'");
+
         $bonus_enchanteur = 1;
         if(game::$instance->getGameStateValue("enchanteur") == $player)
         {

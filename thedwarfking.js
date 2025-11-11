@@ -553,23 +553,88 @@ updateLayout: function () {
                     var parent_player = document.getElementById("infopannel_"+player);
                     parent_player.appendChild(icon_trick);
                     parent_player.appendChild(trick_win);
+
+
+                    var info = _('Number of tricks won')
+                    var html = '<div>'+info+'</div>';
+                    this.addTooltipHtml( "icon_trick_"+player, html, 500);
+                    
+                    
                 
 
                 if(this.getCurrentPlayerId() == player)
                 {
-                    //container.classList.add("pointer");
+                    const last_win_container = document.createElement("div");
+                    last_win_container.id = "last_win_container_"+player;
+                    last_win_container.className = "last_win_container";
+                    parent.appendChild(last_win_container);
+
+                    var info = _('Last trick won')
+                    var html = '<div>'+info+'</div>';
+                    this.addTooltipHtml( "last_win_container_"+player, html, 500);
+
+                    
+                    
+                    if(this.gamedatas.tricks_win[player] > 0)
+                    {
+                        
+                        for(index in this.gamedatas.last_trick_win[player])
+                        {
+                            var type = this.gamedatas.last_trick_win[player][index].type;
+                            var type_arg = this.gamedatas.last_trick_win[player][index].type_arg;
+
+                            this.addLastWinTrickCard (player, type, type_arg);
+    
+                        }
+                    }
                 }
-
-
-
-
-
 
             }
 
-            
-        
         },
+
+        // PANNEL LAST TRICK WIN
+
+        addLastWinTrickCard: function(player, card_type, card_type_arg)
+        {
+                       
+            var parent = document.getElementById("last_win_container_"+player);
+            var type = card_type;
+            var type_arg = card_type_arg;
+
+            if(type == 1)
+            {
+                var variableY = 0;
+            }
+
+            if(type == 2)
+            {
+                var variableY = -100;
+            }
+
+            if(type == 3)
+            {
+                var variableY = -200;
+            }
+
+            if(type == 4)
+            {
+                var variableY = -300;
+            }
+
+            var variableX = (type_arg-1)*(-100);
+
+            const newDiv = document.createElement('div');
+            newDiv.classList.add('icon_last_trick_win');
+            newDiv.style.backgroundPositionX = variableX + '%';
+            newDiv.style.backgroundPositionY = variableY + '%';
+            parent.appendChild(newDiv);
+
+
+            
+        },
+
+
 
         /// BOARD
 
@@ -1534,6 +1599,8 @@ updateLayout: function () {
             dojo.subscribe( 'majTricksWin', this, "notif_majTricksWin" );
             dojo.subscribe( 'initPannel', this, "notif_initPannel" );
             dojo.subscribe( 'score', this, "notif_score" );
+            dojo.subscribe( 'majLastTrickWin', this, "notif_majLastTrickWin" );
+            dojo.subscribe( 'removeLastTrickWin', this, "notif_removeLastTrickWin" );
 
             
 
@@ -1649,9 +1716,7 @@ updateLayout: function () {
             
 
             var modal_round_container = document.getElementById("modal_round_container");
-            var croix = document.getElementById("croix");
             modal_round_container.classList.remove('hidden');
-            croix.classList.add('hidden');
 
             dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
             
@@ -1712,6 +1777,28 @@ updateLayout: function () {
         notif_score: async function( notif ){
     
             this.scoreCtrl[ notif.args.player ].toValue( notif.args.score );
+
+        },
+
+        notif_majLastTrickWin: async function( notif ){
+
+            var parent = document.getElementById("last_win_container_"+notif.args.player);
+            parent.textContent = '';
+    
+            for(index in notif.args.trick)
+            {
+                var type = notif.args.trick[index].type;
+                var type_arg = notif.args.trick[index].type_arg;
+
+                this.addLastWinTrickCard(notif.args.player, type, type_arg);
+            }
+
+        },
+
+        notif_removeLastTrickWin: async function( notif ){
+    
+            var parent = document.getElementById("last_win_container_"+notif.args.player);
+            parent.textContent = '';
 
         },
 
