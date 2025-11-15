@@ -228,8 +228,8 @@ function (dojo, declare) {
                                 }
                                 if(args.buttons[nb] == "yes") 
                                 {
-                                this.addActionButton('btn_yes', _("Yes"), 'onOpButton', null, null, 'blue');
-                                this.startActionTimer('btn_yes', 5, 1);
+                                this.addActionButton('yes', _("Yes"), 'onOpButton', null, null, 'blue');
+                                //this.startActionTimer('yes', 5, 1);
                                 }
                                 if(args.buttons[nb] == "no") 
                                 {

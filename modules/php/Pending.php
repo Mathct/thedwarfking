@@ -24,6 +24,10 @@ class Pending extends APP_GameClass
         $this->trick_nb = game::$instance->getGameStateValue('no_trick');
         $this->special = self::getObjectListFromDB( "SELECT id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$this->round_nb}'");
         $this->quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'");
+
+        /// PREFERENCE DE CONFIRMATION
+
+        $this->player_pref_confirm = game::$instance->getUniqueValueFromDB("SELECT pgp_value FROM bga_user_preferences WHERE pgp_player='{$this->player_id}' AND pgp_preference_id = 100");
     }
 
 
@@ -136,48 +140,125 @@ class Pending extends APP_GameClass
 
     function Quest($parg1, $parg2, $varg1, $varg2)
     {
-        $questremove = 0;
-
-        if($varg1 == 'questcardmodal1')
+        if($this->player_pref_confirm == 1)
         {
-            $questremove = 2;
-            self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+            $questremove = 0;
+
+            if($varg1 == 'questcardmodal1')
+            {
+                $questremove = 2;
+                self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+            }
+
+            if($varg1 == 'questcardmodal2')
+            {
+                $questremove = 1;
+                self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
+                
+            }
+
+            $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+            $imageQuestLog = game::$instance->getLogQuest($quest);
+
+            game::$instance->notifyAllPlayers(
+                    'ChoiceQuest',
+                    clienttranslate('${player_name} chooses this quest: ${log}'),
+                    array(
+                        'player_name' => $this->player_name,
+                        'questremove' => $questremove,
+                        'log' => $imageQuestLog,
+                    
+
+                    )
+                );
+
+            game::$instance->giveExtraTime($this->player_id);
+
+            // PE_ROUGE
+            $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
+            if($player_pe_rouge != null)
+            {
+                game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
+                game::$instance->addPending($player_pe_rouge, "PeRed");
+            }
         }
 
-        if($varg1 == 'questcardmodal2')
+        if($this->player_pref_confirm == 2)
         {
-            $questremove = 1;
-            self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
-            
-        }
-
-        $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
-        $imageQuestLog = game::$instance->getLogQuest($quest);
-
-         game::$instance->notifyAllPlayers(
-                'ChoiceQuest',
-                clienttranslate('${player_name} chooses this quest: ${log}'),
-                array(
-                    'player_name' => $this->player_name,
-                    'questremove' => $questremove,
-                    'log' => $imageQuestLog,
-                   
-
-                )
-            );
-
-        game::$instance->giveExtraTime($this->player_id);
-
-        // PE_ROUGE
-        $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
-        if($player_pe_rouge != null)
-        {
-            game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
-            game::$instance->addPending($player_pe_rouge, "PeRed");
+            game::$instance->addPending($this->player_id, "QuestConfirm", $varg1);
         }
         
         
     }
+
+    function argQuestConfirm($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function QuestConfirm($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "Quest");
+        }
+
+        if ($varg1 == 'yes') {
+
+            $questremove = 0;
+
+            if($parg1 == 'questcardmodal1')
+            {
+                $questremove = 2;
+                self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+            }
+
+            if($parg1 == 'questcardmodal2')
+            {
+                $questremove = 1;
+                self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
+                
+            }
+
+            $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+            $imageQuestLog = game::$instance->getLogQuest($quest);
+
+            game::$instance->notifyAllPlayers(
+                    'ChoiceQuest',
+                    clienttranslate('${player_name} chooses this quest: ${log}'),
+                    array(
+                        'player_name' => $this->player_name,
+                        'questremove' => $questremove,
+                        'log' => $imageQuestLog,
+                    
+
+                    )
+                );
+
+            game::$instance->giveExtraTime($this->player_id);
+
+            // PE_ROUGE
+            $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
+            if($player_pe_rouge != null)
+            {
+                game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
+                game::$instance->addPending($player_pe_rouge, "PeRed");
+            }
+            
+        }
+    }
+
 
     function argFirstPlay($parg1, $parg2)
     {
@@ -369,6 +450,8 @@ class Pending extends APP_GameClass
 
         else
         {
+            if($this->player_pref_confirm == 1)
+            {
 
             $explode = explode('_', $varg1);
             $card_id = intval(end($explode));
@@ -541,10 +624,220 @@ class Pending extends APP_GameClass
             if ($trick_no != $tricks_max && $type == 2 && $type_arg == 11 && $type_arg_2 == 1)
             {
                 game::$instance->setGameStateValue("pe_bleu_player", $this->player_id);
-            } 
+            }
+
+            }
+            
+            if($this->player_pref_confirm == 2)
+            {
+                game::$instance->addPending($this->player_id, "PlayCardConfirm", $varg1);
+            }
 
         }
         
+    }
+
+    function argPlayCardConfirm($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function PlayCardConfirm($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "PlayCard");
+        }
+
+        if ($varg1 == 'yes') {
+
+            $explode = explode('_', $parg1);
+            $card_id = intval(end($explode));
+
+            $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
+            $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+            $type_arg_2 = self::getUniqueValueFromDB("SELECT card_type_arg_2 FROM cards WHERE card_id='{$card_id}'");
+
+            $card_play = self::getObjectFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = {$card_id}");
+
+            game::$instance->cards->moveCard($card_id, 'table', $this->player_id);
+
+            
+            // pour la Momie
+            $momie = 0;
+            if (($type == 4) && ($type_arg == 2))
+            {
+                $momie = 1;
+            }
+
+            $trick_no = game::$instance->getGameStateValue('no_trick');
+            $round = game::$instance->getGameStateValue('no_round');
+            $last_trick = $trick_no - 1;
+            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+
+            // pour le Clone: sauvergarde de la derniere card_id jouée (n'est pas mise à jour dès que le Clone est joué)
+            $last_type = 0;
+            $last_type_arg = 0;
+            $clone = 0;
+            if (($type == 4) && ($type_arg == 3))
+            {
+                $clone = 1;
+                game::$instance->setGameStateValue("clone_play", 1);
+                $last_card_id = game::$instance->getGameStateValue("last_card_play");
+                $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
+                $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$last_card_id}'");
+            }
+
+            if(game::$instance->getGameStateValue("clone_play") != 1)
+            {
+                game::$instance->setGameStateValue("last_card_play", $card_id);
+                $clone_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                if($clone_id != null)
+                    {
+                        
+                        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                        $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
+                        $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+
+                        game::$instance->notifyPlayer(
+                        $clone_player,
+                        'cloneChange',
+                        '',
+                        array(
+                            'clone_id' => $clone_id,
+                            'clone_player' => $clone_player,
+                            'type_last_card' => $last_type,
+                            'typearg_last_card' => $last_type_arg
+
+                        )
+                    );
+
+                }
+               
+
+                
+            }
+
+
+
+            $log = $type.'_'.$type_arg;
+            $image_log = game::$instance->getLogIcon($log);
+            
+            game::$instance->notifyAllPlayers(
+                        'playCard',
+                        clienttranslate('${player_name} plays ${log}'),
+                        array(
+                            'player_name' => $this->player_name,
+                            'card_play' => $card_play,
+                            'log' => $image_log,
+                            'momie' => $momie,
+                            'type_last_card_win' => $type_last_card_win,
+                            'typearg_last_card_win' => $typearg_last_card_win,
+                            'clone' => $clone,
+                            'type_last_card' => $last_type,
+                            'typearg_last_card' => $last_type_arg,
+
+                             
+                        )
+                    );
+
+            
+            // message clone
+            if (($type == 4) && ($type_arg == 3))
+            {
+                $log2 = $last_type.'_'.$last_type_arg;
+                $image_log2 = game::$instance->getLogIcon($log2);
+
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${log} is the same color as ${log2} (with a slightly higher value)'),
+                        array(
+                            
+                            'log' => $image_log,
+                            'log2' => $image_log2,
+                             
+                        )
+                    );
+
+            }
+           
+
+            
+
+                    
+            // Test si color_request doit être modifiée
+            if (game::$instance->getGameStateValue("color_request") == 0)
+            {
+                if (($type == 1) || ($type == 2) || ($type == 3))
+                {
+                    game::$instance->setGameStateValue("color_request", $type);
+                }
+
+                if (($type == 4) && ($type_arg == 2))
+                {
+                    game::$instance->setGameStateValue("color_request", $type_last_card_win);
+                }
+
+                if (($type == 4) && ($type_arg == 3))
+                {
+                    game::$instance->setGameStateValue("color_request", $last_type);
+                }
+
+
+            }
+
+
+            
+
+            
+            game::$instance->DbQuery("UPDATE player set player_turn = 1 WHERE player_id = '{$this->player_id}'");
+            game::$instance->giveExtraTime($this->player_id);
+            game::$instance->addPendingFirst($this->player_id, "PlayCard");
+
+
+            //DRUIDE OU PE_BLEU
+
+            $tricks_max = 0;
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+            if($nbreplayers == 3)
+            {
+                $tricks_max = 13;
+            }
+            if($nbreplayers == 4)
+            {
+                $tricks_max = 10;
+            }
+            if($nbreplayers == 5)
+            {
+                $tricks_max = 8;
+            }
+
+            if ($trick_no != $tricks_max && $type == 1 && $type_arg == 1)
+            {
+                game::$instance->setGameStateValue("druide_player", $this->player_id);
+            }
+            
+            if ($trick_no != $tricks_max && $type == 2 && $type_arg == 11 && $type_arg_2 == 1)
+            {
+                game::$instance->setGameStateValue("pe_bleu_player", $this->player_id);
+            }
+
+        
+        }
+
     }
 
     function argEndOfTurn($parg1, $parg2)
@@ -1102,6 +1395,9 @@ class Pending extends APP_GameClass
 
     function DruideStep2($parg1, $parg2, $varg1, $varg2)
     {
+        if($this->player_pref_confirm == 1)
+        {
+
         $explode = explode('_', $varg1);
         $nextplayer = $explode[2];
         $player = $this->player_id;
@@ -1198,6 +1494,138 @@ class Pending extends APP_GameClass
 
         game::$instance->giveExtraTime($this->player_id);
 
+        }
+
+        if($this->player_pref_confirm == 2)
+        {
+            game::$instance->addPending($this->player_id, "DruideConfirm", $varg1);
+        }
+
+    }
+
+
+    function argDruideConfirm($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function DruideConfirm($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "DruideStep2");
+        }
+
+        if ($varg1 == 'yes') {
+
+            $explode = explode('_', $parg1);
+            $nextplayer = $explode[2];
+            $player = $this->player_id;
+
+            $cards_before_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
+            $cards_before_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removeCards',
+                    '',
+                    array(
+
+                        'cards' => $cards_before_1,
+
+                    )
+            );
+
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'removeCards',
+                    '',
+                    array(
+
+                        'cards' => $cards_before_2,
+
+                    )
+            );
+
+            
+            self::DbQuery("UPDATE cards set card_location_arg = 1234 WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'");
+            self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'");
+            self::DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_location ='hand' AND card_location_arg=1234");
+
+            $cards_after_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
+            $cards_after_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+
+
+            game::$instance->notifyPlayer(
+                    $player,
+                    'drawCards',
+                    '',
+                    array(
+
+                        'cards' => $cards_after_1,
+
+                    )
+                );
+
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'drawCards',
+                    '',
+                    array(
+
+                        'cards' => $cards_after_2,
+
+                    )
+                );
+
+
+            
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removePlayersModal',
+                    '',
+                    array(
+
+                        
+
+                    )
+            ); 
+            
+            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} exchanges their hand with ${opponent}'),
+                    array(
+                        'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                            'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                        ],
+
+                        'player_name' => $this->player_name,
+                        
+                    )
+                );
+
+
+            // INIT DRUIDE
+            game::$instance->setGameStateValue("druide_player", 0);
+            game::$instance->setGameStateValue("druide_active", 0);
+
+            game::$instance->giveExtraTime($this->player_id);
+
+        }
     }
 
 
@@ -1252,6 +1680,10 @@ class Pending extends APP_GameClass
 
     function PeBlueStep2($parg1, $parg2, $varg1, $varg2)
     {
+
+        if($this->player_pref_confirm == 1)
+        {
+
         $explode = explode('_', $varg1);
         $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
         
@@ -1411,7 +1843,204 @@ class Pending extends APP_GameClass
         game::$instance->setGameStateValue("pe_bleu_active", 0);
 
         game::$instance->giveExtraTime($this->player_id);
+
+        }
+
+
+        if($this->player_pref_confirm == 2)
+        {
+            game::$instance->addPending($this->player_id, "PeBlueConfirm", $varg1);
+        }
         
+
+    }
+
+    function argPeBlueConfirm($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function PeBlueConfirm($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "PeBlueStep2");
+        }
+
+        if ($varg1 == 'yes') {
+
+            $explode = explode('_', $parg1);
+            $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+            
+            foreach($players as $player)
+            {
+                $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+                
+                game::$instance->notifyPlayer(
+                $player,
+                'removeCards',
+                '',
+                array(
+
+                    'cards' => $cards_before,
+
+                )
+                );
+            }
+
+            $nb_players = count($players);
+
+            $player1 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 1");
+            $player2 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 2");
+            $player3 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 3");
+            $player4 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 4");
+            $player5 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 5");
+            
+            self::DbQuery("UPDATE cards set card_location_arg = 1 WHERE card_location ='hand' AND card_location_arg='{$player1}'");
+            self::DbQuery("UPDATE cards set card_location_arg = 2 WHERE card_location ='hand' AND card_location_arg='{$player2}'");
+            self::DbQuery("UPDATE cards set card_location_arg = 3 WHERE card_location ='hand' AND card_location_arg='{$player3}'");
+
+            if($nb_players == 4)
+            {
+                self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
+            }
+
+            if($nb_players == 5)
+            {
+                self::DbQuery("UPDATE cards set card_location_arg = 5 WHERE card_location ='hand' AND card_location_arg='{$player5}'");
+            }
+
+
+
+
+            if($explode[2] == 1)
+            {  
+                if($nb_players == 3)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 3");
+                }
+
+                if($nb_players == 4)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 4");
+                }
+
+                if($nb_players == 5)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 4");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 5");
+                }
+
+
+                game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} with ${log}: All players pass their hand to the NEXT player'),
+                    array(
+                        
+                        'player_name' => $this->player_name,
+                        'log' => game::$instance->getLogIcon('2_11'),
+                    )
+                );
+            
+            
+                
+            }
+
+            if($explode[2] == 2)
+            {
+
+                if($nb_players == 3)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
+                }
+
+                if($nb_players == 4)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
+                }
+
+                if($nb_players == 5)
+                {
+                    self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 1");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
+                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 5");
+                }
+
+                game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} with ${log}: All players pass their hand to the PREVIOUS player'),
+                    array(
+                        
+                        'player_name' => $this->player_name,
+                        'log' => game::$instance->getLogIcon('2_11'),
+                    )
+                );
+
+
+                
+            }
+
+            foreach($players as $player)
+            {
+                $cards_after = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+                
+                game::$instance->notifyPlayer(
+                $player,
+                'drawCards',
+                '',
+                array(
+
+                    'cards' => $cards_after,
+
+                )
+                );
+            }
+
+            game::$instance->notifyPlayer(
+                    $this->player_id,
+                    'removeFlecheModal',
+                    '',
+                    array(
+
+                        
+
+                    )
+            );
+
+
+            // INIT PE BLEU
+            game::$instance->setGameStateValue("pe_bleu_player", 0);
+            game::$instance->setGameStateValue("pe_bleu_active", 0);
+
+            game::$instance->giveExtraTime($this->player_id);
+
+        }
 
     }
 
@@ -1490,104 +2119,239 @@ class Pending extends APP_GameClass
 
     function PeRedStep2($parg1, $parg2, $varg1, $varg2)
     {
-        $max_cards = 0;
-        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+        if($this->player_pref_confirm == 1)
+        {
+            $max_cards = 0;
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
 
-        if($nbreplayers == 3)
-        {
-            $max_cards = 13;
-        }
-        if($nbreplayers == 4)
-        {
-            $max_cards = 10;
-        }
-        if($nbreplayers == 5)
-        {
-            $max_cards = 8;
-        }
-        
-        $rand1 = bga_rand(1, $max_cards);
-        $rand2 = bga_rand(1, $max_cards);
-
-        while($rand2 == $rand1)
-        {
+            if($nbreplayers == 3)
+            {
+                $max_cards = 13;
+            }
+            if($nbreplayers == 4)
+            {
+                $max_cards = 10;
+            }
+            if($nbreplayers == 5)
+            {
+                $max_cards = 8;
+            }
+            
+            $rand1 = bga_rand(1, $max_cards);
             $rand2 = bga_rand(1, $max_cards);
+
+            while($rand2 == $rand1)
+            {
+                $rand2 = bga_rand(1, $max_cards);
+            }
+
+
+            $explode = explode('_', $varg1);
+            $nextplayer = $explode[2];
+            $player = $this->player_id;
+
+            $cards = [];
+
+            $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
+            $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            
+            $cards[] = $cards_before[$cards_id_before[$rand1-1]];
+            $cards[] = $cards_before[$cards_id_before[$rand2-1]];
+
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+
+
+        
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'removeCards',
+                    '',
+                    array(
+
+                        'cards' => $cards,
+
+                    )
+            );
+
+            game::$instance->notifyPlayer(
+                    $player,
+                    'drawCards',
+                    '',
+                    array(
+
+                        'cards' => $cards,
+
+                    )
+                );
+
+            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} takes 2 cards from ${opponent}\'s hand'),
+                    array(
+                        'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                            'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                        ],
+
+                        'player_name' => $this->player_name,
+                        
+                    )
+                );
+
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removePlayersModal',
+                    '',
+                    array(
+
+                        
+
+                    )
+            ); 
+
+            
+            // INIT PE ROUGE
+            game::$instance->setGameStateValue("pe_rouge_player", 0);
+            game::$instance->setGameStateValue("pe_rouge_active", 0);
+
+            game::$instance->addPending($this->player_id, "PeRedStep3", $nextplayer);
+
         }
 
+        if($this->player_pref_confirm == 2)
+        {
+            game::$instance->addPending($this->player_id, "PeRedConfirm1", $varg1);
+        }
 
-        $explode = explode('_', $varg1);
-        $nextplayer = $explode[2];
-        $player = $this->player_id;
+    }
 
-        $cards = [];
+    function argPeRedConfirm1($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
 
-        $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
-        $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function PeRedConfirm1($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "PeRedStep2");
+        }
+
+        if ($varg1 == 'yes') {
+
+            $max_cards = 0;
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+            if($nbreplayers == 3)
+            {
+                $max_cards = 13;
+            }
+            if($nbreplayers == 4)
+            {
+                $max_cards = 10;
+            }
+            if($nbreplayers == 5)
+            {
+                $max_cards = 8;
+            }
+            
+            $rand1 = bga_rand(1, $max_cards);
+            $rand2 = bga_rand(1, $max_cards);
+
+            while($rand2 == $rand1)
+            {
+                $rand2 = bga_rand(1, $max_cards);
+            }
+
+
+            $explode = explode('_', $parg1);
+            $nextplayer = $explode[2];
+            $player = $this->player_id;
+
+            $cards = [];
+
+            $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
+            $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            
+            $cards[] = $cards_before[$cards_id_before[$rand1-1]];
+            $cards[] = $cards_before[$cards_id_before[$rand2-1]];
+
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+
+
         
-        $cards[] = $cards_before[$cards_id_before[$rand1-1]];
-        $cards[] = $cards_before[$cards_id_before[$rand2-1]];
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'removeCards',
+                    '',
+                    array(
 
-        game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
-        game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+                        'cards' => $cards,
 
-
-       
-        game::$instance->notifyPlayer(
-                $nextplayer,
-                'removeCards',
-                '',
-                array(
-
-                    'cards' => $cards,
-
-                )
-        );
-
-        game::$instance->notifyPlayer(
-                $player,
-                'drawCards',
-                '',
-                array(
-
-                    'cards' => $cards,
-
-                )
+                    )
             );
 
-        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            game::$instance->notifyPlayer(
+                    $player,
+                    'drawCards',
+                    '',
+                    array(
 
-        game::$instance->notifyAllPlayers(
-                'message',
-                clienttranslate('${player_name} takes 2 cards from ${opponent}\'s hand'),
-                array(
-                    'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
-                                        'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
-                                    ],
+                        'cards' => $cards,
 
-                    'player_name' => $this->player_name,
-                    
-                )
-            );
+                    )
+                );
 
-        game::$instance->notifyPlayer(
-                $player,
-                'removePlayersModal',
-                '',
-                array(
+            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
 
-                    
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} takes 2 cards from ${opponent}\'s hand'),
+                    array(
+                        'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                            'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                        ],
 
-                )
-        ); 
+                        'player_name' => $this->player_name,
+                        
+                    )
+                );
 
-        
-        // INIT PE ROUGE
-        game::$instance->setGameStateValue("pe_rouge_player", 0);
-        game::$instance->setGameStateValue("pe_rouge_active", 0);
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removePlayersModal',
+                    '',
+                    array(
 
-        game::$instance->addPending($this->player_id, "PeRedStep3", $nextplayer);
+                        
 
+                    )
+            ); 
+
+            
+            // INIT PE ROUGE
+            game::$instance->setGameStateValue("pe_rouge_player", 0);
+            game::$instance->setGameStateValue("pe_rouge_active", 0);
+
+            game::$instance->addPending($this->player_id, "PeRedStep3", $nextplayer);
+
+        }
     }
 
 
@@ -1621,61 +2385,154 @@ class Pending extends APP_GameClass
 
     function PeRedStep3($parg1, $parg2, $varg1, $varg2)
     {
+        if($this->player_pref_confirm == 1)
+        {
 
-        $explode = explode('_', $varg1);
-        $player = $this->player_id;
-        $nextplayer = $parg1;
+            $explode = explode('_', $varg1);
+            $player = $this->player_id;
+            $nextplayer = $parg1;
 
-        $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
-        $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
-        
-        $cards = [];
-        $cards[] = $cards_before1[$explode[0]];
-        $cards[] = $cards_before2[$explode[1]];
+            $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
+            $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
+            
+            $cards = [];
+            $cards[] = $cards_before1[$explode[0]];
+            $cards[] = $cards_before2[$explode[1]];
 
-        game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
-        game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
 
-        game::$instance->notifyPlayer(
-                $player,
-                'removeCards',
-                '',
-                array(
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removeCards',
+                    '',
+                    array(
 
-                    'cards' => $cards,
+                        'cards' => $cards,
 
-                )
-        );
-
-        game::$instance->notifyPlayer(
-                $nextplayer,
-                'drawCards',
-                '',
-                array(
-
-                    'cards' => $cards,
-
-                )
+                    )
             );
 
-        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'drawCards',
+                    '',
+                    array(
 
-        game::$instance->notifyAllPlayers(
-                'message',
-                clienttranslate('${player_name} returns 2 cards to ${opponent}'),
-                array(
-                    'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
-                                        'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
-                                    ],
+                        'cards' => $cards,
 
-                    'player_name' => $this->player_name,
-                    
-                )
+                    )
+                );
+
+            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} returns 2 cards to ${opponent}'),
+                    array(
+                        'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                            'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                        ],
+
+                        'player_name' => $this->player_name,
+                        
+                    )
+                );
+
+            game::$instance->giveExtraTime($this->player_id);
+
+        }
+
+        if($this->player_pref_confirm == 2)
+        {
+            game::$instance->addPending($this->player_id, "PeRedConfirm2", $parg1, $varg1);
+        }
+        
+    }
+
+    function argPeRedConfirm2($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $explode = explode('_', $parg2);
+        $ret["selected"][] = 'my_cards_item_' . $explode[0];
+        $ret["selected"][] = 'my_cards_item_' . $explode[1];
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function PeRedConfirm2($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "PeRedStep3", $parg1);
+        }
+
+        if ($varg1 == 'yes') {
+
+            $explode = explode('_', $parg2);
+            $player = $this->player_id;
+            $nextplayer = $parg1;
+
+            $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
+            $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
+            
+            $cards = [];
+            $cards[] = $cards_before1[$explode[0]];
+            $cards[] = $cards_before2[$explode[1]];
+
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
+            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
+
+            game::$instance->notifyPlayer(
+                    $player,
+                    'removeCards',
+                    '',
+                    array(
+
+                        'cards' => $cards,
+
+                    )
             );
 
-        game::$instance->giveExtraTime($this->player_id);
+            game::$instance->notifyPlayer(
+                    $nextplayer,
+                    'drawCards',
+                    '',
+                    array(
+
+                        'cards' => $cards,
+
+                    )
+                );
+
+            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
+            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+
+            game::$instance->notifyAllPlayers(
+                    'message',
+                    clienttranslate('${player_name} returns 2 cards to ${opponent}'),
+                    array(
+                        'opponent' =>    [   'log' => '<b style="color: #${color};">${opponent_name}</b>',
+                                            'args'=> ['opponent_name' => $player_name_opponent, 'color'=>$player_color_opponent]
+                                        ],
+
+                        'player_name' => $this->player_name,
+                        
+                    )
+                );
+
+            game::$instance->giveExtraTime($this->player_id);
         
+        }
     }
 
     ////////////////////////// SORCIER /////////////////////
@@ -1827,123 +2684,316 @@ class Pending extends APP_GameClass
     function SorcierStep2($parg1, $parg2, $varg1, $varg2)
     {
 
-        game::$instance->notifyPlayer(
+        
+        if($varg1 == 'pass')
+        {
+            if($this->player_pref_confirm == 1)
+            {
+                game::$instance->notifyPlayer(
                 $this->player_id,
                 'removePreviousTrick',
                 '',
                 array(
 
                 )
-        );
-
-        if($varg1 == 'pass')
-        {
-            game::$instance->notifyAllPlayers(
-                    'message',
-                    clienttranslate('${player_name} does not use ${log}'),
-                    array(
-                        'player_name' => $this->player_name,
-                        'log' => game::$instance->getLogIcon('4_4'),
-
-                    )
                 );
-            
-            // INIT SORCIER ACTIVE
-            game::$instance->setGameStateValue("sorcier_active", 0);
-            game::$instance->giveExtraTime($this->player_id);
+
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} does not use ${log}'),
+                        array(
+                            'player_name' => $this->player_name,
+                            'log' => game::$instance->getLogIcon('4_4'),
+
+                        )
+                    );
+                
+                // INIT SORCIER ACTIVE
+                game::$instance->setGameStateValue("sorcier_active", 0);
+                game::$instance->giveExtraTime($this->player_id);
+            }
+
+            if($this->player_pref_confirm == 2)
+            {
+                game::$instance->addPending($this->player_id, "SorcierConfirmPass");
+            }
 
         }
 
         else {
 
-            $round = game::$instance->getGameStateValue('no_round');
-            $player = $this->player_id;
-            $explode = explode('_', $varg1);
-            $card_id = $explode[2];
-                        
-            $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
+            if($this->player_pref_confirm == 1)
+            {
 
-            // INVERSION DES CARTES EN BD
-            
-
-            self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-            self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-            self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
-
-            
-            self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
-            self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
-            self::DbQuery("UPDATE cards set card_location = 'discard' WHERE card_id = '{$sorcier_id}'");
-            
-            
-            $card = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = '{$card_id}'" );
-            $card_sorcier = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4" );
-
-            game::$instance->notifyPlayer(
-                $player,
-                'removeCards',
-                '',
-                array(
-
-                    'cards' => $card_sorcier,
-
-                )
-            );
-
-            game::$instance->notifyPlayer(
-                    $player,
-                    'drawCards',
+                game::$instance->notifyPlayer(
+                    $this->player_id,
+                    'removePreviousTrick',
                     '',
                     array(
 
-                        'cards' => $card,
-
                     )
-            );
+                );
 
-            $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-            $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
-            $log = $type.'_'.$type_arg;
-            game::$instance->notifyAllPlayers(
-                    'message',
-                    clienttranslate('${player_name} uses ${log} and retrieves ${log2}'),
+                $round = game::$instance->getGameStateValue('no_round');
+                $player = $this->player_id;
+                $explode = explode('_', $varg1);
+                $card_id = $explode[2];
+                            
+                $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
+
+                // INVERSION DES CARTES EN BD
+                
+
+                self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
+
+                
+                self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
+                self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
+                self::DbQuery("UPDATE cards set card_location = 'discard' WHERE card_id = '{$sorcier_id}'");
+                
+                
+                $card = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = '{$card_id}'" );
+                $card_sorcier = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4" );
+
+                game::$instance->notifyPlayer(
+                    $player,
+                    'removeCards',
+                    '',
                     array(
-                        'player_name' => $this->player_name,
-                        'log' => game::$instance->getLogIcon('4_4'),
-                        'log2' => game::$instance->getLogIcon($log),
+
+                        'cards' => $card_sorcier,
 
                     )
-            );
+                );
 
-            // MAJ LAST TRICK PANNEL FOR THE PLAYER
-            $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
-            $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
-            $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
-
-            game::$instance->notifyPlayer(
-                        $player_maj,
-                        'majLastTrickWin',
+                game::$instance->notifyPlayer(
+                        $player,
+                        'drawCards',
                         '',
                         array(
-                            'player' => $player_maj,
-                            'trick' => $cards_trick,
-                        )
-            );
 
-            // INIT SORCIER
-            game::$instance->setGameStateValue("sorcier_player", 0);
-            game::$instance->setGameStateValue("sorcier_active", 0);
-            game::$instance->giveExtraTime($this->player_id);
+                            'cards' => $card,
+
+                        )
+                );
+
+                $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
+                $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                $log = $type.'_'.$type_arg;
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} uses ${log} and retrieves ${log2}'),
+                        array(
+                            'player_name' => $this->player_name,
+                            'log' => game::$instance->getLogIcon('4_4'),
+                            'log2' => game::$instance->getLogIcon($log),
+
+                        )
+                );
+
+                // MAJ LAST TRICK PANNEL FOR THE PLAYER
+                $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
+                $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
+                $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+
+                game::$instance->notifyPlayer(
+                            $player_maj,
+                            'majLastTrickWin',
+                            '',
+                            array(
+                                'player' => $player_maj,
+                                'trick' => $cards_trick,
+                            )
+                );
+
+                // INIT SORCIER
+                game::$instance->setGameStateValue("sorcier_player", 0);
+                game::$instance->setGameStateValue("sorcier_active", 0);
+                game::$instance->giveExtraTime($this->player_id);
+
+            }
+
+            if($this->player_pref_confirm == 2)
+            {
+                game::$instance->addPending($this->player_id, "SorcierConfirm", $varg1);
+            }
 
         }
 
         
-
-
-        
-
-        
     }
+
+    function argSorcierConfirmPass($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function SorcierConfirmPass($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "SorcierStep2");
+        }
+
+        if ($varg1 == 'yes') {
+
+            game::$instance->notifyPlayer(
+                $this->player_id,
+                'removePreviousTrick',
+                '',
+                array(
+
+                )
+                );
+
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} does not use ${log}'),
+                        array(
+                            'player_name' => $this->player_name,
+                            'log' => game::$instance->getLogIcon('4_4'),
+
+                        )
+                    );
+                
+                // INIT SORCIER ACTIVE
+                game::$instance->setGameStateValue("sorcier_active", 0);
+                game::$instance->giveExtraTime($this->player_id);
+
+        }
+    
+    }
+
+    function argSorcierConfirm($parg1, $parg2)
+    {
+        $ret = array();
+        $ret["selectable"] = array();
+        $ret["selected"] = array();
+        $ret['buttons'] = array();
+        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['titleyou'] = clienttranslate('${you} must confirm');
+
+        $ret["selected"][] = $parg1;
+
+        $ret['buttons'][] = 'yes';
+        $ret['buttons'][] = 'no';
+
+        return $ret;
+    }
+
+    function SorcierConfirm($parg1, $parg2, $varg1, $varg2)
+    {
+        if ($varg1 == 'no') {
+            game::$instance->addPending($this->player_id, "SorcierStep2");
+        }
+
+        if ($varg1 == 'yes') {
+
+            game::$instance->notifyPlayer(
+                    $this->player_id,
+                    'removePreviousTrick',
+                    '',
+                    array(
+
+                    )
+                );
+
+                $round = game::$instance->getGameStateValue('no_round');
+                $player = $this->player_id;
+                $explode = explode('_', $parg1);
+                $card_id = $explode[2];
+                            
+                $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
+
+                // INVERSION DES CARTES EN BD
+                
+
+                self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
+
+                
+                self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
+                self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
+                self::DbQuery("UPDATE cards set card_location = 'discard' WHERE card_id = '{$sorcier_id}'");
+                
+                
+                $card = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = '{$card_id}'" );
+                $card_sorcier = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4" );
+
+                game::$instance->notifyPlayer(
+                    $player,
+                    'removeCards',
+                    '',
+                    array(
+
+                        'cards' => $card_sorcier,
+
+                    )
+                );
+
+                game::$instance->notifyPlayer(
+                        $player,
+                        'drawCards',
+                        '',
+                        array(
+
+                            'cards' => $card,
+
+                        )
+                );
+
+                $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
+                $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                $log = $type.'_'.$type_arg;
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${player_name} uses ${log} and retrieves ${log2}'),
+                        array(
+                            'player_name' => $this->player_name,
+                            'log' => game::$instance->getLogIcon('4_4'),
+                            'log2' => game::$instance->getLogIcon($log),
+
+                        )
+                );
+
+                // MAJ LAST TRICK PANNEL FOR THE PLAYER
+                $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
+                $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
+                $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+
+                game::$instance->notifyPlayer(
+                            $player_maj,
+                            'majLastTrickWin',
+                            '',
+                            array(
+                                'player' => $player_maj,
+                                'trick' => $cards_trick,
+                            )
+                );
+
+                // INIT SORCIER
+                game::$instance->setGameStateValue("sorcier_player", 0);
+                game::$instance->setGameStateValue("sorcier_active", 0);
+                game::$instance->giveExtraTime($this->player_id);
+
+        }
+    
+    }
+
+
     
     
 

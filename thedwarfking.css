@@ -457,6 +457,7 @@ body {
   background-color: #cdbebe75;
   border-radius: 8px;
   width: 150px;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
 }
 
 
@@ -469,13 +470,19 @@ body {
 }
 
 
-.modal_player:hover {
+.modal_player.selectable:hover {
   background-color: #73252544;
-  border-radius: 8px;
+  
 }
 
 .modal_player.selectable{
   border: 2px solid white;
+  outline: none; 
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
+}
+
+.modal_player.selected{
+  border: 2px solid yellow;
   outline: none; 
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
 }
@@ -521,6 +528,8 @@ body {
   align-items: center;
   justify-content: center;
   width: 150px;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
+  border-radius: 8px;
     
 }
 
@@ -541,9 +550,8 @@ body {
   background-position-x: -100%;
 }
 
-.container_fleche:hover {
+.container_fleche.selectable:hover {
   background-color: #73252544;
-  border-radius: 8px;
 }
 
 .container_fleche.selectable{
@@ -553,12 +561,22 @@ body {
   border-radius: 8px;
 }
 
+.container_fleche.selected{
+ 
+  border: 2px solid yellow;
+  outline: none;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.548);
+  border-radius: 8px;
+}
+
+
 .texte_fleche {
   font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 20px;
   color: white;
   width: 70%;
   text-align: center;
+  
 }
 
 
