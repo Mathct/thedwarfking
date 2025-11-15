@@ -27,7 +27,7 @@ $this->_CARDS = [
     ],
     2111 => [
         "name" => clienttranslate('Flag Bearer'),
-        "text" => clienttranslate('After this trick, choose whether all players must give their hand to the player on their left or right.')
+        "text" => clienttranslate('After this trick, choose whether all players must give their hand to the player on their left or right. This card has no effect if played in the final trick.')
     ],
     2112 => [
         "name" => clienttranslate('Enchanter'),
