@@ -197,7 +197,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must choose the quest for the round');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $ret["selected"][] = $parg1;
@@ -643,7 +643,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must play a card');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $ret["selected"][] = $parg1;
@@ -1510,7 +1510,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must exchange their hand with that of another player');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $ret["selected"][] = $parg1;
@@ -1861,7 +1861,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must choose which neighbor each player will pass their hand to');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $ret["selected"][] = $parg1;
@@ -2102,7 +2102,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must must exchange 2 cards with another player');
+        $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
         $ret['titleyou'] = clienttranslate('${you} must choose a player from whom to take 2 cards');
 
         $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
@@ -2234,7 +2234,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $ret["selected"][] = $parg1;
@@ -2457,7 +2457,7 @@ class Pending extends APP_GameClass
         $ret["selectable"] = array();
         $ret["selected"] = array();
         $ret['buttons'] = array();
-        $ret['title'] = clienttranslate('${actplayer} must confirm');
+        $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
         $ret['titleyou'] = clienttranslate('${you} must confirm');
 
         $explode = explode('_', $parg2);
