@@ -654,14 +654,14 @@ updateLayout: function () {
                     </div>
 
                     <div id="table_cards_container" class="cards-container">
-                        <div class="titre">${_("Cards played")}:</div>
+                        <div class="titre">${_("Cards played")}</div>
                         <div id="table_cards" class="cards"></div>
                         
                     </div> 
 
                     
                     <div id="hand_container" class="cards-container">
-                        <div class="titre" id="my_cards_title">${_("My hand")}:</div>
+                        <div class="titre" id="my_cards_title">${_("My hand")}</div>
                         <div id="my_cards" class="cards"></div>
                     </div>
 
