@@ -1104,21 +1104,26 @@ class Pending extends APP_GameClass
 
             $rand = bga_rand(1, 14);
 
-            if(game::$instance->gamestate->table_globals[100] != 3)
+            while (in_array($rand, $all_rand))
             {
-                while (in_array($rand, $all_rand))
-                {
-                    $rand = bga_rand(1, 14);
-                }
+                $rand = bga_rand(1, 14);
             }
 
-            if(game::$instance->gamestate->table_globals[100] == 3)
-            {
-                while (in_array($rand, $all_rand) && $rand == 4)
-                {
-                    $rand = bga_rand(1, 14);
-                }
-            }
+            // if(game::$instance->gamestate->table_globals[100] != 3)
+            // {
+            //     while (in_array($rand, $all_rand))
+            //     {
+            //         $rand = bga_rand(1, 14);
+            //     }
+            // }
+
+            // if(game::$instance->gamestate->table_globals[100] == 3)
+            // {
+            //     while (in_array($rand, $all_rand) && $rand == 4)
+            //     {
+            //         $rand = bga_rand(1, 14);
+            //     }
+            // }
 
             if($rand>=1 && $rand<=5)
             {

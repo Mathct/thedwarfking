@@ -40,7 +40,7 @@ class Game extends \Table
 
         $this->initGameStateLabels([
 
-            "game_mode" => 100,
+            //"game_mode" => 100,
 
             "first_player_deal" => 10,
             "first_player_quest" => 11,
@@ -190,18 +190,18 @@ class Game extends \Table
         $rand = bga_rand(1, 14);
 
         //TEST SPECIAL CARD A L'INIT
-        if($this->gamestate->table_globals[100] == 2)
-        {
-            $rand = 4;
-        }
+        // if($this->gamestate->table_globals[100] == 2)
+        // {
+        //     $rand = 4;
+        // }
 
-        if($this->gamestate->table_globals[100] == 3)
-        {
-            while($rand == 4)
-            {
-                $rand = bga_rand(1, 14);
-            }
-        }
+        // if($this->gamestate->table_globals[100] == 3)
+        // {
+        //     while($rand == 4)
+        //     {
+        //         $rand = bga_rand(1, 14);
+        //     }
+        // }
         
         //FORCE CARD SPECIAL FOR DEV
         //$rand = 4;
