@@ -563,6 +563,25 @@ class Pending extends APP_GameClass
                     );
 
             }
+
+            // message momie
+            if (($type == 4) && ($type_arg == 2))
+            {
+                $log2 = $type_last_card_win.'_'.$typearg_last_card_win;
+                $image_log2 = game::$instance->getLogIcon($log2);
+
+                game::$instance->notifyAllPlayers(
+                        'message',
+                        clienttranslate('${log} is a copy of ${log2}'),
+                        array(
+                            
+                            'log' => $image_log,
+                            'log2' => $image_log2,
+                             
+                        )
+                    );
+
+            }
            
 
             

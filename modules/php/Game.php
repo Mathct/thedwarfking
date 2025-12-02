@@ -204,7 +204,7 @@ class Game extends \Table
         // }
         
         //FORCE CARD SPECIAL FOR DEV
-        //$rand = 4;
+        //$rand = 2;
 
         if($rand>=1 && $rand<=5)
         {
@@ -1926,7 +1926,7 @@ function calculScore()
         {
             game::$instance->notifyAllPlayers(
                         'message',
-                        clienttranslate('${player_name} scores ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log})'),
+                        clienttranslate('${player_name}: ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log})'),
                         array(
                             'player_name' => $player_name,
                             'pv' => $pv_round,
@@ -1941,7 +1941,7 @@ function calculScore()
         {
             game::$instance->notifyAllPlayers(
                         'message',
-                        clienttranslate('${player_name} scores ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log}) x2 ${log2}'),
+                        clienttranslate('${player_name}: ${pv} ${log} <br> (Quest: ${quest} ${log} + Bonus: ${bonus} ${log}) x2 ${log2}'),
                         array(
                             'player_name' => $player_name,
                             'pv' => $pv_round,
