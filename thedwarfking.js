@@ -694,6 +694,10 @@ updateLayout: function () {
         const gamePlayArea = document.getElementById("board_id");
         gamePlayArea.insertAdjacentHTML("beforeend", gameBoardHTML);
 
+        var info = _('Special Card and Quest for the Round')
+        var html = '<div>'+info+'</div>';
+        this.addTooltipHtml( "btn_round", html, 500);
+
         var choiceQuest = this.gamedatas.active_quest_card;
         if(choiceQuest[0].validate == 0)
         {
