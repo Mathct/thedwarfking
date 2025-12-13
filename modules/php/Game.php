@@ -1918,7 +1918,7 @@ function calculScore()
 
         
 
-        $pv_round = $pv * $bonus_enchanteur + $score_bonus;
+        $pv_round = ($pv + $score_bonus) * $bonus_enchanteur;
         self::DbQuery("INSERT INTO scores (round, player_id, score_quest, score_bonus, bonus_enchanteur, score_round) VALUES ($round, $player, $pv, $score_bonus, $bonus_enchanteur, $pv_round)");
         self::DbQuery("UPDATE player set player_score = player_score + $pv_round WHERE player_id = '{$player}'");
 
