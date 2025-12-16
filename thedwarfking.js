@@ -599,8 +599,9 @@ updateLayout: function () {
 
                 const voisin_gauche = document.createElement("div");
                 voisin_gauche.id = "voisin_gauche_"+player;
+                voisin_gauche.className = "voisin";
                 voisin_gauche.style.color = "#" + this.gamedatas.player_after[player][0].color;
-                voisin_gauche.textContent = '< '+this.gamedatas.player_after[player][0].name
+                voisin_gauche.textContent = this.gamedatas.player_after[player][0].name
                 voisins_container.appendChild(voisin_gauche);
 
                 var info1 = _('Player on the left')
@@ -609,8 +610,9 @@ updateLayout: function () {
 
                 const voisin_droite= document.createElement("div");
                 voisin_droite.id = "voisin_droite_"+player;
+                voisin_droite.className = "voisin";
                 voisin_droite.style.color = "#" + this.gamedatas.player_before[player][0].color;
-                voisin_droite.textContent = this.gamedatas.player_before[player][0].name +' >'
+                voisin_droite.textContent = this.gamedatas.player_before[player][0].name
                 voisins_container.appendChild(voisin_droite);
 
                 var info2 = _('Player on the right')

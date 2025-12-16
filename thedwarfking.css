@@ -774,6 +774,14 @@ body {
   margin: 0 10px;
 }
 
+.voisin {
+  max-width: 45%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
 
 
 
