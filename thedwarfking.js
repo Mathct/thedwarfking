@@ -587,7 +587,35 @@ updateLayout: function () {
     
                         }
                     }
+
                 }
+
+                const voisins = document.createElement("div");
+                voisins.id = "voisins_"+player;
+                voisins.className = "voisins_container";
+                parent.appendChild(voisins);
+
+                var voisins_container = document.getElementById('voisins_'+player);
+
+                const voisin_gauche = document.createElement("div");
+                voisin_gauche.id = "voisin_gauche_"+player;
+                voisin_gauche.style.color = "#" + this.gamedatas.player_after[player][0].color;
+                voisin_gauche.textContent = '< '+this.gamedatas.player_after[player][0].name
+                voisins_container.appendChild(voisin_gauche);
+
+                var info1 = _('Player on the left')
+                var html1 = '<div>'+info1+'</div>';
+                this.addTooltipHtml("voisin_gauche_"+player, html1, 500);
+
+                const voisin_droite= document.createElement("div");
+                voisin_droite.id = "voisin_droite_"+player;
+                voisin_droite.style.color = "#" + this.gamedatas.player_before[player][0].color;
+                voisin_droite.textContent = this.gamedatas.player_before[player][0].name +' >'
+                voisins_container.appendChild(voisin_droite);
+
+                var info2 = _('Player on the right')
+                var html2 = '<div>'+info2+'</div>';
+                this.addTooltipHtml("voisin_droite_"+player, html2, 500);
 
             }
 

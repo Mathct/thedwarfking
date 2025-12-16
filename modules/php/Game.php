@@ -411,6 +411,16 @@ protected function getAllDatas()
         }
     }
 
+    // prev and next player
+    foreach ($players as $player)
+    {
+        $prev_id = game::$instance->getPlayerBefore($player);
+        $next_id = game::$instance->getPlayerAfter($player);
+        $result['player_before'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$prev_id}'" );
+        $result['player_after'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$next_id}'" );
+
+    }
+
 
     
     return $result;
