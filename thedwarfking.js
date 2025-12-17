@@ -597,22 +597,44 @@ updateLayout: function () {
 
                 var voisins_container = document.getElementById('voisins_'+player);
 
+                
                 const voisin_gauche = document.createElement("div");
                 voisin_gauche.id = "voisin_gauche_"+player;
-                voisin_gauche.className = "voisin";
+                voisin_gauche.className = "voisin voisin_gauche";
                 voisin_gauche.style.color = "#" + this.gamedatas.player_after[player][0].color;
-                voisin_gauche.textContent = this.gamedatas.player_after[player][0].name
+
+                const fleche_gauche = document.createElement("span");
+                fleche_gauche.className = "voisin_fleche";
+                fleche_gauche.textContent = "<";
+
+                const nom_gauche = document.createElement("span");
+                nom_gauche.className = "voisin_nom";
+                nom_gauche.textContent = this.gamedatas.player_after[player][0].name;
+
+                voisin_gauche.appendChild(fleche_gauche);
+                voisin_gauche.appendChild(nom_gauche);
                 voisins_container.appendChild(voisin_gauche);
 
                 var info1 = _('Player on the left')
                 var html1 = '<div>'+info1+'</div>';
                 this.addTooltipHtml("voisin_gauche_"+player, html1, 500);
 
-                const voisin_droite= document.createElement("div");
+               
+                const voisin_droite = document.createElement("div");
                 voisin_droite.id = "voisin_droite_"+player;
-                voisin_droite.className = "voisin";
+                voisin_droite.className = "voisin voisin_droite";
                 voisin_droite.style.color = "#" + this.gamedatas.player_before[player][0].color;
-                voisin_droite.textContent = this.gamedatas.player_before[player][0].name
+
+                const nom_droite = document.createElement("span");
+                nom_droite.className = "voisin_nom";
+                nom_droite.textContent = this.gamedatas.player_before[player][0].name;
+
+                const fleche_droite = document.createElement("span");
+                fleche_droite.className = "voisin_fleche";
+                fleche_droite.textContent = ">";
+
+                voisin_droite.appendChild(nom_droite);
+                voisin_droite.appendChild(fleche_droite);
                 voisins_container.appendChild(voisin_droite);
 
                 var info2 = _('Player on the right')

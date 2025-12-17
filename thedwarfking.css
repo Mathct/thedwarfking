@@ -771,15 +771,34 @@ body {
 .voisins_container{
   display: flex;
   justify-content: space-between;
-  margin: 0 10px;
+  margin: 0 5px;
 }
 
+
 .voisin {
+  display: flex;
+  align-items: center;
   max-width: 45%;
+  min-width: 0;
+}
+
+.voisin_nom {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+.voisin_fleche {
+  flex-shrink: 0; /* empêche la flèche de disparaître */
+}
+
+.voisin_gauche .voisin_fleche {
+  margin-right: 3px;
+}
+
+.voisin_droite .voisin_fleche {
+  margin-left: 3px;
 }
 
 
