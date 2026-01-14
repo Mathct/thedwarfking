@@ -189,22 +189,8 @@ class Game extends \Table
 
         $rand = bga_rand(1, 14);
 
-        //TEST SPECIAL CARD A L'INIT
-        // if($this->gamestate->table_globals[100] == 2)
-        // {
-        //     $rand = 4;
-        // }
-
-        // if($this->gamestate->table_globals[100] == 3)
-        // {
-        //     while($rand == 4)
-        //     {
-        //         $rand = bga_rand(1, 14);
-        //     }
-        // }
-        
         //FORCE CARD SPECIAL FOR DEV
-        //$rand = 2;
+        //$rand = 3;
 
         if($rand>=1 && $rand<=5)
         {
@@ -418,6 +404,66 @@ protected function getAllDatas()
         $next_id = game::$instance->getPlayerAfter($player);
         $result['player_before'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$prev_id}'" );
         $result['player_after'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$next_id}'" );
+
+    }
+
+
+    $tricks_max = 0;
+    $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+
+    if($nbreplayers == 3)
+    {
+        $tricks_max = 13;
+    }
+    if($nbreplayers == 4)
+    {
+        $tricks_max = 10;
+    }
+    if($nbreplayers == 5)
+    {
+        $tricks_max = 8;
+    }
+
+    $result['tricks_max'] = $tricks_max;
+
+
+    for($i = 1; $i <=$round; $i++)
+    {
+        if($i != $round)
+        {
+            
+            for($j = 1; $j <= $tricks_max; $j++)
+            {
+                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$i}' AND trick = '{$j}'" );
+                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1");
+                $datas_win = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1", true );
+                $result['round_result'][$i][$j]['winner'] = $datas_win[0];
+            }
+
+        }
+        else 
+        {
+            for($j = 1; $j <= $trick; $j++)
+            {
+                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$i}' AND trick = '{$j}'" );
+                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1");
+                $datas_win = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1", true );
+                if($datas_win == null)
+                {
+                    $result['round_result'][$i][$j]['winner'] = null;
+                }
+                else
+                {
+                    $result['round_result'][$i][$j]['winner'] = $datas_win[0];
+                }
+                
+
+            }
+        }
+        
+        
+        $result['resume_quest_card'][$i] = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$i}'" );
+
 
     }
 

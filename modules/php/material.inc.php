@@ -119,12 +119,12 @@ $this->_QUESTS = [
     ],
 
     61 => [
-        "name" => clienttranslate("Bad Numbers"),
-        "text" => clienttranslate("Add up the values (from <b>1</b> to <b>11</b>) of your cards. -5 <div class='log_pv'></div> for the player with the highest total.")
-    ],
-    62 => [
         "name" => clienttranslate("Good Numbers"),
         "text" => clienttranslate("Add the values (from <b>1</b> to <b>11</b>) of your cards. +5 <div class='log_pv'></div> for the player with the highest total.")
+    ],
+    62 => [
+        "name" => clienttranslate("Bad Numbers"),
+        "text" => clienttranslate("Add up the values (from <b>1</b> to <b>11</b>) of your cards. -5 <div class='log_pv'></div> for the player with the highest total.")
     ],
 
     71 => [

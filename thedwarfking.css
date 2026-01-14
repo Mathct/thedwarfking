@@ -772,6 +772,7 @@ body {
   display: flex;
   justify-content: space-between;
   margin: 0 5px;
+  cursor: default;
 }
 
 
@@ -801,6 +802,169 @@ body {
   margin-left: 3px;
 }
 
+
+/* Resume Round modale*/
+
+#btn_resume_round {
+  width: 80px;
+  height: 85px;
+  background-image: url('img/btn_score.png');
+  background-size: 100% 100%;
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  cursor: pointer;
+  z-index: 200;
+   filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+}
+
+#modal_resume_round_container{
+  width: 100%;
+  height: calc(100% + 100px);
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 105px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  border-radius: 10px;
+}
+
+#modal_resume_round {
+  width: auto;
+  min-width: 459px;
+  height: auto;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius:20px;
+  background-color: #c7a5a5;
+  border: 2px solid white;
+  display: flex;
+  padding: 20px 20px;
+  position: relative;
+  justify-content: center;
+  
+}
+
+#resume_round {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  
+}
+
+#croix2 {
+  top: 5px;
+  right: 5px;
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  background-color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #954e4e;
+  color: #954e4e;
+  padding: 15px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+#croix2:hover {
+  transform: scale(1.1);
+}
+
+.round_tile_score {
+  text-align: center;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 25px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.trick_title {
+
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  color: #954e4e;
+  width: 90px;
+  display: flex;
+  justify-content: center;
+}
+
+.ligne_trick {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.played_cards_list {
+  display: flex;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  gap: 10px;
+}
+
+.winner_trick {
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#prev_round {
+
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  color: white;
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-100px);
+  cursor: pointer;
+
+}
+
+
+#next_round {
+
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  color: white;
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(65px);
+  cursor: pointer;
+
+}
+
+.questresumescore {
+
+  /* width: 200px;
+  height: 233px; */
+  width: 124px;
+  height: 145px;
+  background-image: url('img/quest.jpg');
+  background-size: 1000% 400%;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  -webkit-filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.9));
+  border-radius: 5%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-30%, -58%);
+  border: 2px solid white;
+
+}
 
 
 

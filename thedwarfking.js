@@ -75,8 +75,11 @@ function (dojo, declare) {
             this.first_player_play = gamedatas.first_player_play;
             this.no_round = parseInt(gamedatas.no_round);
             this.no_trick = parseInt(gamedatas.no_trick);
+            this.round_result = gamedatas.round_result;
+            this.tricks_max = gamedatas.tricks_max;
+            this.view_round = this.no_round;
+            this.resume_quest_card = gamedatas.resume_quest_card;
             
-
 
             this.setupBoard();
             this.setupPannel();
@@ -705,6 +708,18 @@ updateLayout: function () {
                     <div id="btn_round"><div class="icon1_btn"></div><div>/</div><div class="icon2_btn"></div></div>
                     </div>
 
+                    <div id="btn_resume_round">
+                    </div>
+
+                    <div id="modal_resume_round_container" class="hidden">
+                        <div id="modal_resume_round">
+                            <div id="croix2">X</div>
+                            <div id="prev_round"><<</div>
+                            <div id="next_round">>></div>
+                            <div id="resume_round"></div>
+                        </div>
+                    </div>
+
                     <div id="table_cards_container" class="cards-container">
                         <div class="titre">${_("Cards played")}</div>
                         <div id="table_cards" class="cards"></div>
@@ -765,6 +780,9 @@ updateLayout: function () {
         }
 
         this.addEventListenerModal();
+        this.addEventListenerModalResumeRound();
+        this.addEventListenerResumeScore();
+       
 
 
         var druide = this.gamedatas.druide_player;
@@ -844,10 +862,21 @@ updateLayout: function () {
                 }
             });
 
+            var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+            if (!modal_resume_round_container.classList.contains("hidden")) {
+                modal_resume_round_container.classList.add("hidden");
+            }
+            var modal_round_container = document.getElementById("modal_round_container");
+            if (!modal_round_container.classList.contains("hidden")) {
+                modal_round_container.classList.add("hidden");
+            }
+
             var modal_players_container = document.getElementById("modal_players_container");
             modal_players_container.classList.remove("hidden");
             var round = document.getElementById("round");
             round.classList.add("index");
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.add("index");
 
 
             dojo.query(".modal_player").connect('onclick', this, 'onSelect' )
@@ -862,6 +891,8 @@ updateLayout: function () {
             
             var round = document.getElementById("round");
             round.classList.remove("index");
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.remove("index");
             
             
         },
@@ -907,12 +938,23 @@ updateLayout: function () {
             texte_fleche2.classList.add('texte_fleche');
             texte_fleche2.innerHTML = text2;
             container_fleche2.appendChild(texte_fleche2);
+
+            var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+            if (!modal_resume_round_container.classList.contains("hidden")) {
+                modal_resume_round_container.classList.add("hidden");
+            }
+            var modal_round_container = document.getElementById("modal_round_container");
+            if (!modal_round_container.classList.contains("hidden")) {
+                modal_round_container.classList.add("hidden");
+            }
                     
            
             var modal_fleches_container = document.getElementById("modal_fleches_container");
             modal_fleches_container.classList.remove("hidden");
             var round = document.getElementById("round");
             round.classList.add("index");
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.add("index");
 
 
             dojo.query(".container_fleche").connect('onclick', this, 'onSelect' )
@@ -927,6 +969,8 @@ updateLayout: function () {
             
             var round = document.getElementById("round");
             round.classList.remove("index");
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.remove("index");
             
             
         },
@@ -967,11 +1011,23 @@ updateLayout: function () {
                 
             });
 
+            var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+            if (!modal_resume_round_container.classList.contains("hidden")) {
+                modal_resume_round_container.classList.add("hidden");
+            }
+            var modal_round_container = document.getElementById("modal_round_container");
+            if (!modal_round_container.classList.contains("hidden")) {
+                modal_round_container.classList.add("hidden");
+            }
+
+
+
             var modal_previoustrick_container = document.getElementById("modal_previoustrick_container");
             modal_previoustrick_container.classList.remove("hidden");
             var round = document.getElementById("round");
             round.classList.add("index");
-
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.add("index");
 
             dojo.query(".previous_card").connect('onclick', this, 'onSelect' )
             
@@ -985,6 +1041,8 @@ updateLayout: function () {
             
             var round = document.getElementById("round");
             round.classList.remove("index");
+            var btn_resume_round = document.getElementById("btn_resume_round");
+            btn_resume_round.classList.remove("index");
             
             
         },
@@ -1374,11 +1432,64 @@ updateLayout: function () {
             };
 
             this._btnHandler = () => {
+                var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+                if (!modal_resume_round_container.classList.contains("hidden")) {
+                    modal_resume_round_container.classList.add("hidden");
+                }
                 modal_round_container.classList.toggle("hidden");
             };
 
             croix.addEventListener("click", this._croixHandler);
             btn.addEventListener("click", this._btnHandler);
+        },
+
+        addEventListenerModalResumeRound: function() {
+
+            var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+            var croix2 = document.getElementById("croix2");
+            var btn2 = document.getElementById("btn_resume_round");
+
+            // On stocke les handlers dans this pour pouvoir les enlever après
+            this._croixHandler2 = () => {
+                modal_resume_round_container.classList.add("hidden");
+            };
+
+            this._btnHandler2 = () => {
+                var modal_round_container = document.getElementById("modal_round_container");
+                if (!modal_round_container.classList.contains("hidden")) {
+                    modal_round_container.classList.add("hidden");
+                }
+                modal_resume_round_container.classList.toggle("hidden");
+                this.view_round = this.no_round;
+                this.detailScore(this.no_round);
+            };
+
+            croix2.addEventListener("click", this._croixHandler2);
+            btn2.addEventListener("click", this._btnHandler2);
+
+            
+            
+        },
+
+        addEventListenerResumeScore: function() {
+            
+            this._showprev = () => {
+                this.view_round--;
+                this.detailScore(this.view_round);
+            };
+
+            this._shownext = () => {
+                this.view_round++;
+                this.detailScore(this.view_round);
+            };
+
+            var prev = document.getElementById("prev_round");
+            var next = document.getElementById("next_round");
+
+            prev.addEventListener("click", this._showprev);
+            next.addEventListener("click", this._shownext);
+
+
         },
 
         setupSpecialModal: function(data)
@@ -1622,6 +1733,230 @@ updateLayout: function () {
 
         },
 
+        addTooltipsQuestResume: function(quest)
+        {            
+                          
+                        
+            if(this.gamedatas.tooltips_quests[quest])
+            {
+                const name = _(this.gamedatas.tooltips_quests[quest].name);
+                const text = _(this.gamedatas.tooltips_quests[quest].text);
+                let text2 = '';
+                if(this.gamedatas.tooltips_quests[quest].text2)
+                {
+                    text2 = _(this.gamedatas.tooltips_quests[quest].text2);
+                }
+                const html = `<div class="tooltips-container">
+                <div class="tooltips">
+                <div class="tooltips-title">- ${name} -</div>
+                <div class="tooltips-text">${text}</div>
+                <div class="tooltips-text">${text2}</div>
+                </div>
+                </div>`;
+                
+                
+                this.addTooltipHtml('questresumescore', html, 500);
+                
+            
+            }
+       
+            
+
+        },
+
+
+        // Details Scores
+
+        detailScore: function(no_round)
+        {
+
+                       
+            var container = document.getElementById("resume_round");
+            container.textContent = '';
+
+            var prev = document.getElementById("prev_round");
+            var next = document.getElementById("next_round");
+
+            if(this.no_round == 1)
+            {
+                prev.classList.add("hidden");
+                next.classList.add("hidden");
+            }
+
+            else
+            {
+                if(no_round < this.no_round && no_round > 1)
+                {
+                    prev.classList.remove("hidden");
+                    next.classList.remove("hidden");
+                }
+
+                if(no_round < this.no_round && no_round == 1)
+                {
+                    prev.classList.add("hidden");
+                    next.classList.remove("hidden");
+                }
+
+                if(no_round == this.no_round)
+                {
+                    prev.classList.remove("hidden");
+                    next.classList.add("hidden");
+                }
+            }
+
+            
+            const text_round = _('Round');
+            const text_trick = _('Trick');
+            const text_trick_in_progress = _('Trick in progress ...');
+
+            const round = document.createElement("div");
+            round.classList.add('round_tile_score');
+            round.textContent = text_round + ' ' + no_round;
+            container.appendChild(round);
+            
+           Object.entries(this.round_result[no_round])
+            .forEach(([trick, detail]) => {
+
+                const ligne_trick = document.createElement("div");
+                ligne_trick.id = 'trick_'+no_round+'_'+trick;
+                ligne_trick.classList.add('ligne_trick');
+                container.appendChild(ligne_trick);
+
+                const ligne_trick_detail = document.getElementById('trick_'+no_round+'_'+trick);
+
+                const trick_title = document.createElement("div");
+                trick_title.classList.add('trick_title');
+                trick_title.textContent = text_trick + ' ' + trick + ':';
+                ligne_trick_detail.appendChild(trick_title);
+
+
+                const played_cards = document.createElement("div");
+                played_cards.id = 'played_card_'+no_round+'_'+trick;
+                played_cards.classList.add('played_cards_list');
+                ligne_trick_detail.appendChild(played_cards);
+
+                const player_id_win = this.round_result[no_round][trick]['winner'];
+                if(player_id_win)
+                {
+                    const player_name_win = this.players[player_id_win].name;
+                    const player_color_win = this.players[player_id_win].color;
+
+                    const winner = document.createElement("div");
+                    winner.id = 'winner_'+no_round+'_'+trick;
+                    winner.classList.add('winner_trick');
+                    winner.style.color = '#'+player_color_win;
+                    winner.textContent = player_name_win;
+                    ligne_trick_detail.appendChild(winner);
+                    
+                }
+
+                const detail_played_cards = document.getElementById('played_card_'+no_round+'_'+trick);
+                if(detail.cards_played.length != 0)
+                {
+
+                    for(let i = 0; i < detail.cards_played.length; i++)
+                    {                                                                       
+                            var type = detail.cards_played[i].type;
+                            var type_arg = detail.cards_played[i].type_arg;
+
+                            if(type == 1)
+                            {
+                                var variableY = 0;
+                            }
+
+                            if(type == 2)
+                            {
+                                var variableY = -100;
+                            }
+
+                            if(type == 3)
+                            {
+                                var variableY = -200;
+                            }
+
+                            if(type == 4)
+                            {
+                                var variableY = -300;
+                            }
+
+                            var variableX = (type_arg-1)*(-100);
+
+                            const newDiv = document.createElement('div');
+                            newDiv.classList.add('icon_last_trick_win');
+                            newDiv.style.backgroundPositionX = variableX + '%';
+                            newDiv.style.backgroundPositionY = variableY + '%';
+                            detail_played_cards.appendChild(newDiv);
+                        
+                    }
+                }
+
+                else
+                {
+                    
+                    const TickinProgres = document.createElement('div');
+                    TickinProgres.textContent = text_trick_in_progress;
+                    detail_played_cards.appendChild(TickinProgres);
+                }
+
+                                
+            });
+
+            
+            if(this.resume_quest_card[no_round])
+            {
+                /* QUEST CARD */
+
+                var type = this.resume_quest_card[no_round][0].rand;
+                var validate = this.resume_quest_card[no_round][0].validate;
+
+                if(type >=1 && type <=10)
+                {
+
+                    var variableX = -100*(Number(type) - 1);
+                    var variableY = 0;
+
+                }
+
+                if(type >=11 && type <=20)
+                {
+
+                    var variableX = -100*(Number(type) - 11);
+                    var variableY = -200;
+
+                }
+
+                if(validate != 0)
+                {
+                    const quest = document.createElement("div");
+                    quest.id = "questresumescore";
+                    quest.className = "questresumescore";
+
+                    if(validate == 1)
+                    {
+                        quest.style.backgroundPositionX = variableX + "%";
+                        quest.style.backgroundPositionY = variableY + "%";
+                        container.appendChild(quest);
+                        this.addTooltipsQuestResume(type+'1');
+
+                    }
+
+                    if(validate == 2)
+                    {
+                        quest.style.backgroundPositionX = variableX + "%";
+                        quest.style.backgroundPositionY = (variableY-100) + "%";
+                        container.appendChild(quest);
+                        this.addTooltipsQuestResume(type+'2');
+                    }
+
+                    
+                }
+
+            }
+            
+        },
+
+    
+
         
 ///////////////////////////////////////////////////////////////////////////////// 
 //       _   _       _   _  __ _           _   _                 
@@ -1657,6 +1992,9 @@ updateLayout: function () {
             dojo.subscribe( 'score', this, "notif_score" );
             dojo.subscribe( 'majLastTrickWin', this, "notif_majLastTrickWin" );
             dojo.subscribe( 'removeLastTrickWin', this, "notif_removeLastTrickWin" );
+            dojo.subscribe( 'majResumeScoreEndOfTurn', this, "notif_majResumeScoreEndOfTurn" );
+            dojo.subscribe( 'majResumeScoreEndOfRound', this, "notif_majResumeScoreEndOfRound" );
+            dojo.subscribe( 'majResumeScoreAfterSorcier', this, "notif_majResumeScoreAfterSorcier" );
 
             
 
@@ -1723,6 +2061,10 @@ updateLayout: function () {
             modal_round_container.classList.add("hidden");
 
             card.remove();
+
+            this.resume_quest_card[this.no_round] = notif.args.quest;
+            this.detailScore(this.no_round);
+           
  
         },
 
@@ -1736,6 +2078,7 @@ updateLayout: function () {
             {
                 document.getElementById('nb_round').innerText = _('Tiebreaker Round');
             }
+            
             
         },
 
@@ -1774,7 +2117,12 @@ updateLayout: function () {
             var modal_round_container = document.getElementById("modal_round_container");
             modal_round_container.classList.remove('hidden');
 
-            dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' )
+            dojo.query(".questcardmodal").connect('onclick', this, 'onSelect' );
+
+            var modal_resume_round_container = document.getElementById("modal_resume_round_container");
+            if (!modal_resume_round_container.classList.contains("hidden")) {
+                modal_resume_round_container.classList.add("hidden");
+            }
             
  
         },
@@ -1830,13 +2178,13 @@ updateLayout: function () {
    
         },
 
-        notif_score: async function( notif ){
+        notif_score: function( notif ){
     
             this.scoreCtrl[ notif.args.player ].toValue( notif.args.score );
 
         },
 
-        notif_majLastTrickWin: async function( notif ){
+        notif_majLastTrickWin: function( notif ){
 
             var parent = document.getElementById("last_win_container_"+notif.args.player);
             parent.textContent = '';
@@ -1851,26 +2199,63 @@ updateLayout: function () {
 
         },
 
-        notif_removeLastTrickWin: async function( notif ){
+        notif_removeLastTrickWin: function( notif ){
     
             var parent = document.getElementById("last_win_container_"+notif.args.player);
             parent.textContent = '';
 
         },
 
+        notif_majResumeScoreEndOfTurn: function( notif ){
+    
+            this.no_round = parseInt(notif.args.no_round);
+            this.no_trick = parseInt(notif.args.no_trick);
+            this.view_round = this.no_round;
+
+            this.round_result[this.no_round][this.no_trick]['cards_played'] = notif.args.cards_played;
+            this.round_result[this.no_round][this.no_trick]['winner'] = notif.args.winner;
+
+            if(this.no_trick < this.tricks_max)
+            {
+                this.round_result[this.no_round][this.no_trick + 1] = {
+                    cards_played: [],
+                    winner: null
+                };
+            }
+                        
+            this.detailScore(this.no_round);
+
+        },
+
+        notif_majResumeScoreEndOfRound: function (notif) {
+
+            this.no_round = this.no_round + 1;
+            this.view_round = this.no_round;
+
+            // Initialisation du round
+            this.round_result[this.no_round] = {};
+
+            // Initialisation du trick 1
+            this.round_result[this.no_round][1] = {
+                cards_played: [],
+                winner: null
+            };
+
+            this.detailScore(this.no_round);
+        },
+
+        notif_majResumeScoreAfterSorcier: function (notif) {
+
+            var no_round = parseInt(notif.args.no_round);
+            var no_trick = parseInt(notif.args.no_trick);
+            this.view_round = this.no_round;
+
+            this.round_result[no_round][no_trick]['cards_played'] = notif.args.cards_played;
+            this.round_result[no_round][no_trick]['winner'] = notif.args.winner;
 
 
-        
-
-
-        
-
-
-
-
-
-
-
+            this.detailScore(no_round);
+        }
 
 
 

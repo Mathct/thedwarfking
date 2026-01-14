@@ -167,6 +167,7 @@ class Pending extends APP_GameClass
                         'player_name' => $this->player_name,
                         'questremove' => $questremove,
                         'log' => $imageQuestLog,
+                        'quest' => $quest,
                     
 
                     )
@@ -241,6 +242,7 @@ class Pending extends APP_GameClass
                         'player_name' => $this->player_name,
                         'questremove' => $questremove,
                         'log' => $imageQuestLog,
+                        'quest' => $quest,
                     
 
                     )
@@ -321,12 +323,21 @@ class Pending extends APP_GameClass
         // CLONE
         $clone = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
         $count_cards_table = count(self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'" ));
+        $last_card_id = game::$instance->getGameStateValue("last_card_play");
+        $last_type = 0;
+        if($last_card_id != 0)
+        {
+            $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
+        }
 
         // ESACLIBUR
         $excalibur = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 5 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
 
         // SORCIER
         $sorcier = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+
+        // DRAGON
+        $dragon = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 1 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
         
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
@@ -383,12 +394,22 @@ class Pending extends APP_GameClass
                     }
                 }
 
-                elseif($sorcier !=null)
+                elseif($sorcier != null)
                 {
                     $cards = ${'cards_'.$color_request};
                 }
 
-                elseif($excalibur !=null)
+                elseif($excalibur != null)
+                {
+                    $cards = ${'cards_'.$color_request};
+                }
+
+                elseif($dragon != null)
+                {
+                    $cards = ${'cards_'.$color_request};
+                }
+
+                elseif($clone != null)
                 {
                     $cards = ${'cards_'.$color_request};
                 }
@@ -407,7 +428,17 @@ class Pending extends APP_GameClass
                     {
                         $ret["selectable"][] = 'my_cards_item_' . $card;
 
-                    }                    
+                    }
+                    
+                    if($dragon != null)
+                    {
+                        $ret["selectable"][] = 'my_cards_item_' . $dragon;
+                    }
+
+                    if($clone != null && $color_request == $last_type)
+                    {
+                        $ret["selectable"][] = 'my_cards_item_' . $clone;
+                    }
                     
                 }
 
@@ -427,6 +458,12 @@ class Pending extends APP_GameClass
                     if($sorcier != null)
                     {
                         $ret["selectable"] = array_diff($ret["selectable"], ['my_cards_item_' . $sorcier]);
+                    }
+
+                    if($clone != null && $color_request == $last_type)
+                    {
+                        $ret["selectable"] = [];
+                        $ret["selectable"][] = 'my_cards_item_' . $clone;
                     }
                     
                 }
@@ -915,13 +952,32 @@ class Pending extends APP_GameClass
             );
         }
 
-        self::DbQuery("UPDATE tricks set card_win = 1 WHERE card_id = '{$card_id_win}'");
+        self::DbQuery("UPDATE tricks set card_win = 1 WHERE card_id = '{$card_id_win}' AND round = '{$this->round_nb}' AND trick = '{$trick_no}'");
+       
 
 
         //INIT TURN
         game::$instance->DbQuery("UPDATE player set player_turn = 0 ");
         game::$instance->setGameStateValue("color_request", 0);
         game::$instance->setGameStateValue('first_player_play', $winner);
+
+
+        //MAJ RESUME SCORE
+
+        $cards_played = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+
+        game::$instance->notifyAllPlayers(
+                            'majResumeScoreEndOfTurn',
+                            '',
+                            array(
+                                'winner' => $winner,
+                                'no_round' => $round,
+                                'no_trick' => $trick_no,
+                                'cards_played' => $cards_played
+                                
+                                
+                            )
+                        );
 
 
         $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
@@ -1067,6 +1123,17 @@ class Pending extends APP_GameClass
         {
             //// INIT NEW ROUND + INIT TRICK ////
 
+            //MAJ RESUME SCORE
+
+            game::$instance->notifyAllPlayers(
+                'majResumeScoreEndOfRound',
+                '',
+                array(
+                    'round' => $round                   
+                    
+                )
+            );
+
             // MAJ ROUND
             game::$instance->incGameStateValue('no_round', 1);
             $new_round = game::$instance->getGameStateValue('no_round');
@@ -1075,6 +1142,7 @@ class Pending extends APP_GameClass
             game::$instance->setGameStateValue("druide_active", 0);
             game::$instance->setGameStateValue("pe_bleu_player", 0);
             game::$instance->setGameStateValue("pe_bleu_active", 0);
+            game::$instance->setGameStateValue("last_card_play", 0);
 
             game::$instance->notifyAllPlayers(
                             'majRound',
@@ -1127,22 +1195,6 @@ class Pending extends APP_GameClass
             {
                 $rand = bga_rand(1, 14);
             }
-
-            // if(game::$instance->gamestate->table_globals[100] != 3)
-            // {
-            //     while (in_array($rand, $all_rand))
-            //     {
-            //         $rand = bga_rand(1, 14);
-            //     }
-            // }
-
-            // if(game::$instance->gamestate->table_globals[100] == 3)
-            // {
-            //     while (in_array($rand, $all_rand) && $rand == 4)
-            //     {
-            //         $rand = bga_rand(1, 14);
-            //     }
-            // }
 
             if($rand>=1 && $rand<=5)
             {
@@ -1285,7 +1337,7 @@ class Pending extends APP_GameClass
                         'player' => $player,
                         
                     )
-        );
+                );
             }
 
             $active_special_card = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$new_round}'" );
@@ -1343,8 +1395,6 @@ class Pending extends APP_GameClass
         $ret['buttons'] = array();
         $ret['title'] = clienttranslate('End of Game');
         $ret['titleyou'] = clienttranslate('End of Game');
-
-        $ret['buttons'][] ='continue';
         
         return $ret;
     }
@@ -2829,6 +2879,20 @@ class Pending extends APP_GameClass
                             array(
                                 'player' => $player_maj,
                                 'trick' => $cards_trick,
+                            )
+                );
+
+                // MAJ RESUME SCORE
+                game::$instance->notifyAllPlayers(
+                            'majResumeScoreAfterSorcier',
+                            '',
+                            array(
+                                'winner' => $player_maj,
+                                'no_round' => $round,
+                                'no_trick' => $trick_no,
+                                'cards_played' => $cards_trick
+                                
+                                
                             )
                 );
 
