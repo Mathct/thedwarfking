@@ -426,6 +426,7 @@ protected function getAllDatas()
 
     $result['tricks_max'] = $tricks_max;
 
+    $result['resume_score'] = [];
 
     for($i = 1; $i <=$round; $i++)
     {
@@ -439,6 +440,8 @@ protected function getAllDatas()
                 $datas_win = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1", true );
                 $result['round_result'][$i][$j]['winner'] = $datas_win[0];
             }
+
+            $result['resume_score'][$i] = self::getObjectListFromDB( "SELECT player_id player_id, score_quest score_quest, score_bonus score_bonus, bonus_enchanteur bonus_enchanteur, score_round score_round FROM scores WHERE round = '{$i}'" );
 
         }
         else 

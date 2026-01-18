@@ -79,6 +79,7 @@ function (dojo, declare) {
             this.tricks_max = gamedatas.tricks_max;
             this.view_round = this.no_round;
             this.resume_quest_card = gamedatas.resume_quest_card;
+            this.resume_score = gamedatas.resume_score;
             
 
             this.setupBoard();
@@ -761,9 +762,14 @@ updateLayout: function () {
         const gamePlayArea = document.getElementById("board_id");
         gamePlayArea.insertAdjacentHTML("beforeend", gameBoardHTML);
 
-        var info = _('Special Card and Quest for the Round')
+        var info = _('Special Card and Quest for the Round');
         var html = '<div>'+info+'</div>';
         this.addTooltipHtml( "btn_round", html, 500);
+
+        var info_resume = _('Round summary');
+        var html_resume = '<div>'+info_resume+'</div>';
+        this.addTooltipHtml( "btn_resume_round", html_resume, 500);
+
 
         var choiceQuest = this.gamedatas.active_quest_card;
         if(choiceQuest[0].validate == 0)
@@ -1810,7 +1816,7 @@ updateLayout: function () {
             const text_trick_in_progress = _('Trick in progress ...');
 
             const round = document.createElement("div");
-            round.classList.add('round_tile_score');
+            round.classList.add('round_title');
             round.textContent = text_round + ' ' + no_round;
             container.appendChild(round);
             
@@ -1836,21 +1842,29 @@ updateLayout: function () {
                 ligne_trick_detail.appendChild(played_cards);
 
                 const player_id_win = this.round_result[no_round][trick]['winner'];
+
                 if(player_id_win)
                 {
                     const player_name_win = this.players[player_id_win].name;
                     const player_color_win = this.players[player_id_win].color;
 
-                    const winner = document.createElement("div");
-                    winner.id = 'winner_'+no_round+'_'+trick;
-                    winner.classList.add('winner_trick');
-                    winner.style.color = '#'+player_color_win;
-                    winner.textContent = player_name_win;
-                    ligne_trick_detail.appendChild(winner);
+                    var avatar ='avatar_'+player_id_win;
+                    var avatarImage = document.getElementById(avatar);
+                    var avatarSrc = avatarImage.src;
+                    var newImage = document.createElement('img');
+                    newImage.src = avatarSrc;
+                    newImage.id = 'win_avatar_'+player_id_win+'_'+no_round+'_'+trick; 
+                    newImage.classList.add('resume_score_avatar');
+                    ligne_trick_detail.appendChild(newImage);
+
+                    const html = `<div style="color: #${player_color_win}">${player_name_win}</div>`;
+                                
+                    this.addTooltipHtml('win_avatar_'+player_id_win+'_'+no_round+'_'+trick, html, 500);
                     
                 }
 
                 const detail_played_cards = document.getElementById('played_card_'+no_round+'_'+trick);
+                
                 if(detail.cards_played.length != 0)
                 {
 
@@ -1901,11 +1915,11 @@ updateLayout: function () {
                                 
             });
 
-            
+            /* QUEST CARD */
+
             if(this.resume_quest_card[no_round])
             {
-                /* QUEST CARD */
-
+                
                 var type = this.resume_quest_card[no_round][0].rand;
                 var validate = this.resume_quest_card[no_round][0].validate;
 
@@ -1952,6 +1966,84 @@ updateLayout: function () {
                 }
 
             }
+
+            /* SCORE */
+
+            //if(no_round != this.no_round)
+            if(this.resume_score[no_round])
+            {
+                const text_quest = _('Quest');
+                const text_bonus = _('Bonus');
+
+                const text_score = _('Scores');
+                const score = document.createElement("div");
+                score.classList.add('round_title_score');
+                score.textContent = text_score+":";
+                container.appendChild(score);
+
+
+                var ligne_score = document.createElement("div");
+                ligne_score.id = "ligne_score_"+no_round;
+                ligne_score.classList.add('ligne_score');
+                container.appendChild(ligne_score);
+
+                var ligne = document.getElementById("ligne_score_"+no_round);
+
+
+                Object.entries(this.resume_score[no_round])
+                .forEach(([key, detail]) => {
+
+                    var player_name = this.players[detail.player_id].name;
+                    var player_color = this.players[detail.player_id].color;
+
+                    const div = document.createElement("div");
+                    div.id = 'player_score_info_'+detail.player_id+'_'+no_round;
+                    div.classList.add('player_score_info');
+                    ligne.appendChild(div);
+
+                    var div_player = document.getElementById('player_score_info_'+detail.player_id+'_'+no_round);
+
+                    var avatar2 ='avatar_'+detail.player_id;
+                    var avatarImage2 = document.getElementById(avatar2);
+                    var avatarSrc2 = avatarImage2.src;
+                    var newImage2 = document.createElement('img');
+                    newImage2.src = avatarSrc2;
+                    newImage2.id = 'score_avatar_'+detail.player_id+'_'+no_round; 
+                    newImage2.classList.add('resume_score_avatar');
+                    div_player.appendChild(newImage2);
+
+                    const html = `<div style="color: #${player_color}">${player_name}</div>`;
+                    this.addTooltipHtml('score_avatar_'+detail.player_id+'_'+no_round, html, 500);
+
+                    const score = document.createElement("div");
+                    score.id = "score_"+detail.player_id+"_"+no_round;
+                    score.classList.add('detail_score');
+                    score.innerHTML = `<span>${detail.score_round}</span> <span class="log_pv title"></span>`
+                    div_player.appendChild(score);
+
+                    if(detail.score_bonus != 0)
+                    {
+                        var html2 = `<span>${text_quest}:</span> <span>&nbsp;${detail.score_quest}</span> <span class="log_pv title"></span> <span>&nbsp;+ ${text_bonus}: </span> <span>${detail.score_bonus}</span> <span class="log_pv title"></span>`;
+                    }
+                    else if(detail.bonus_enchanteur == 2)
+                    {
+                        var html2 = `<span>${text_quest}:</span> <span>&nbsp;${detail.score_quest}</span> <span class="log_pv title"></span> <span>&nbsp;x2</span>`;
+                    }
+                    else
+                    {
+                        var html2 = `<span>${text_quest}:</span> <span>&nbsp;${detail.score_quest}</span> <span class="log_pv title"></span>`;
+                    }
+                    
+                    this.addTooltipHtml("score_"+detail.player_id+"_"+no_round, html2, 500);
+
+                   
+                    
+                });
+
+                
+            }
+
+            
             
         },
 
@@ -1995,6 +2087,7 @@ updateLayout: function () {
             dojo.subscribe( 'majResumeScoreEndOfTurn', this, "notif_majResumeScoreEndOfTurn" );
             dojo.subscribe( 'majResumeScoreEndOfRound', this, "notif_majResumeScoreEndOfRound" );
             dojo.subscribe( 'majResumeScoreAfterSorcier', this, "notif_majResumeScoreAfterSorcier" );
+            dojo.subscribe( 'majModalResultScoreRound', this, "notif_majModalResultScoreRound" );
 
             
 
@@ -2255,11 +2348,20 @@ updateLayout: function () {
 
 
             this.detailScore(no_round);
-        }
+        },
+
+        notif_majModalResultScoreRound: function (notif) {
+
+            var no_round = parseInt(notif.args.no_round);
+            
+            this.resume_score[no_round] = notif.args.result_score_round;
+
+            this.detailScore(no_round);
+        },
 
 
 
-
+        
 
 
 

@@ -811,7 +811,7 @@ body {
   background-image: url('img/btn_score.png');
   background-size: 100% 100%;
   position: absolute;
-  top: 25px;
+  top: 10px;
   right: 25px;
   cursor: pointer;
   z-index: 200;
@@ -853,7 +853,7 @@ body {
 #resume_round {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
   
 }
 
@@ -880,12 +880,12 @@ body {
   transform: scale(1.1);
 }
 
-.round_tile_score {
+.round_title {
   text-align: center;
   font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
   font-size: 25px;
   color: white;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .trick_title {
@@ -966,6 +966,49 @@ body {
 
 }
 
+.ligne_score {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.player_score_name {
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 20px;
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail_score {
+  position: absolute;
+  display: flex;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-46%);
+  font-size: 18px;
+  cursor: default;
+
+}
+
+.round_title_score {
+  text-align: center;
+  font-family: 'BuenaPark', 'Garamond', 'Montserrat', 'Raleway', 'Segoe UI', Arial, sans-serif;
+  font-size: 25px;
+  color: white;
+}
+
+.resume_score_avatar{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+.player_score_info{
+  position: relative;
+}
 
 
 

@@ -1119,6 +1119,17 @@ class Pending extends APP_GameClass
         ));
 
 
+        $result_score_round = self::getObjectListFromDB( "SELECT player_id player_id, score_quest score_quest, score_bonus score_bonus, bonus_enchanteur bonus_enchanteur, score_round score_round FROM scores WHERE round = '{$round}'" );
+        game::$instance->notifyAllPlayers(
+                'majModalResultScoreRound',
+                '',
+                array(
+                    'result_score_round' => $result_score_round,
+                    'no_round' => $round                 
+                    
+                )
+        );
+
         if (($round < 7)||($round >=7 && $count_players_max_score >=2))
         {
             //// INIT NEW ROUND + INIT TRICK ////
