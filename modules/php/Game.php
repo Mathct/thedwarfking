@@ -1912,9 +1912,9 @@ function calculScore()
         {
 
             $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
-            $player_win_type_arg_blue2 = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg >= 12 ORDER BY id ASC", true );
+            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg >= 12 ORDER BY id ASC", true );
             $count1 = count($player_win_type_arg_blue);
-            $count2 = count($player_win_type_arg_blue2);
+            $count2 = count($player_win_type_arg_face);
 
             $pv = $count1 + $count2;
 
@@ -1923,9 +1923,9 @@ function calculScore()
         if($quest == '192')
         {
             $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
-            $player_win_type_arg_blue2 = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg >= 12 ORDER BY id ASC", true );
+            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg >= 12 ORDER BY id ASC", true );
             $count1 = count($player_win_type_arg_blue);
-            $count2 = count($player_win_type_arg_blue2);
+            $count2 = count($player_win_type_arg_face);
 
             $pv = -($count1) - $count2;
 
