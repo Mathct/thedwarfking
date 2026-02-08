@@ -1807,6 +1807,7 @@ class Pending extends APP_GameClass
 
         if($nb_players == 5)
         {
+            self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
             self::DbQuery("UPDATE cards set card_location_arg = 5 WHERE card_location ='hand' AND card_location_arg='{$player5}'");
         }
 
@@ -2003,6 +2004,7 @@ class Pending extends APP_GameClass
 
             if($nb_players == 5)
             {
+                self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
                 self::DbQuery("UPDATE cards set card_location_arg = 5 WHERE card_location ='hand' AND card_location_arg='{$player5}'");
             }
 
