@@ -1,18 +1,31 @@
 <?php
 
 namespace Bga\Games\thedwarfking;   // ATTENTION NOM DU JEU
-use APP_GameClass;
+
+use Bga\GameFramework\Table;
 
 require_once 'actions/Actions.php'; // Inclure le fichier contenant les fonctions
 
-class Pending extends APP_GameClass
+class Pending
 {
     use ActionsTrait; // ATTENTION
+    
+    public mixed $player_no;
+    public mixed $player_id;
+    public mixed $player_name;
+    public mixed $player_score;
+    public mixed $player_color;
+    public mixed $player_turn;
+    public mixed $round_nb;
+    public mixed $trick_nb;
+    public mixed $special;
+    public mixed $quest;
+    public mixed $player_pref_confirm;
 
     public function __construct($player_id)
     {
         $this->player_id = $player_id;
-        $p = self::getObjectFromDB("SELECT * FROM player WHERE player_id = {$player_id}");        
+        $p = Table::getObjectFromDB("SELECT * FROM `player` WHERE `player_id` = {$player_id}");        
         $this->player_no = $p['player_no'];
         $this->player_id = $p['player_id'];
         $this->player_name = $p['player_name'];
@@ -22,12 +35,12 @@ class Pending extends APP_GameClass
 
         $this->round_nb = game::$instance->getGameStateValue('no_round');
         $this->trick_nb = game::$instance->getGameStateValue('no_trick');
-        $this->special = self::getObjectListFromDB( "SELECT id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$this->round_nb}'");
-        $this->quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'");
+        $this->special = Table::getObjectListFromDB( "SELECT `id` `id`, `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `specialcard` WHERE `round` = '{$this->round_nb}'");
+        $this->quest = Table::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$this->round_nb}'");
 
         /// PREFERENCE DE CONFIRMATION
 
-        $this->player_pref_confirm = game::$instance->getUniqueValueFromDB("SELECT pgp_value FROM bga_user_preferences WHERE pgp_player='{$this->player_id}' AND pgp_preference_id = 100");
+        $this->player_pref_confirm = game::$instance->getUniqueValueFromDB("SELECT `pgp_value` FROM `bga_user_preferences` WHERE `pgp_player`='{$this->player_id}' AND `pgp_preference_id` = 100");
     }
 
 
@@ -50,7 +63,7 @@ class Pending extends APP_GameClass
     function Deal($parg1, $parg2, $varg1, $varg2)
     {
         $round = game::$instance->getGameStateValue("no_round");
-        $specialcard = self::getObjectListFromDB( "SELECT round round, rand rand, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round ='{$round}'" );
+        $specialcard = Table::getObjectListFromDB( "SELECT `round` `round`, `rand` `rand`, `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `specialcard` WHERE `round` ='{$round}'" );
         
         $imageSpecialLog = game::$instance->getLogSpecial($specialcard);
 
@@ -92,16 +105,16 @@ class Pending extends APP_GameClass
                 )
             );
 
-        $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` name FROM `player`", true );
 
         foreach ($players as $player) {
 
-            self::DbQuery("INSERT INTO bonus (round, player_id, bonus) VALUES ($round, $player, 0)");
+            Table::DbQuery("INSERT INTO `bonus` (`round`, `player_id`, `bonus`) VALUES ($round, $player, 0)");
         
         }
 
         $players_id_quest = game::$instance->getGameStateValue("first_player_quest");
-        $player_name_quest = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$players_id_quest}'");
+        $player_name_quest = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$players_id_quest}'");
 
         game::$instance->notifyAllPlayers(
                 'message',
@@ -114,7 +127,7 @@ class Pending extends APP_GameClass
             );
 
         //SORCIER
-        $player_sorcier = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4 AND card_location = 'hand'");
+        $player_sorcier = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4 AND `card_location` = 'hand'");
         if($player_sorcier != null)
         {
             game::$instance->setGameStateValue("sorcier_player", $player_sorcier);
@@ -147,17 +160,17 @@ class Pending extends APP_GameClass
             if($varg1 == 'questcardmodal1')
             {
                 $questremove = 2;
-                self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+                Table::DbQuery("UPDATE `quest` set `validate` = 1 WHERE `round` = '{$this->round_nb}'");
             }
 
             if($varg1 == 'questcardmodal2')
             {
                 $questremove = 1;
-                self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
+                Table::DbQuery("UPDATE `quest` set `validate` = 2 WHERE `round` = '{$this->round_nb}'");
                 
             }
 
-            $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+            $quest = Table::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$this->round_nb}'" );
             $imageQuestLog = game::$instance->getLogQuest($quest);
 
             game::$instance->notifyAllPlayers(
@@ -176,7 +189,7 @@ class Pending extends APP_GameClass
             game::$instance->giveExtraTime($this->player_id);
 
             // PE_ROUGE
-            $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
+            $player_pe_rouge = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 3 AND `card_type_arg` = 11 AND `card_type_arg_2` = 2 AND `card_location` = 'hand'");
             if($player_pe_rouge != null)
             {
                 game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
@@ -222,17 +235,17 @@ class Pending extends APP_GameClass
             if($parg1 == 'questcardmodal1')
             {
                 $questremove = 2;
-                self::DbQuery("UPDATE quest set validate = 1 WHERE round = '{$this->round_nb}'");
+                Table::DbQuery("UPDATE `quest` set `validate` = 1 WHERE `round` = '{$this->round_nb}'");
             }
 
             if($parg1 == 'questcardmodal2')
             {
                 $questremove = 1;
-                self::DbQuery("UPDATE quest set validate = 2 WHERE round = '{$this->round_nb}'");
+                Table::DbQuery("UPDATE `quest` set `validate` = 2 WHERE `round` = '{$this->round_nb}'");
                 
             }
 
-            $quest = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$this->round_nb}'" );
+            $quest = Table::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$this->round_nb}'" );
             $imageQuestLog = game::$instance->getLogQuest($quest);
 
             game::$instance->notifyAllPlayers(
@@ -251,7 +264,7 @@ class Pending extends APP_GameClass
             game::$instance->giveExtraTime($this->player_id);
 
             // PE_ROUGE
-            $player_pe_rouge = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 3 AND card_type_arg = 11 AND card_type_arg_2 = 2 AND card_location = 'hand'");
+            $player_pe_rouge = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 3 AND `card_type_arg` = 11 AND `card_type_arg_2` = 2 AND `card_location` = 'hand'");
             if($player_pe_rouge != null)
             {
                 game::$instance->setGameStateValue("pe_rouge_player", $player_pe_rouge);
@@ -316,37 +329,37 @@ class Pending extends APP_GameClass
         $round = game::$instance->getGameStateValue('no_round');
 
         // MOMIE
-        $momie = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+        $momie = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'");
         $last_trick = $trick_no - 1;
-        $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+        $type_last_card_win = Table::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
         
         // CLONE
-        $clone = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
-        $count_cards_table = count(self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'" ));
+        $clone = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'");
+        $count_cards_table = count(Table::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'table'" ));
         $last_card_id = game::$instance->getGameStateValue("last_card_play");
         $last_type = 0;
         if($last_card_id != 0)
         {
-            $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
+            $last_type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$last_card_id}'");
         }
 
         // ESACLIBUR
-        $excalibur = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 5 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+        $excalibur = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 5 AND `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'");
 
         // SORCIER
-        $sorcier = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+        $sorcier = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4 AND `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'");
 
         // DRAGON
-        $dragon = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 1 AND card_location = 'hand' AND card_location_arg = '{$this->player_id}'");
+        $dragon = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 1 AND `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'");
         
 
-        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+        $all_cards = Table::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'" );
         $color_request = game::$instance->getGameStateValue("color_request");
 
-        $cards_1 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 1", true);
-        $cards_2 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 2", true);
-        $cards_3 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 3", true);
-        $cards_4 = self::getObjectListFromDB("SELECT card_id FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}' AND card_type = 4", true);
+        $cards_1 = Table::getObjectListFromDB("SELECT `card_id` FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}' AND `card_type` = 1", true);
+        $cards_2 = Table::getObjectListFromDB("SELECT `card_id` FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}' AND `card_type` = 2", true);
+        $cards_3 = Table::getObjectListFromDB("SELECT `card_id` FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}' AND `card_type` = 3", true);
+        $cards_4 = Table::getObjectListFromDB("SELECT `card_id` FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}' AND `card_type` = 4", true);
 
         if ($this->player_turn != 1) // si le joueur n'a pas joué son tour 
         {
@@ -493,11 +506,11 @@ class Pending extends APP_GameClass
             $explode = explode('_', $varg1);
             $card_id = intval(end($explode));
 
-            $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-            $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
-            $type_arg_2 = self::getUniqueValueFromDB("SELECT card_type_arg_2 FROM cards WHERE card_id='{$card_id}'");
+            $type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+            $type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
+            $type_arg_2 = Table::getUniqueValueFromDB("SELECT `card_type_arg_2` FROM `cards` WHERE `card_id`='{$card_id}'");
 
-            $card_play = self::getObjectFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = {$card_id}");
+            $card_play = Table::getObjectFromDB("SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_id` = {$card_id}");
 
             game::$instance->cards->moveCard($card_id, 'table', $this->player_id);
 
@@ -512,8 +525,8 @@ class Pending extends APP_GameClass
             $trick_no = game::$instance->getGameStateValue('no_trick');
             $round = game::$instance->getGameStateValue('no_round');
             $last_trick = $trick_no - 1;
-            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
-            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $type_last_card_win = Table::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
+            $typearg_last_card_win = Table::getUniqueValueFromDB("SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
 
             // pour le Clone: sauvergarde de la derniere card_id jouée (n'est pas mise à jour dès que le Clone est joué)
             $last_type = 0;
@@ -524,20 +537,20 @@ class Pending extends APP_GameClass
                 $clone = 1;
                 game::$instance->setGameStateValue("clone_play", 1);
                 $last_card_id = game::$instance->getGameStateValue("last_card_play");
-                $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
-                $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$last_card_id}'");
+                $last_type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$last_card_id}'");
+                $last_type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$last_card_id}'");
             }
 
             if(game::$instance->getGameStateValue("clone_play") != 1)
             {
                 game::$instance->setGameStateValue("last_card_play", $card_id);
-                $clone_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                $clone_id = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
                 if($clone_id != null)
                     {
                         
-                        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
-                        $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-                        $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                        $clone_player = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
+                        $last_type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+                        $last_type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
 
                         game::$instance->notifyPlayer(
                         $clone_player,
@@ -649,7 +662,7 @@ class Pending extends APP_GameClass
             
 
             
-            game::$instance->DbQuery("UPDATE player set player_turn = 1 WHERE player_id = '{$this->player_id}'");
+            game::$instance->DbQuery("UPDATE `player` set `player_turn` = 1 WHERE `player_id` = '{$this->player_id}'");
             game::$instance->giveExtraTime($this->player_id);
             game::$instance->addPendingFirst($this->player_id, "PlayCard");
 
@@ -657,7 +670,7 @@ class Pending extends APP_GameClass
             //DRUIDE OU PE_BLEU
 
             $tricks_max = 0;
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
@@ -721,11 +734,11 @@ class Pending extends APP_GameClass
             $explode = explode('_', $parg1);
             $card_id = intval(end($explode));
 
-            $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-            $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
-            $type_arg_2 = self::getUniqueValueFromDB("SELECT card_type_arg_2 FROM cards WHERE card_id='{$card_id}'");
+            $type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+            $type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
+            $type_arg_2 = Table::getUniqueValueFromDB("SELECT `card_type_arg_2` FROM `cards` WHERE `card_id`='{$card_id}'");
 
-            $card_play = self::getObjectFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = {$card_id}");
+            $card_play = Table::getObjectFromDB("SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_id` = {$card_id}");
 
             game::$instance->cards->moveCard($card_id, 'table', $this->player_id);
 
@@ -740,8 +753,8 @@ class Pending extends APP_GameClass
             $trick_no = game::$instance->getGameStateValue('no_trick');
             $round = game::$instance->getGameStateValue('no_round');
             $last_trick = $trick_no - 1;
-            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
-            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $type_last_card_win = Table::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
+            $typearg_last_card_win = Table::getUniqueValueFromDB("SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
 
             // pour le Clone: sauvergarde de la derniere card_id jouée (n'est pas mise à jour dès que le Clone est joué)
             $last_type = 0;
@@ -752,20 +765,20 @@ class Pending extends APP_GameClass
                 $clone = 1;
                 game::$instance->setGameStateValue("clone_play", 1);
                 $last_card_id = game::$instance->getGameStateValue("last_card_play");
-                $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$last_card_id}'");
-                $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$last_card_id}'");
+                $last_type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$last_card_id}'");
+                $last_type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$last_card_id}'");
             }
 
             if(game::$instance->getGameStateValue("clone_play") != 1)
             {
                 game::$instance->setGameStateValue("last_card_play", $card_id);
-                $clone_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+                $clone_id = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
                 if($clone_id != null)
                     {
                         
-                        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
-                        $last_type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-                        $last_type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                        $clone_player = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
+                        $last_type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+                        $last_type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
 
                         game::$instance->notifyPlayer(
                         $clone_player,
@@ -858,7 +871,7 @@ class Pending extends APP_GameClass
             
 
             
-            game::$instance->DbQuery("UPDATE player set player_turn = 1 WHERE player_id = '{$this->player_id}'");
+            game::$instance->DbQuery("UPDATE `player` set `player_turn` = 1 WHERE `player_id` = '{$this->player_id}'");
             game::$instance->giveExtraTime($this->player_id);
             game::$instance->addPendingFirst($this->player_id, "PlayCard");
 
@@ -866,7 +879,7 @@ class Pending extends APP_GameClass
             //DRUIDE OU PE_BLEU
 
             $tricks_max = 0;
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
@@ -918,7 +931,7 @@ class Pending extends APP_GameClass
         // SCORE TRICK PANNEL
 
         $round = game::$instance->getGameStateValue('no_round');
-        $before_tricks_win = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$winner}'", true ));
+        $before_tricks_win = count(Table::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$winner}'", true ));
         game::$instance->notifyAllPlayers(
                             'majTricksWin',
                             '',
@@ -933,14 +946,14 @@ class Pending extends APP_GameClass
 
         // MOVE CARD ET INSCRIPTION DU TRICK EN BD
 
-        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
-        $card_id_win = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_location = 'table' AND card_location_arg = '{$winner}'");
+        $cards_played = Table::getObjectListFromDB("SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'table'");
+        $card_id_win = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_location` = 'table' AND `card_location_arg` = '{$winner}'");
         $trick_no = game::$instance->getGameStateValue('no_trick');
         foreach ($cards_played as $card_played) {
             game::$instance->cards->moveCard($card_played['id'], 'discard', $winner);
 
-            self::DbQuery(
-            "INSERT INTO tricks (round, trick, player_id, player_win, card_id, type, type_arg, type_arg_2) VALUES ('"
+            Table::DbQuery(
+            "INSERT INTO `tricks` (`round`, `trick`, `player_id`, `player_win`, `card_id`, `type`, `type_arg`, `type_arg_2`) VALUES ('"
             . $this->round_nb . "', "
             . $trick_no . ", '"
             . $card_played['location_arg'] . "', "
@@ -952,19 +965,19 @@ class Pending extends APP_GameClass
             );
         }
 
-        self::DbQuery("UPDATE tricks set card_win = 1 WHERE card_id = '{$card_id_win}' AND round = '{$this->round_nb}' AND trick = '{$trick_no}'");
+        Table::DbQuery("UPDATE `tricks` set `card_win` = 1 WHERE `card_id` = '{$card_id_win}' AND `round` = '{$this->round_nb}' AND `trick` = '{$trick_no}'");
        
 
 
         //INIT TURN
-        game::$instance->DbQuery("UPDATE player set player_turn = 0 ");
+        game::$instance->DbQuery("UPDATE `player` set `player_turn` = 0 ");
         game::$instance->setGameStateValue("color_request", 0);
         game::$instance->setGameStateValue('first_player_play', $winner);
 
 
         //MAJ RESUME SCORE
 
-        $cards_played = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+        $cards_played = Table::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$trick_no}'" );
 
         game::$instance->notifyAllPlayers(
                             'majResumeScoreEndOfTurn',
@@ -980,13 +993,13 @@ class Pending extends APP_GameClass
                         );
 
 
-        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+        $all_cards = Table::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'" );
 
         if($all_cards != null)
         {
 
             // MAJ LAST TRICK PANNEL FOR THE PLAYER
-            $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+            $cards_trick = Table::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$trick_no}'" );
 
             game::$instance->notifyPlayer(
                         $winner,
@@ -1001,8 +1014,8 @@ class Pending extends APP_GameClass
                 
             // NOUVEL ORDRE PENDING
             $nextplayer = $winner;
-            self::DbQuery("DELETE FROM `pending`;");
-            $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+            Table::DbQuery("DELETE FROM `pending`;");
+            $count_players = count(Table::getObjectListFromDB("SELECT `player_id` `id` FROM `player`", true));
             for ($i = 1; $i <= $count_players; $i++) {
                 game::$instance->addPendingFirst($nextplayer, "PlayCard");
                 $nextplayer = game::$instance->getPlayerAfter($nextplayer);
@@ -1025,13 +1038,13 @@ class Pending extends APP_GameClass
 
 
             // MOMIE DISPLAY SI PAS JOUEE
-            $momie_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
-            $momie_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
+            $momie_id = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'hand'");
+            $momie_player = Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'hand'");
             $round = game::$instance->getGameStateValue('no_round');
             $trick = game::$instance->getGameStateValue('no_trick');
             $last_trick = game::$instance->getGameStateValue('no_trick') - 1;
-            $type_last_card_win = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
-            $typearg_last_card_win = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1");
+            $type_last_card_win = Table::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
+            $typearg_last_card_win = Table::getUniqueValueFromDB("SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1");
             
             if($momie_id != null)
             {
@@ -1111,15 +1124,15 @@ class Pending extends APP_GameClass
 
         $round = game::$instance->getGameStateValue('no_round');
 
-        $count_players_max_score = count(self::getObjectListFromDB(
-            "SELECT player_id AS id
-            FROM player
-            WHERE player_score = (SELECT MAX(player_score) FROM player)",
+        $count_players_max_score = count(Table::getObjectListFromDB(
+            "SELECT `player_id` AS `id`
+            FROM `player`
+            WHERE `player_score` = (SELECT MAX(`player_score`) FROM `player`)",
             true
         ));
 
 
-        $result_score_round = self::getObjectListFromDB( "SELECT player_id player_id, score_quest score_quest, score_bonus score_bonus, bonus_enchanteur bonus_enchanteur, score_round score_round FROM scores WHERE round = '{$round}'" );
+        $result_score_round = Table::getObjectListFromDB( "SELECT `player_id` `player_id`, `score_quest` `score_quest`, `score_bonus` `score_bonus`, `bonus_enchanteur` `bonus_enchanteur`, `score_round` `score_round` FROM `scores` WHERE `round` = '{$round}'" );
         game::$instance->notifyAllPlayers(
                 'majModalResultScoreRound',
                 '',
@@ -1166,7 +1179,7 @@ class Pending extends APP_GameClass
                         );
 
             // MOVE DISCARD TO DECK
-            $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
+            $all_cards = Table::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards`" );
             foreach($all_cards as $card)
             {
                 game::$instance->cards->moveCard($card['id'], 'deck');
@@ -1176,16 +1189,16 @@ class Pending extends APP_GameClass
             // INIT SPECIAL CARD
             if($this->special[0]['type_arg'] == 1)
             {
-                self::DbQuery("UPDATE cards set card_type = 4 WHERE card_type_arg = 1");
-                self::DbQuery("UPDATE cards set card_type_arg = 0 WHERE card_type = 4");
-                self::DbQuery("UPDATE cards set card_type_arg_2 = 0 WHERE card_type = 4");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 4 WHERE `card_type_arg` = 1");
+                Table::DbQuery("UPDATE `cards` set `card_type_arg` = 0 WHERE `card_type` = 4");
+                Table::DbQuery("UPDATE `cards` set `card_type_arg_2` = 0 WHERE `card_type` = 4");
             }
 
             if($this->special[0]['type_arg'] == 11)
             {
-                self::DbQuery("UPDATE cards set card_type = 4 WHERE card_type_arg = 11");
-                self::DbQuery("UPDATE cards set card_type_arg = 0 WHERE card_type = 4");
-                self::DbQuery("UPDATE cards set card_type_arg_2 = 0 WHERE card_type = 4");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 4 WHERE `card_type_arg` = 11");
+                Table::DbQuery("UPDATE `cards` set `card_type_arg` = 0 WHERE `card_type` = 4");
+                Table::DbQuery("UPDATE `cards` set `card_type_arg_2` = 0 WHERE `card_type` = 4");
             }
             
             // SHUFFLE
@@ -1193,7 +1206,7 @@ class Pending extends APP_GameClass
 
             //SELECT NEW SPECIAL CARD
             $all_rand = [];
-            $all_cardspecial_play = self::getObjectListFromDB( "SELECT rand rand FROM specialcard" );
+            $all_cardspecial_play = Table::getObjectListFromDB( "SELECT `rand` `rand` FROM `specialcard`" );
             
             foreach($all_cardspecial_play as $special)
             {
@@ -1209,68 +1222,68 @@ class Pending extends APP_GameClass
 
             if($rand>=1 && $rand<=5)
             {
-                self::DbQuery("UPDATE cards set card_type_arg = $rand WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 4, $rand, 0)");
+                Table::DbQuery("UPDATE `cards` set `card_type_arg` = $rand WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 4, $rand, 0)");
             }
 
             if($rand == 6)
             {
-                self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 1, 0)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 1, 1, 0)");
             }
 
             if($rand == 7)
             {
-                self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 11, 1)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 1, 11, 1)");
             }
 
             if($rand==8)
             {
-                self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 1, 11, 2)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 1, 11, 2)");
             }
 
             if($rand == 9)
             {
-                self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 1, 0)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 2, 1, 0)");
             }
 
             if($rand == 10)
             {
-                self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 11, 1)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 2, 11, 1)");
             }
 
             if($rand == 11)
             {
-                self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 2, 11, 2)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 2, 11, 2)");
             }
 
             if($rand == 12)
             {
-                self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 1, 0)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 3, 1, 0)");
             }
 
             if($rand == 13)
             {
-                self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 11, 1)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 3, 11, 1)");
             }
 
             if($rand == 14)
             {
-                self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-                self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES ($new_round, $rand, 3, 11, 2)");
+                Table::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+                Table::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES ($new_round, $rand, 3, 11, 2)");
             }
 
             //INIT NEW QUEST
 
             $all_rand = [];
-            $all_cardsquest_play = self::getObjectListFromDB( "SELECT rand rand FROM quest" );
+            $all_cardsquest_play = Table::getObjectListFromDB( "SELECT `rand` `rand` FROM `quest`" );
             foreach($all_cardsquest_play as $quest)
             {
                 $all_rand[] = $quest['rand'];
@@ -1284,11 +1297,11 @@ class Pending extends APP_GameClass
                 
             }
         
-            self::DbQuery("INSERT INTO quest (round, rand) VALUES ($new_round, $rand)");
+            Table::DbQuery("INSERT INTO `quest` (`round`, `rand`) VALUES ($new_round, $rand)");
 
             //DISTRIBUTION DES CARTES
 
-            $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+            $players = Table::getObjectListFromDB( "SELECT `player_id` name FROM `player`", true );
             $nbreplayers = count($players);
 
             if ($nbreplayers == 3)
@@ -1315,7 +1328,7 @@ class Pending extends APP_GameClass
 
             foreach ($players as $player) {
 
-            $cards = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+            $cards = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$player}'" );
 
                 game::$instance->notifyPlayer(
                     $player,
@@ -1351,8 +1364,8 @@ class Pending extends APP_GameClass
                 );
             }
 
-            $active_special_card = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$new_round}'" );
-            $active_quest_card = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$new_round}'" );
+            $active_special_card = Table::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `specialcard` WHERE `round` = '{$new_round}'" );
+            $active_quest_card = Table::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$new_round}'" );
 
             game::$instance->notifyAllPlayers(
                             'majModal',
@@ -1369,15 +1382,15 @@ class Pending extends APP_GameClass
             // NOUVEL ORDRE PENDING
             $first_player_deal = game::$instance->getGameStateValue("first_player_deal");
             
-            $first_player_quest = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=2 AND card_type_arg = 5"));
+            $first_player_quest = intval(Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=2 AND `card_type_arg` = 5"));
             game::$instance->setGameStateValue("first_player_quest", $first_player_quest);
 
-            $first_player_play = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=3 AND card_type_arg = 5"));
+            $first_player_play = intval(Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=3 AND `card_type_arg` = 5"));
             game::$instance->setGameStateValue("first_player_play", $first_player_play);
 
-            self::DbQuery("DELETE FROM `pending`;");
+            Table::DbQuery("DELETE FROM `pending`;");
             $nextplayer = $first_player_play;
-            $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+            $count_players = count(Table::getObjectListFromDB("SELECT `player_id` `id` FROM `player`", true));
             for ($i = 1; $i <= $count_players; $i++) {
                 game::$instance->addPendingFirst($nextplayer, "PlayCard");
                 $nextplayer = game::$instance->getPlayerAfter($nextplayer);
@@ -1436,7 +1449,7 @@ class Pending extends APP_GameClass
     {
         game::$instance->setGameStateValue("druide_active", $this->player_id);
 
-        $players = self::getObjectListFromDB( "SELECT player_id id, player_name name, player_color color FROM player WHERE player_id != '{$this->player_id}'" );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` `id`, `player_name` name, `player_color` color FROM `player` WHERE `player_id` != '{$this->player_id}'" );
         $player = $this->player_id;
 
 
@@ -1466,7 +1479,7 @@ class Pending extends APP_GameClass
         $ret['title'] = clienttranslate('${actplayer} must exchange their hand with that of another player');
         $ret['titleyou'] = clienttranslate('${you} must exchange your hand with that of another player');
 
-        $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true );
         foreach($players as $player)
         {
             if( $player != $this->player_id)
@@ -1487,8 +1500,8 @@ class Pending extends APP_GameClass
         $nextplayer = $explode[2];
         $player = $this->player_id;
 
-        $cards_before_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
-        $cards_before_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+        $cards_before_1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'" );
+        $cards_before_2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
 
         game::$instance->notifyPlayer(
                 $player,
@@ -1513,12 +1526,12 @@ class Pending extends APP_GameClass
         );
 
         
-        self::DbQuery("UPDATE cards set card_location_arg = 1234 WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'");
-        self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'");
-        self::DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_location ='hand' AND card_location_arg=1234");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = 1234 WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_location` ='hand' AND `card_location_arg`=1234");
 
-        $cards_after_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
-        $cards_after_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+        $cards_after_1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'" );
+        $cards_after_2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
 
 
         game::$instance->notifyPlayer(
@@ -1556,8 +1569,8 @@ class Pending extends APP_GameClass
                 )
         ); 
         
-        $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-        $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+        $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+        $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
         game::$instance->notifyAllPlayers(
                 'message',
@@ -1618,8 +1631,8 @@ class Pending extends APP_GameClass
             $nextplayer = $explode[2];
             $player = $this->player_id;
 
-            $cards_before_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
-            $cards_before_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            $cards_before_1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'" );
+            $cards_before_2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
 
             game::$instance->notifyPlayer(
                     $player,
@@ -1644,12 +1657,12 @@ class Pending extends APP_GameClass
             );
 
             
-            self::DbQuery("UPDATE cards set card_location_arg = 1234 WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'");
-            self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'");
-            self::DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_location ='hand' AND card_location_arg=1234");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 1234 WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_location` ='hand' AND `card_location_arg`=1234");
 
-            $cards_after_1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$this->player_id}'" );
-            $cards_after_2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            $cards_after_1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$this->player_id}'" );
+            $cards_after_2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
 
 
             game::$instance->notifyPlayer(
@@ -1687,8 +1700,8 @@ class Pending extends APP_GameClass
                     )
             ); 
             
-            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+            $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
             game::$instance->notifyAllPlayers(
                     'message',
@@ -1770,11 +1783,11 @@ class Pending extends APP_GameClass
         {
 
         $explode = explode('_', $varg1);
-        $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` name FROM `player`", true );
         
         foreach($players as $player)
         {
-            $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+            $cards_before = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$player}'" );
             
             game::$instance->notifyPlayer(
             $player,
@@ -1790,25 +1803,25 @@ class Pending extends APP_GameClass
 
         $nb_players = count($players);
 
-        $player1 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 1");
-        $player2 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 2");
-        $player3 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 3");
-        $player4 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 4");
-        $player5 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 5");
+        $player1 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 1");
+        $player2 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 2");
+        $player3 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 3");
+        $player4 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 4");
+        $player5 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 5");
         
-        self::DbQuery("UPDATE cards set card_location_arg = 1 WHERE card_location ='hand' AND card_location_arg='{$player1}'");
-        self::DbQuery("UPDATE cards set card_location_arg = 2 WHERE card_location ='hand' AND card_location_arg='{$player2}'");
-        self::DbQuery("UPDATE cards set card_location_arg = 3 WHERE card_location ='hand' AND card_location_arg='{$player3}'");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = 1 WHERE `card_location` ='hand' AND `card_location_arg`='{$player1}'");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = 2 WHERE `card_location` ='hand' AND `card_location_arg`='{$player2}'");
+        Table::DbQuery("UPDATE `cards` set `card_location_arg` = 3 WHERE `card_location` ='hand' AND `card_location_arg`='{$player3}'");
 
         if($nb_players == 4)
         {
-            self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 4 WHERE `card_location` ='hand' AND `card_location_arg`='{$player4}'");
         }
 
         if($nb_players == 5)
         {
-            self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
-            self::DbQuery("UPDATE cards set card_location_arg = 5 WHERE card_location ='hand' AND card_location_arg='{$player5}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 4 WHERE `card_location` ='hand' AND `card_location_arg`='{$player4}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 5 WHERE `card_location` ='hand' AND `card_location_arg`='{$player5}'");
         }
 
 
@@ -1818,26 +1831,26 @@ class Pending extends APP_GameClass
         {  
             if($nb_players == 3)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
             }
 
             if($nb_players == 4)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 4");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
             }
 
             if($nb_players == 5)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
-                self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 4");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 5");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player5 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 5");
             }
 
 
@@ -1860,26 +1873,26 @@ class Pending extends APP_GameClass
 
             if($nb_players == 3)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
             }
 
             if($nb_players == 4)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
             }
 
             if($nb_players == 5)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 1");
-                self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
-                self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
-                self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 5");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player5 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 5");
             }
 
             game::$instance->notifyAllPlayers(
@@ -1898,7 +1911,7 @@ class Pending extends APP_GameClass
 
         foreach($players as $player)
         {
-            $cards_after = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+            $cards_after = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$player}'" );
             
             game::$instance->notifyPlayer(
             $player,
@@ -1967,11 +1980,11 @@ class Pending extends APP_GameClass
         if ($varg1 == 'yes') {
 
             $explode = explode('_', $parg1);
-            $players = self::getObjectListFromDB( "SELECT player_id name FROM player", true );
+            $players = Table::getObjectListFromDB( "SELECT `player_id` name FROM `player`", true );
             
             foreach($players as $player)
             {
-                $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+                $cards_before = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$player}'" );
                 
                 game::$instance->notifyPlayer(
                 $player,
@@ -1987,25 +2000,25 @@ class Pending extends APP_GameClass
 
             $nb_players = count($players);
 
-            $player1 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 1");
-            $player2 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 2");
-            $player3 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 3");
-            $player4 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 4");
-            $player5 = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = 5");
+            $player1 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 1");
+            $player2 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 2");
+            $player3 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 3");
+            $player4 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 4");
+            $player5 = Table::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no` = 5");
             
-            self::DbQuery("UPDATE cards set card_location_arg = 1 WHERE card_location ='hand' AND card_location_arg='{$player1}'");
-            self::DbQuery("UPDATE cards set card_location_arg = 2 WHERE card_location ='hand' AND card_location_arg='{$player2}'");
-            self::DbQuery("UPDATE cards set card_location_arg = 3 WHERE card_location ='hand' AND card_location_arg='{$player3}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 1 WHERE `card_location` ='hand' AND `card_location_arg`='{$player1}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 2 WHERE `card_location` ='hand' AND `card_location_arg`='{$player2}'");
+            Table::DbQuery("UPDATE `cards` set `card_location_arg` = 3 WHERE `card_location` ='hand' AND `card_location_arg`='{$player3}'");
 
             if($nb_players == 4)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = 4 WHERE `card_location` ='hand' AND `card_location_arg`='{$player4}'");
             }
 
             if($nb_players == 5)
             {
-                self::DbQuery("UPDATE cards set card_location_arg = 4 WHERE card_location ='hand' AND card_location_arg='{$player4}'");
-                self::DbQuery("UPDATE cards set card_location_arg = 5 WHERE card_location ='hand' AND card_location_arg='{$player5}'");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = 4 WHERE `card_location` ='hand' AND `card_location_arg`='{$player4}'");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = 5 WHERE `card_location` ='hand' AND `card_location_arg`='{$player5}'");
             }
 
 
@@ -2015,26 +2028,26 @@ class Pending extends APP_GameClass
             {  
                 if($nb_players == 3)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
                 }
 
                 if($nb_players == 4)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 4");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
                 }
 
                 if($nb_players == 5)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 3");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 4");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 5");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player5 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 5");
                 }
 
 
@@ -2057,26 +2070,26 @@ class Pending extends APP_GameClass
 
                 if($nb_players == 3)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
                 }
 
                 if($nb_players == 4)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
                 }
 
                 if($nb_players == 5)
                 {
-                    self::DbQuery("UPDATE cards set card_location_arg = $player5 WHERE card_location ='hand' AND card_location_arg= 1");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player1 WHERE card_location ='hand' AND card_location_arg= 2");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player2 WHERE card_location ='hand' AND card_location_arg= 3");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player3 WHERE card_location ='hand' AND card_location_arg= 4");
-                    self::DbQuery("UPDATE cards set card_location_arg = $player4 WHERE card_location ='hand' AND card_location_arg= 5");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player5 WHERE `card_location` ='hand' AND `card_location_arg`= 1");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player1 WHERE `card_location` ='hand' AND `card_location_arg`= 2");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player2 WHERE `card_location` ='hand' AND `card_location_arg`= 3");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player3 WHERE `card_location` ='hand' AND `card_location_arg`= 4");
+                    Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player4 WHERE `card_location` ='hand' AND `card_location_arg`= 5");
                 }
 
                 game::$instance->notifyAllPlayers(
@@ -2095,7 +2108,7 @@ class Pending extends APP_GameClass
 
             foreach($players as $player)
             {
-                $cards_after = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$player}'" );
+                $cards_after = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$player}'" );
                 
                 game::$instance->notifyPlayer(
                 $player,
@@ -2152,7 +2165,7 @@ class Pending extends APP_GameClass
     {
         game::$instance->setGameStateValue("pe_rouge_active", $this->player_id);
 
-        $players = self::getObjectListFromDB( "SELECT player_id id, player_name name, player_color color FROM player WHERE player_id != '{$this->player_id}'" );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` `id`, `player_name` name, `player_color` color FROM `player` WHERE `player_id` != '{$this->player_id}'" );
         $player = $this->player_id;
 
 
@@ -2192,7 +2205,7 @@ class Pending extends APP_GameClass
         $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
         $ret['titleyou'] = clienttranslate('${you} must choose a player from whom to take 2 cards');
 
-        $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+        $players = Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true );
         foreach($players as $player)
         {
             if( $player != $this->player_id)
@@ -2209,7 +2222,7 @@ class Pending extends APP_GameClass
         if($this->player_pref_confirm == 1)
         {
             $max_cards = 0;
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
@@ -2239,14 +2252,14 @@ class Pending extends APP_GameClass
 
             $cards = [];
 
-            $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
-            $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            $cards_id_before = Table::getObjectListFromDB( "SELECT `card_id` FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'", true );
+            $cards_before = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
             
             $cards[] = $cards_before[$cards_id_before[$rand1-1]];
             $cards[] = $cards_before[$cards_id_before[$rand2-1]];
 
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$cards_id_before[$rand1-1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$cards_id_before[$rand2-1]}'");
 
 
         
@@ -2272,8 +2285,8 @@ class Pending extends APP_GameClass
                     )
                 );
 
-            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+            $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
             game::$instance->notifyAllPlayers(
                     'message',
@@ -2341,7 +2354,7 @@ class Pending extends APP_GameClass
         if ($varg1 == 'yes') {
 
             $max_cards = 0;
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
@@ -2371,14 +2384,14 @@ class Pending extends APP_GameClass
 
             $cards = [];
 
-            $cards_id_before = self::getObjectListFromDB( "SELECT card_id FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'", true );
-            $cards_before = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$nextplayer}'" );
+            $cards_id_before = Table::getObjectListFromDB( "SELECT `card_id` FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'", true );
+            $cards_before = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$nextplayer}'" );
             
             $cards[] = $cards_before[$cards_id_before[$rand1-1]];
             $cards[] = $cards_before[$cards_id_before[$rand2-1]];
 
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand1-1]}'");
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$cards_id_before[$rand2-1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$cards_id_before[$rand1-1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$cards_id_before[$rand2-1]}'");
 
 
         
@@ -2404,8 +2417,8 @@ class Pending extends APP_GameClass
                     )
                 );
 
-            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+            $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
             game::$instance->notifyAllPlayers(
                     'message',
@@ -2451,13 +2464,13 @@ class Pending extends APP_GameClass
         $ret['buttons'] = array();
         $ret['title'] = clienttranslate('${actplayer} must exchange 2 cards with another player');
         
-        $nextplayer_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$parg1}");
-        $nextplayer_color = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$parg1}");
+        $nextplayer_name = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$parg1}");
+        $nextplayer_color = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$parg1}");
         $ret['opponent'] = '<span style="color: #' . $nextplayer_color . ';">' . $nextplayer_name . '</span>';
 
         $ret['titleyou'] = clienttranslate('${you} must choose 2 cards to pass to #opponent#');
 
-        $all_cards = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'hand' AND card_location_arg = '{$this->player_id}'" );
+        $all_cards = Table::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'hand' AND `card_location_arg` = '{$this->player_id}'" );
         
         foreach ($all_cards as $card) 
         {
@@ -2479,15 +2492,15 @@ class Pending extends APP_GameClass
             $player = $this->player_id;
             $nextplayer = $parg1;
 
-            $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
-            $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
+            $cards_before1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_id`='{$explode[0]}'" );
+            $cards_before2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_id`='{$explode[1]}'" );
             
             $cards = [];
             $cards[] = $cards_before1[$explode[0]];
             $cards[] = $cards_before2[$explode[1]];
 
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_id` = '{$explode[0]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_id` = '{$explode[1]}'");
 
             game::$instance->notifyPlayer(
                     $player,
@@ -2511,8 +2524,8 @@ class Pending extends APP_GameClass
                     )
                 );
 
-            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+            $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
             game::$instance->notifyAllPlayers(
                     'message',
@@ -2569,15 +2582,15 @@ class Pending extends APP_GameClass
             $player = $this->player_id;
             $nextplayer = $parg1;
 
-            $cards_before1 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[0]}'" );
-            $cards_before2 = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_id='{$explode[1]}'" );
+            $cards_before1 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_id`='{$explode[0]}'" );
+            $cards_before2 = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_id`='{$explode[1]}'" );
             
             $cards = [];
             $cards[] = $cards_before1[$explode[0]];
             $cards[] = $cards_before2[$explode[1]];
 
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[0]}'");
-            game::$instance->DbQuery("UPDATE cards set card_location_arg = $nextplayer WHERE card_id = '{$explode[1]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_id` = '{$explode[0]}'");
+            game::$instance->DbQuery("UPDATE `cards` set `card_location_arg` = $nextplayer WHERE `card_id` = '{$explode[1]}'");
 
             game::$instance->notifyPlayer(
                     $player,
@@ -2601,8 +2614,8 @@ class Pending extends APP_GameClass
                     )
                 );
 
-            $player_name_opponent = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id={$nextplayer}");
-            $player_color_opponent = self::getUniqueValueFromDB("SELECT player_color FROM player WHERE player_id={$nextplayer}");
+            $player_name_opponent = Table::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id`={$nextplayer}");
+            $player_color_opponent = Table::getUniqueValueFromDB("SELECT `player_color` FROM `player` WHERE `player_id`={$nextplayer}");
 
             game::$instance->notifyAllPlayers(
                     'message',
@@ -2650,7 +2663,7 @@ class Pending extends APP_GameClass
         $round = game::$instance->getGameStateValue('no_round');
 
         $tricks_max = 0;
-        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+        $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
         if($nbreplayers == 3)
         {
@@ -2666,7 +2679,7 @@ class Pending extends APP_GameClass
         }
 
 
-        $previous_trick_cards = self::getCollectionFromDB( "SELECT card_id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM tricks WHERE round ='{$round}' AND trick='{$previous_trick_no}'" );
+        $previous_trick_cards = Table::getCollectionFromDB( "SELECT `card_id` `id`, `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `tricks` WHERE `round` ='{$round}' AND `trick`='{$previous_trick_no}'" );
         
         game::$instance->notifyPlayer(
                 $this->player_id,
@@ -2726,7 +2739,7 @@ class Pending extends APP_GameClass
         $round = game::$instance->getGameStateValue('no_round');
 
         $tricks_max = 0;
-        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+        $nbreplayers = count(Table::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
         if($nbreplayers == 3)
         {
@@ -2754,7 +2767,7 @@ class Pending extends APP_GameClass
             $ret['titleyou'] = clienttranslate('${you} must exchange the Sorcerer for a card from the previous trick');
         }
 
-        $cards = self::getObjectListFromDB( "SELECT card_id FROM tricks WHERE round ='{$round}' AND trick = '{$previous_trick_no}'", true );
+        $cards = Table::getObjectListFromDB( "SELECT `card_id` FROM `tricks` WHERE `round` ='{$round}' AND `trick` = '{$previous_trick_no}'", true );
 
         foreach($cards as $card)
         {
@@ -2826,23 +2839,23 @@ class Pending extends APP_GameClass
                 $explode = explode('_', $varg1);
                 $card_id = $explode[2];
                             
-                $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
+                $sorcier_id = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4");
 
                 // INVERSION DES CARTES EN BD
                 
 
-                self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-                self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-                self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `type` = 4 WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `type_arg` = 4 WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `card_id` = $sorcier_id WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
 
                 
-                self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
-                self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
-                self::DbQuery("UPDATE cards set card_location = 'discard' WHERE card_id = '{$sorcier_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location` = 'hand' WHERE `card_id` = '{$card_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$card_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location` = 'discard' WHERE `card_id` = '{$sorcier_id}'");
                 
                 
-                $card = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = '{$card_id}'" );
-                $card_sorcier = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4" );
+                $card = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_id` = '{$card_id}'" );
+                $card_sorcier = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4" );
 
                 game::$instance->notifyPlayer(
                     $player,
@@ -2866,8 +2879,8 @@ class Pending extends APP_GameClass
                         )
                 );
 
-                $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-                $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                $type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+                $type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
                 $log = $type.'_'.$type_arg;
                 game::$instance->notifyAllPlayers(
                         'message',
@@ -2881,9 +2894,9 @@ class Pending extends APP_GameClass
                 );
 
                 // MAJ LAST TRICK PANNEL FOR THE PLAYER
-                $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
-                $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
-                $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+                $player_maj = Table::getUniqueValueFromDB("SELECT `player_win` FROM `tricks` WHERE `type` = 4 AND `type_arg` = 4");
+                $trick_no = Table::getUniqueValueFromDB("SELECT `trick` FROM `tricks` WHERE `type` = 4 AND `type_arg` = 4");
+                $cards_trick = Table::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$trick_no}'" );
 
                 game::$instance->notifyPlayer(
                             $player_maj,
@@ -3016,23 +3029,23 @@ class Pending extends APP_GameClass
                 $explode = explode('_', $parg1);
                 $card_id = $explode[2];
                             
-                $sorcier_id = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 4");
+                $sorcier_id = Table::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4");
 
                 // INVERSION DES CARTES EN BD
                 
 
-                self::DbQuery("UPDATE tricks set type = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-                self::DbQuery("UPDATE tricks set type_arg = 4 WHERE card_id = '{$card_id}' AND round = '{$round}'");
-                self::DbQuery("UPDATE tricks set card_id = $sorcier_id WHERE card_id = '{$card_id}' AND round = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `type` = 4 WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `type_arg` = 4 WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
+                Table::DbQuery("UPDATE `tricks` set `card_id` = $sorcier_id WHERE `card_id` = '{$card_id}' AND `round` = '{$round}'");
 
                 
-                self::DbQuery("UPDATE cards set card_location = 'hand' WHERE card_id = '{$card_id}'");
-                self::DbQuery("UPDATE cards set card_location_arg = $player WHERE card_id = '{$card_id}'");
-                self::DbQuery("UPDATE cards set card_location = 'discard' WHERE card_id = '{$sorcier_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location` = 'hand' WHERE `card_id` = '{$card_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location_arg` = $player WHERE `card_id` = '{$card_id}'");
+                Table::DbQuery("UPDATE `cards` set `card_location` = 'discard' WHERE `card_id` = '{$sorcier_id}'");
                 
                 
-                $card = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_id = '{$card_id}'" );
-                $card_sorcier = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 4" );
+                $card = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_id` = '{$card_id}'" );
+                $card_sorcier = Table::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 4" );
 
                 game::$instance->notifyPlayer(
                     $player,
@@ -3056,8 +3069,8 @@ class Pending extends APP_GameClass
                         )
                 );
 
-                $type = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id='{$card_id}'");
-                $type_arg = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id='{$card_id}'");
+                $type = Table::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id`='{$card_id}'");
+                $type_arg = Table::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id`='{$card_id}'");
                 $log = $type.'_'.$type_arg;
                 game::$instance->notifyAllPlayers(
                         'message',
@@ -3071,9 +3084,9 @@ class Pending extends APP_GameClass
                 );
 
                 // MAJ LAST TRICK PANNEL FOR THE PLAYER
-                $player_maj = self::getUniqueValueFromDB("SELECT player_win FROM tricks WHERE type = 4 AND type_arg = 4");
-                $trick_no = self::getUniqueValueFromDB("SELECT trick FROM tricks WHERE type = 4 AND type_arg = 4");
-                $cards_trick = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$trick_no}'" );
+                $player_maj = Table::getUniqueValueFromDB("SELECT `player_win` FROM `tricks` WHERE `type` = 4 AND `type_arg` = 4");
+                $trick_no = Table::getUniqueValueFromDB("SELECT `trick` FROM `tricks` WHERE `type` = 4 AND `type_arg` = 4");
+                $cards_trick = Table::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$trick_no}'" );
 
                 game::$instance->notifyPlayer(
                             $player_maj,

@@ -18,15 +18,22 @@ declare(strict_types=1);
 
 namespace Bga\Games\thedwarfking;
 
-require_once(APP_GAMEMODULE_PATH . "module/table/table.game.php");
+use Bga\GameFramework\Components\Deck;
+use Bga\GameFramework\SystemException;
+use Bga\GameFramework\Table;
+use Bga\GameFramework\VisibleSystemException;
 
 include('Pending.php'); // ATTENTION
 
 
-class Game extends \Table
+class Game extends Table
 {
     public static $instance = null; //ATTENTION
 
+    public Deck $cards;
+
+    public array $_CARDS;
+    public array $_QUESTS;
    
     public function __construct()
     {
@@ -69,16 +76,9 @@ class Game extends \Table
         
         self::$instance = $this; // ATTENTION
 
-        $this->cards = self::getNew("module.common.deck");
-        $this->cards->init("cards");
+        $this->cards = $this->bga->deckFactory->createDeck("cards");
 
         
-    }
-
-
-    protected function getGameName()
-    {
-        return "thedwarfking";
     }
 
 /////////////////////////////////////////////////////////////////////////////////  
@@ -116,7 +116,7 @@ class Game extends \Table
         // additional fields directly here.
         static::DbQuery(
             sprintf(
-                "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES %s",
+                "INSERT INTO `player` (`player_id`, `player_color`, `player_canal`, `player_name`, `player_avatar`) VALUES %s",
                 implode(",", $query_values)
             )
         );
@@ -150,7 +150,7 @@ class Game extends \Table
 
         // INIT GAME
 
-        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+        $nbreplayers = count(self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
         // DECK
         $colors = [1, 2, 3];
@@ -194,68 +194,68 @@ class Game extends \Table
 
         if($rand>=1 && $rand<=5)
         {
-            self::DbQuery("UPDATE cards set card_type_arg = $rand WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 4, $rand, 0)");
+            self::DbQuery("UPDATE `cards` set `card_type_arg` = $rand WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 4, $rand, 0)");
         }
 
         if($rand == 6)
         {
-            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 1, 0)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 1, 1, 0)");
         }
 
         if($rand == 7)
         {
-            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 11, 1)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 1, 11, 1)");
         }
 
         if($rand==8)
         {
-            self::DbQuery("UPDATE cards set card_type = 1, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 1, 11, 2)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 1, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 1, 11, 2)");
         }
 
         if($rand == 9)
         {
-            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 1, 0)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 2, 1, 0)");
         }
 
          if($rand == 10)
         {
-            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 11, 1)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 2, 11, 1)");
         }
 
         if($rand == 11)
         {
-            self::DbQuery("UPDATE cards set card_type = 2, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 2, 11, 2)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 2, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 2, 11, 2)");
         }
 
         if($rand == 12)
         {
-            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 1, 0)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 3, 1, 0)");
         }
 
          if($rand == 13)
         {
-            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 1 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 11, 1)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 11, `card_type_arg_2` = 1 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 3, 11, 1)");
         }
 
         if($rand == 14)
         {
-            self::DbQuery("UPDATE cards set card_type = 3, card_type_arg = 11, card_type_arg_2 = 2 WHERE card_type = 4");
-            self::DbQuery("INSERT INTO specialcard (round, rand, type, type_arg, type_arg_2) VALUES (1, $rand, 3, 11, 2)");
+            self::DbQuery("UPDATE `cards` set `card_type` = 3, `card_type_arg` = 11, `card_type_arg_2` = 2 WHERE `card_type` = 4");
+            self::DbQuery("INSERT INTO `specialcard` (`round`, `rand`, `type`, `type_arg`, `type_arg_2`) VALUES (1, $rand, 3, 11, 2)");
         }
 
         //QUEST FIRST ROUND
 
         $rand2 = bga_rand(1, 20);
-        self::DbQuery("INSERT INTO quest (round, rand) VALUES (1, $rand2)");
+        self::DbQuery("INSERT INTO `quest` (`round`, `rand`) VALUES (1, $rand2)");
 
 
         // distribution des cartes pour le first round
@@ -284,13 +284,13 @@ class Game extends \Table
 
         // init global values first round
 
-        $first_player_deal = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no=1");
+        $first_player_deal = self::getUniqueValueFromDB("SELECT `player_id` FROM `player` WHERE `player_no`=1");
         $this->setGameStateInitialValue("first_player_deal", $first_player_deal);
 
-        $first_player_quest = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=2 AND card_type_arg = 5"));
+        $first_player_quest = intval(self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=2 AND `card_type_arg` = 5"));
         $this->setGameStateInitialValue("first_player_quest", $first_player_quest);
 
-        $first_player_play = intval(self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type=3 AND card_type_arg = 5"));
+        $first_player_play = intval(self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=3 AND `card_type_arg` = 5"));
         $this->setGameStateInitialValue("first_player_play", $first_player_play);
 
 
@@ -300,7 +300,7 @@ class Game extends \Table
            
         // NOUVEL ORDRE PENDING
         $nextplayer = $first_player_play;
-        $count_players = count(self::getObjectListFromDB("SELECT player_id id FROM player", true));
+        $count_players = count(self::getObjectListFromDB("SELECT `player_id` `id` FROM `player`", true));
         for ($i = 1; $i <= $count_players; $i++) {
             game::$instance->addPendingFirst($nextplayer, "PlayCard");
             $nextplayer = game::$instance->getPlayerAfter($nextplayer);
@@ -310,6 +310,7 @@ class Game extends \Table
         $this->addPending($first_player_quest, "Quest");
         $this->addPending($first_player_deal, "Deal");
 
+        return 2;
     }
 
 /////////////////////////////////////////////////////////////////////////////////  
@@ -345,17 +346,17 @@ protected function getAllDatas()
     $result['no_round'] = $round;
     $result['no_trick'] = $trick;
     $result['first_player_play'] = $this->getGameStateValue('first_player_play');
-    $result['my_hand'] = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='hand' AND card_location_arg='{$current_player_id}'" );
+    $result['my_hand'] = self::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='hand' AND `card_location_arg`='{$current_player_id}'" );
     $result['table'] = $this->getCardsOnTableOrdered();
-    $result['active_special_card'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg, type_arg_2 type_arg_2 FROM specialcard WHERE round = '{$result['no_round']}'" );
-    $result['active_quest_card'] = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$result['no_round']}'" );
+    $result['active_special_card'] = self::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `specialcard` WHERE `round` = '{$result['no_round']}'" );
+    $result['active_quest_card'] = self::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$result['no_round']}'" );
 
     //momie
-    $result['momie_id'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
-    $result['momie_id_table'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'");
-    $result['momie_player'] = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'hand'");
-    $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$previous_trick}' AND card_win = 1");
-    $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$previous_trick}' AND card_win = 1");
+    $result['momie_id'] = self::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'hand'");
+    $result['momie_id_table'] = self::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'table'");
+    $result['momie_player'] = self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'hand'");
+    $result['type_last_card_win'] = self::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$previous_trick}' AND `card_win` = 1");
+    $result['typearg_last_card_win'] = self::getUniqueValueFromDB("SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$previous_trick}' AND `card_win` = 1");
 
     //druide
     $result['druide_player'] = $this->getGameStateValue('druide_active');
@@ -368,32 +369,32 @@ protected function getAllDatas()
 
     //sorcier
     $result['sorcier_player'] = $this->getGameStateValue('sorcier_active');
-    $result['previous_trick_cards'] = self::getCollectionFromDB( "SELECT card_id id, type type, type_arg type_arg, type_arg_2 type_arg_2 FROM tricks WHERE round ='{$round}' AND trick='{$previous_trick}'" );
+    $result['previous_trick_cards'] = self::getCollectionFromDB( "SELECT `card_id` `id`, `type` `type`, `type_arg` `type_arg`, `type_arg_2` `type_arg_2` FROM `tricks` WHERE `round` ='{$round}' AND `trick`='{$previous_trick}'" );
 
     //clone
-    $result['clone_id'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
-    $result['clone_id_table'] = self::getUniqueValueFromDB("SELECT card_id FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'table'");
-    $result['clone_player'] = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'hand'");
+    $result['clone_id'] = self::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
+    $result['clone_id_table'] = self::getUniqueValueFromDB("SELECT `card_id` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'table'");
+    $result['clone_player'] = self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'hand'");
     $last_id = game::$instance->getGameStateValue("last_card_play");
-    $result['type_last_card'] = self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id = '{$last_id}'");
-    $result['typearg_last_card'] = self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id = '{$last_id}'");
+    $result['type_last_card'] = self::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id` = '{$last_id}'");
+    $result['typearg_last_card'] = self::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id` = '{$last_id}'");
 
     //all cards for tooltips
-    $result['all_cards'] = self::getObjectListFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards" );
+    $result['all_cards'] = self::getObjectListFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards`" );
     $result['tooltips_cards'] = $this->_CARDS;
     $result['tooltips_quests'] = $this->_QUESTS;
 
     //pannel last trick win
-    $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+    $players = self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true );
     foreach ($players as $player)
     {
-        $result['tricks_win'][$player] = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+        $result['tricks_win'][$player] = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
 
         if ($result['tricks_win'][$player] > 0)
         {
-            $list_tricks = self::getObjectListFromDB( "SELECT trick FROM tricks WHERE card_win = 1 AND player_win = '{$player}' ORDER BY id ASC", true );
+            $list_tricks = self::getObjectListFromDB( "SELECT `trick` FROM `tricks` WHERE `card_win` = 1 AND `player_win` = '{$player}' ORDER BY `id` ASC", true );
             $last_trick = end($list_tricks);
-            $result['last_trick_win'][$player] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND player_win = '{$player}'" );
+            $result['last_trick_win'][$player] = self::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `player_win` = '{$player}'" );
         }
     }
 
@@ -402,14 +403,14 @@ protected function getAllDatas()
     {
         $prev_id = game::$instance->getPlayerBefore($player);
         $next_id = game::$instance->getPlayerAfter($player);
-        $result['player_before'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$prev_id}'" );
-        $result['player_after'][$player] = self::getObjectListFromDB( "SELECT player_name name, player_color color FROM player WHERE player_id = '{$next_id}'" );
+        $result['player_before'][$player] = self::getObjectListFromDB( "SELECT `player_name` name, `player_color` color FROM `player` WHERE `player_id` = '{$prev_id}'" );
+        $result['player_after'][$player] = self::getObjectListFromDB( "SELECT `player_name` name, `player_color` color FROM `player` WHERE `player_id` = '{$next_id}'" );
 
     }
 
 
     $tricks_max = 0;
-    $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+    $nbreplayers = count(self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
     if($nbreplayers == 3)
     {
@@ -435,22 +436,22 @@ protected function getAllDatas()
             
             for($j = 1; $j <= $tricks_max; $j++)
             {
-                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$i}' AND trick = '{$j}'" );
-                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1");
-                $datas_win = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1", true );
+                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}'" );
+                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}' AND `card_win` = 1");
+                $datas_win = self::getObjectListFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}' AND `card_win` = 1", true );
                 $result['round_result'][$i][$j]['winner'] = $datas_win[0];
             }
 
-            $result['resume_score'][$i] = self::getObjectListFromDB( "SELECT player_id player_id, score_quest score_quest, score_bonus score_bonus, bonus_enchanteur bonus_enchanteur, score_round score_round FROM scores WHERE round = '{$i}'" );
+            $result['resume_score'][$i] = self::getObjectListFromDB( "SELECT `player_id` `player_id`, `score_quest` `score_quest`, `score_bonus` `score_bonus`, `bonus_enchanteur` `bonus_enchanteur`, `score_round` `score_round` FROM `scores` WHERE `round` = '{$i}'" );
 
         }
         else 
         {
             for($j = 1; $j <= $trick; $j++)
             {
-                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT type type, type_arg type_arg FROM tricks WHERE round = '{$i}' AND trick = '{$j}'" );
-                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1");
-                $datas_win = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$i}' AND trick = '{$j}' AND card_win = 1", true );
+                $result['round_result'][$i][$j]['cards_played'] = self::getObjectListFromDB( "SELECT `type` `type`, `type_arg` `type_arg` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}'" );
+                //$result['round_result'][$i][$j]['winner'] = self::getUniqueValueFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}' AND `card_win` = 1");
+                $datas_win = self::getObjectListFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$i}' AND `trick` = '{$j}' AND `card_win` = 1", true );
                 if($datas_win == null)
                 {
                     $result['round_result'][$i][$j]['winner'] = null;
@@ -465,7 +466,7 @@ protected function getAllDatas()
         }
         
         
-        $result['resume_quest_card'][$i] = self::getObjectListFromDB( "SELECT rand rand, validate validate FROM quest WHERE round = '{$i}'" );
+        $result['resume_quest_card'][$i] = self::getObjectListFromDB( "SELECT `rand` `rand`, `validate` `validate` FROM `quest` WHERE `round` = '{$i}'" );
 
 
     }
@@ -526,14 +527,14 @@ public function getGameProgression()
 /////////////////////////////////////////////////////////////////////////////////  
 
 function addPending($player_id, $function, $arg = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL) {
-    $sql = "INSERT INTO pending (player_id, function, arg, arg2, arg3, arg4) VALUES (".$player_id.", '".$function."', '".$arg."', '".$arg2."', '".$arg3."', '".$arg4."')";
+    $sql = "INSERT INTO `pending` (`player_id`, `function`, `arg`, `arg2`, `arg3`, `arg4`) VALUES (".$player_id.", '".$function."', '".$arg."', '".$arg2."', '".$arg3."', '".$arg4."')";
     self::DbQuery( $sql );
 }
 
 
 function addPendingFirst($player_id, $function, $arg = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL) {
-    $minid = self::getUniqueValueFromDB( "select min(id) from pending")-1;
-    $sql = "INSERT INTO pending (id, player_id, function, arg, arg2) VALUES (".$minid.",".$player_id.", '".$function."', '".$arg."', '".$arg2."')";
+    $minid = self::getUniqueValueFromDB( "select min(`id`) from `pending`")-1;
+    $sql = "INSERT INTO `pending` (`id`, `player_id`, `function`, `arg`, `arg2`) VALUES (".$minid.",".$player_id.", '".$function."', '".$arg."', '".$arg2."')";
     self::DbQuery( $sql );
 }
 
@@ -543,7 +544,7 @@ function checkArgs($arg1)
 
         if(!in_array($arg1,$ret['selectable']) && !in_array($arg1,$ret['buttons']))
         {
-            throw new \BgaSystemException("Not a valid selection");
+            throw new SystemException("Not a valid selection");
         }
         
     }
@@ -551,13 +552,13 @@ function checkArgs($arg1)
 public function getCardsOnTableOrdered()
     {
         $current = $this->getGameStateValue('first_player_play');
-        $current_no = self::getUniqueValueFromDB("SELECT player_no FROM player WHERE player_id = $current");
+        $current_no = self::getUniqueValueFromDB("SELECT `player_no` FROM `player` WHERE `player_id` = $current");
 
-        $sql = "SELECT player_id FROM player ORDER BY (player_no >= $current_no) DESC, player_no ASC";
+        $sql = "SELECT `player_id` FROM `player` ORDER BY (`player_no` >= $current_no) DESC, `player_no` ASC";
         $ordered_ids = $this->getObjectListFromDB($sql, true);
         // ⬅️ Retourne un array simple [2037568, 2037569, ...]
 
-        $tableCards = self::getCollectionFromDB( "SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location ='table'" );
+        $tableCards = self::getCollectionFromDB( "SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` ='table'" );
 
         // Indexe les cartes par player_id
         $cards_by_player = array_column($tableCards, null, 'location_arg');
@@ -584,7 +585,7 @@ function winnerOfTurn()
         // TRICKS MAX POUR BOUFFON ET BRICOLEUR
         // UTILISE AUSSI POUR LE DERNIER MESSAGE DU ROUND
         $tricks_max = 0;
-        $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+        $nbreplayers = count(self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
         if($nbreplayers == 3)
         {
@@ -601,7 +602,7 @@ function winnerOfTurn()
 
         // COLOR REQUEST ET CARDS PLAYED
         $color_request = game::$instance->getGameStateValue("color_request");
-        $cards_played = self::getObjectListFromDB("SELECT card_id id, card_type type, card_type_arg type_arg, card_type_arg_2 type_arg_2, card_location location, card_location_arg location_arg FROM cards WHERE card_location = 'table'");
+        $cards_played = self::getObjectListFromDB("SELECT `card_id` `id`, `card_type` `type`, `card_type_arg` `type_arg`, `card_type_arg_2` `type_arg_2`, `card_location` location, `card_location_arg` location_arg FROM `cards` WHERE `card_location` = 'table'");
         
         // VARIABLES
         $excalibur = 0;
@@ -619,19 +620,19 @@ function winnerOfTurn()
         $hydre_play = 0; // Hydre (4 1 0)
         $hydre_last_A = 0;
         $ordered_cards = game::$instance->getCardsOnTableOrdered();
-        $PlayerHydre = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 1 AND card_location = 'table'");
+        $PlayerHydre = self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 1 AND `card_location` = 'table'");
         if($PlayerHydre != null)
         {
             $hydre_play = 1;
         }
 
         //momie (4 2 0)
-        $momie_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 2 AND card_location = 'table'");
+        $momie_player = self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 2 AND `card_location` = 'table'");
         if($momie_player != null)
         {
             $last_trick = $trick - 1;
-            $type_last_card_win = intval(self::getUniqueValueFromDB("SELECT type FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1"));
-            $typearg_last_card_win = intval(self::getUniqueValueFromDB("SELECT type_arg FROM tricks WHERE round = '{$round}' AND trick = '{$last_trick}' AND card_win = 1"));
+            $type_last_card_win = intval(self::getUniqueValueFromDB("SELECT `type` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1"));
+            $typearg_last_card_win = intval(self::getUniqueValueFromDB("SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `trick` = '{$last_trick}' AND `card_win` = 1"));
             foreach ($cards_played as &$card) { 
                 if ($card['location_arg'] == $momie_player) {
                     $card['type'] = $type_last_card_win; 
@@ -643,12 +644,12 @@ function winnerOfTurn()
         }
 
         //clone (4 3 0)
-        $clone_player = self::getUniqueValueFromDB("SELECT card_location_arg FROM cards WHERE card_type = 4 AND card_type_arg = 3 AND card_location = 'table'");
+        $clone_player = self::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type` = 4 AND `card_type_arg` = 3 AND `card_location` = 'table'");
         if($clone_player != null)
         {
             $last_card_play = game::$instance->getGameStateValue("last_card_play");
-            $type_last_card_play = intval(self::getUniqueValueFromDB("SELECT card_type FROM cards WHERE card_id ='{$last_card_play}'"));
-            $typearg_last_card_play = intval(self::getUniqueValueFromDB("SELECT card_type_arg FROM cards WHERE card_id ='{$last_card_play}'"));
+            $type_last_card_play = intval(self::getUniqueValueFromDB("SELECT `card_type` FROM `cards` WHERE `card_id` ='{$last_card_play}'"));
+            $typearg_last_card_play = intval(self::getUniqueValueFromDB("SELECT `card_type_arg` FROM `cards` WHERE `card_id` ='{$last_card_play}'"));
             foreach ($cards_played as &$card) { 
                 if ($card['location_arg'] == $clone_player) {
                     $card['type'] = $type_last_card_play; 
@@ -775,7 +776,7 @@ function winnerOfTurn()
         }
 
         
-        $winner_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$player_win}'");
+        $winner_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$player_win}'");
 
         /////////////////////////////////// END OF TURN ////////////////////////////
         // MESSAGE ET ENDTURN WIN
@@ -943,7 +944,7 @@ function winnerOfTurn()
                     )
             );
 
-            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+            game::$instance->DbQuery("UPDATE `bonus` set `bonus` = 3 WHERE `player_id` = '{$player_win}' AND `round` = '{$round}'");
 
         }
 
@@ -961,7 +962,7 @@ function winnerOfTurn()
                     )
             );
 
-            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+            game::$instance->DbQuery("UPDATE `bonus` set `bonus` = 3 WHERE `player_id` = '{$player_win}' AND `round` = '{$round}'");
             game::$instance->setGameStateValue("bricoleur", 0);
 
         }
@@ -984,7 +985,7 @@ function winnerOfTurn()
         // BONUS BOUFFON BLEU (2 1 0)
         if($bouffon != 0)
         {
-            $bouffon_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$bouffon}'");
+            $bouffon_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$bouffon}'");
              game::$instance->notifyAllPlayers(
                     'message',
                     clienttranslate('${player_name} plays ${log} on the last trick and will score 3 ${log2}'),
@@ -995,7 +996,7 @@ function winnerOfTurn()
                     )
             );
 
-            game::$instance->DbQuery("UPDATE bonus set bonus = 3 WHERE player_id = '{$bouffon}' AND round = '{$round}'");
+            game::$instance->DbQuery("UPDATE `bonus` set `bonus` = 3 WHERE `player_id` = '{$bouffon}' AND `round` = '{$round}'");
 
         }
 
@@ -1022,7 +1023,7 @@ function winnerOfTurn()
         // BONUS ECLAIREUR ROUGE (3 1 0)
         if($eclaireur != 0)
         {
-            $eclaireur_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$eclaireur}'");
+            $eclaireur_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$eclaireur}'");
              game::$instance->notifyAllPlayers(
                     'message',
                     clienttranslate('${player_name} plays ${log} and will score ${pv} ${log2}'),
@@ -1034,7 +1035,7 @@ function winnerOfTurn()
                     )
             );
 
-            game::$instance->DbQuery("UPDATE bonus set bonus = $eclaireur_pv WHERE player_id = '{$eclaireur}' AND round = '{$round}'");
+            game::$instance->DbQuery("UPDATE `bonus` set `bonus` = $eclaireur_pv WHERE `player_id` = '{$eclaireur}' AND `round` = '{$round}'");
 
         }
 
@@ -1051,7 +1052,7 @@ function winnerOfTurn()
                     )
             );
 
-            game::$instance->DbQuery("UPDATE bonus set bonus = -3 WHERE player_id = '{$player_win}' AND round = '{$round}'");
+            game::$instance->DbQuery("UPDATE `bonus` set `bonus` = -3 WHERE `player_id` = '{$player_win}' AND `round` = '{$round}'");
             
         }
 
@@ -1084,7 +1085,7 @@ function winnerOfTurn()
         //MESSAGE DRUIDE VERT (1 1 0)
         if($druide != 0) {
 
-            $druide_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$druide}'");
+            $druide_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$druide}'");
              game::$instance->notifyAllPlayers(
                     'message',
                     clienttranslate('${player_name} has played ${log} and must exchange their hand with that of another player'),
@@ -1099,7 +1100,7 @@ function winnerOfTurn()
         //MESSAGE PE BLEU (2 11 1)
         if($pe_blue != 0) {
 
-            $pe_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$pe_blue}'");
+            $pe_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$pe_blue}'");
              game::$instance->notifyAllPlayers(
                     'message',
                     clienttranslate('${player_name} has played ${log}. All players will pass their hand to the NEXT or PREVIOUS player'),
@@ -1285,20 +1286,20 @@ function getLogPv()
 
 function calculScore()
 {
-    $players = self::getObjectListFromDB( "SELECT player_id FROM player", true );
+    $players = self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true );
     $round = game::$instance->getGameStateValue("no_round");
-    $type_quest = self::getUniqueValueFromDB("SELECT rand FROM quest WHERE round = '{$round}'");
-    $face_quest = self::getUniqueValueFromDB("SELECT validate FROM quest WHERE round = '{$round}'");
+    $type_quest = self::getUniqueValueFromDB("SELECT `rand` FROM `quest` WHERE `round` = '{$round}'");
+    $face_quest = self::getUniqueValueFromDB("SELECT `validate` FROM `quest` WHERE `round` = '{$round}'");
 
     $quest = $type_quest.$face_quest;
     
 
     foreach($players as $player)
     {
-        $player_name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id = '{$player}'");
+        $player_name = self::getUniqueValueFromDB("SELECT `player_name` FROM `player` WHERE `player_id` = '{$player}'");
         $pv = 0;
         $score_quest = 0;
-        $score_bonus = self::getUniqueValueFromDB("SELECT bonus FROM bonus WHERE player_id = '{$player}' AND round = '{$round}'");
+        $score_bonus = self::getUniqueValueFromDB("SELECT `bonus` FROM `bonus` WHERE `player_id` = '{$player}' AND `round` = '{$round}'");
 
         $bonus_enchanteur = 1;
         if(game::$instance->getGameStateValue("enchanteur") == $player)
@@ -1311,7 +1312,7 @@ function calculScore()
         {
 
             
-            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $tab = self::getObjectListFromDB( "SELECT `card_win` FROM `tricks` WHERE `round` = '{$round}' AND `player_id` = '{$player}' ORDER BY `id` ASC", true );
             $max = 0;
             $count = 0;
 
@@ -1331,7 +1332,7 @@ function calculScore()
 
         if($quest == '12')
         {
-            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $tab = self::getObjectListFromDB( "SELECT `card_win` FROM `tricks` WHERE `round` = '{$round}' AND `player_id` = '{$player}' ORDER BY `id` ASC", true );
             $max = 0;
             $count = 0;
 
@@ -1351,19 +1352,19 @@ function calculScore()
 
         if($quest == '21')
         {
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 10", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 10", true ));
             }
             if($nbreplayers == 4)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 7", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 7", true ));
             }
             if($nbreplayers == 5)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 5", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 5", true ));
             }
             
             $pv = $nb_tricks * 2;
@@ -1371,19 +1372,19 @@ function calculScore()
 
         if($quest == '22')
         {
-            $nbreplayers = count(self::getObjectListFromDB( "SELECT player_id FROM player", true ));
+            $nbreplayers = count(self::getObjectListFromDB( "SELECT `player_id` FROM `player`", true ));
 
             if($nbreplayers == 3)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 10", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 10", true ));
             }
             if($nbreplayers == 4)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 7", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 7", true ));
             }
             if($nbreplayers == 5)
             {
-                $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND card_win = 1 AND trick >= 5", true ));
+                $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `card_win` = 1 AND `trick` >= 5", true ));
             }
             
             $pv = $nb_tricks * (-2);
@@ -1393,28 +1394,28 @@ function calculScore()
 
         if($quest == '31')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 3 OR type_arg = 4)", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND (`type_arg` = 3 OR `type_arg` = 4)", true ));
             $pv = $nb_tricks * 4;
             
         }
 
         if($quest == '32')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND (type_arg = 6 OR type_arg = 7)", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND (`type_arg` = 6 OR `type_arg` = 7)", true ));
             $pv = $nb_tricks * 4;
             
         }
 
         if($quest == '41')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2", true ));
             $pv = $nb_tricks * (-1);
             
         }
 
         if($quest == '42')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 3", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 3", true ));
             $pv = $nb_tricks * (-1);
             
         }
@@ -1422,7 +1423,7 @@ function calculScore()
         if($quest == '51')
         {
             $beforeplayer = game::$instance->getPlayerBefore($player);
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$beforeplayer}'", true ));
             $pv = $nb_tricks;
             
         }
@@ -1430,7 +1431,7 @@ function calculScore()
         if($quest == '52')
         {
             $nextplayer = game::$instance->getPlayerAfter($player);
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$nextplayer}'", true ));
             $pv = $nb_tricks;
             
             
@@ -1441,7 +1442,7 @@ function calculScore()
             $sum_player = 0;
             $max = 1;
 
-            $sum = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11  AND type <= 3 AND round = '{$round}' AND player_win = '{$player}'");
+            $sum = self::getUniqueValueFromDB("SELECT SUM(`type_arg`) FROM `tricks` WHERE `type_arg` >= 1 AND `type_arg` <= 11  AND `type` <= 3 AND `round` = '{$round}' AND `player_win` = '{$player}'");
             if($sum != null)
             {
                 $sum_player = $sum;
@@ -1455,7 +1456,7 @@ function calculScore()
 
                 if($player_test != $player)
                 {
-                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND type <= 3 AND round = '{$round}' AND player_win = '{$player_test}'");
+                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(`type_arg`) FROM `tricks` WHERE `type_arg` >= 1 AND `type_arg` <= 11 AND `type` <= 3 AND `round` = '{$round}' AND `player_win` = '{$player_test}'");
                     if($sum_player_other != null)
                     {
                         $sum2 = $sum_player_other;
@@ -1482,7 +1483,7 @@ function calculScore()
             $sum_player = 0;
             $max = 1;
 
-            $sum = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND round = '{$round}' AND player_win = '{$player}'");
+            $sum = self::getUniqueValueFromDB("SELECT SUM(`type_arg`) FROM `tricks` WHERE `type_arg` >= 1 AND `type_arg` <= 11 AND `round` = '{$round}' AND `player_win` = '{$player}'");
             if($sum != null)
             {
                 $sum_player = $sum;
@@ -1495,7 +1496,7 @@ function calculScore()
 
                 if($player_test != $player)
                 {
-                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(type_arg) FROM tricks WHERE type_arg >= 1 AND type_arg <= 11 AND round = '{$round}' AND player_win = '{$player_test}'");
+                    $sum_player_other = self::getUniqueValueFromDB("SELECT SUM(`type_arg`) FROM `tricks` WHERE `type_arg` >= 1 AND `type_arg` <= 11 AND `round` = '{$round}' AND `player_win` = '{$player_test}'");
                     if($sum_player_other != null)
                     {
                         $sum2 = $sum_player_other;
@@ -1519,21 +1520,21 @@ function calculScore()
         
         if($quest == '71')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             $pv = $nb_tricks;
             
         }
 
         if($quest == '72')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             $pv = $nb_tricks * (-1);
             
         }
 
         if($quest == '81')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks == 3)
             {
                 $pv = 5;
@@ -1545,7 +1546,7 @@ function calculScore()
         if($quest == '82')
         {
 
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks == 1)
             {
                 $pv = 5;
@@ -1556,7 +1557,7 @@ function calculScore()
 
         if($quest == '91')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks == 4)
             {
                 $pv = 5;
@@ -1566,7 +1567,7 @@ function calculScore()
 
         if($quest == '92')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks == 2)
             {
                 $pv = 5;
@@ -1577,7 +1578,7 @@ function calculScore()
         if($quest == '101')
         {
 
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks % 2 == 0)
             {
                 $pv = 5;
@@ -1588,7 +1589,7 @@ function calculScore()
 
         if($quest == '102')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             if ($nb_tricks % 2 != 0 && $nb_tricks != 0)
             {
                 $pv = 5;
@@ -1598,14 +1599,14 @@ function calculScore()
 
         if($quest == '111')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             $ok = 1;
 
             foreach($players as $player_test)
             {                
                 if($player_test != $player)
                 {
-                    $trick2 = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player_test}'", true ));
+                    $trick2 = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player_test}'", true ));
                     if($trick2 == $nb_tricks)
                     {
                         $ok = 0;
@@ -1623,14 +1624,14 @@ function calculScore()
 
         if($quest == '112')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
             $ok = 0;
 
             foreach($players as $player_test)
             {                
                 if($player_test != $player)
                 {
-                    $trick2 = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player_test}'", true ));
+                    $trick2 = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player_test}'", true ));
                     if($trick2 == $nb_tricks)
                     {
                         $ok = 1;
@@ -1650,16 +1651,16 @@ function calculScore()
         if($quest == '121')
         {
 
-            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1", true ));
-            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+            $nb_vert = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 1", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2", true ));
 
             $pv = $nb_bleu - $nb_vert;
         }
 
         if($quest == '122')
         {
-            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1", true ));
-            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2", true ));
+            $nb_vert = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 1", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2", true ));
 
             $pv = $nb_vert - $nb_bleu;
 
@@ -1667,8 +1668,8 @@ function calculScore()
 
         if($quest == '131')
         {
-            $nb_k = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 14", true ));
-            $nb_q = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 13", true ));
+            $nb_k = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` = 14", true ));
+            $nb_q = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` = 13", true ));
 
             $pv = (3*$nb_k) - (3*$nb_q);
 
@@ -1676,8 +1677,8 @@ function calculScore()
 
         if($quest == '132')
         {
-            $nb_k = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 14", true ));
-            $nb_q = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg = 13", true ));
+            $nb_k = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` = 14", true ));
+            $nb_q = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` = 13", true ));
 
             $pv = (3*$nb_q) - (3*$nb_k);
 
@@ -1685,7 +1686,7 @@ function calculScore()
 
         if($quest == '141')
         {
-            $players_win_tricks = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$round}' AND card_win = 1 ORDER BY id ASC", true );
+            $players_win_tricks = self::getObjectListFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 ORDER BY `id` ASC", true );
             $players_ordre = [];
             
             foreach($players as $player_test)
@@ -1716,7 +1717,7 @@ function calculScore()
         if($quest == '142')
         {
 
-            $players_win_tricks = self::getObjectListFromDB( "SELECT player_win FROM tricks WHERE round = '{$round}' AND card_win = 1 ORDER BY id ASC", true );
+            $players_win_tricks = self::getObjectListFromDB( "SELECT `player_win` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 ORDER BY `id` ASC", true );
             $players_ordre = [];
             
             foreach($players as $player_test)
@@ -1746,7 +1747,7 @@ function calculScore()
 
         if($quest == '151')
         {
-            $player_win_type_arg = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type <= 3 ORDER BY id ASC", true );
+            $player_win_type_arg = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` <= 3 ORDER BY `id` ASC", true );
             $card1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             $card2 = [0, 0, 0, 0];
 
@@ -1783,7 +1784,7 @@ function calculScore()
         if($quest == '152')
         {
 
-            $player_win_type_arg = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type <= 3 ORDER BY id ASC", true );
+            $player_win_type_arg = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` <= 3 ORDER BY `id` ASC", true );
             $card1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             $card2 = [0, 0, 0, 0];
 
@@ -1820,7 +1821,7 @@ function calculScore()
 
         if($quest == '161')
         {
-            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $tab = self::getObjectListFromDB( "SELECT `card_win` FROM `tricks` WHERE `round` = '{$round}' AND `player_id` = '{$player}' ORDER BY `id` ASC", true );
             $max = 0;
             $count = 0;
 
@@ -1844,7 +1845,7 @@ function calculScore()
 
         if($quest == '162')
         {
-            $tab = self::getObjectListFromDB( "SELECT card_win FROM tricks WHERE round = '{$round}' AND player_id = '{$player}' ORDER BY id ASC", true );
+            $tab = self::getObjectListFromDB( "SELECT `card_win` FROM `tricks` WHERE `round` = '{$round}' AND `player_id` = '{$player}' ORDER BY `id` ASC", true );
             $max = 0;
             $count = 0;
 
@@ -1868,9 +1869,9 @@ function calculScore()
 
         if($quest == '171')
         {
-            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 1 AND player_win = '{$player}'", true ));
-            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 2 AND player_win = '{$player}'", true ));
-            $nb_rouge = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 3 AND player_win = '{$player}'", true ));
+            $nb_vert = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 1 AND `player_win` = '{$player}'", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 2 AND `player_win` = '{$player}'", true ));
+            $nb_rouge = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 3 AND `player_win` = '{$player}'", true ));
 
             $tab = [$nb_vert, $nb_bleu, $nb_rouge];
 
@@ -1879,9 +1880,9 @@ function calculScore()
 
         if($quest == '172')
         {
-            $nb_vert = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 1 AND player_win = '{$player}'", true ));
-            $nb_bleu = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 2 AND player_win = '{$player}'", true ));
-            $nb_rouge = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND type = 3 AND player_win = '{$player}'", true ));
+            $nb_vert = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 1 AND `player_win` = '{$player}'", true ));
+            $nb_bleu = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 2 AND `player_win` = '{$player}'", true ));
+            $nb_rouge = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `type` = 3 AND `player_win` = '{$player}'", true ));
 
             $tab = [$nb_vert, $nb_bleu, $nb_rouge];
 
@@ -1891,7 +1892,7 @@ function calculScore()
 
         if($quest == '181')
         { 
-            $valeur = self::getUniqueValueFromDB("SELECT MIN(type_arg) AS valeur_min FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 1 AND type_arg <= 11");
+            $valeur = self::getUniqueValueFromDB("SELECT MIN(`type_arg`) AS valeur_min FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 1 AND `type_arg` <= 11");
             if ($valeur != null)
             {
                 $pv = $valeur;
@@ -1900,7 +1901,7 @@ function calculScore()
 
         if($quest == '182')
         {
-            $valeur = self::getUniqueValueFromDB("SELECT MIN(type_arg) AS valeur_min FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 AND type_arg <= 11");
+            $valeur = self::getUniqueValueFromDB("SELECT MIN(`type_arg`) AS valeur_min FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2 AND `type_arg` <= 11");
             if ($valeur != null)
             {
                 $pv = $valeur;
@@ -1911,8 +1912,8 @@ function calculScore()
         if($quest == '191')
         {
 
-            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
-            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg >= 12 ORDER BY id ASC", true );
+            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2 ORDER BY `id` ASC", true );
+            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` >= 12 ORDER BY `id` ASC", true );
             $count1 = count($player_win_type_arg_blue);
             $count2 = count($player_win_type_arg_face);
 
@@ -1922,8 +1923,8 @@ function calculScore()
 
         if($quest == '192')
         {
-            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type = 2 ORDER BY id ASC", true );
-            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT type_arg FROM tricks WHERE round = '{$round}' AND player_win = '{$player}' AND type_arg >= 12 ORDER BY id ASC", true );
+            $player_win_type_arg_blue = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` = 2 ORDER BY `id` ASC", true );
+            $player_win_type_arg_face = self::getObjectListFromDB( "SELECT `type_arg` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type_arg` >= 12 ORDER BY `id` ASC", true );
             $count1 = count($player_win_type_arg_blue);
             $count2 = count($player_win_type_arg_face);
 
@@ -1933,13 +1934,13 @@ function calculScore()
 
         if($quest == '201')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
 
             $beforeplayer = game::$instance->getPlayerBefore($player);
-            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$beforeplayer}'", true ));
             
             $nextplayer = game::$instance->getPlayerAfter($player);
-            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$nextplayer}'", true ));
 
             if($nb_tricks < $nb_tricks_before)
             {
@@ -1955,13 +1956,13 @@ function calculScore()
 
         if($quest == '202')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$player}'", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
 
             $beforeplayer = game::$instance->getPlayerBefore($player);
-            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$beforeplayer}'", true ));
+            $nb_tricks_before = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$beforeplayer}'", true ));
             
             $nextplayer = game::$instance->getPlayerAfter($player);
-            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT id FROM tricks WHERE round = '{$round}' AND card_win = 1 AND player_win = '{$nextplayer}'", true ));
+            $nb_tricks_after = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$nextplayer}'", true ));
 
             if($nb_tricks > $nb_tricks_before)
             {
@@ -1978,8 +1979,8 @@ function calculScore()
         
 
         $pv_round = ($pv + $score_bonus) * $bonus_enchanteur;
-        self::DbQuery("INSERT INTO scores (round, player_id, score_quest, score_bonus, bonus_enchanteur, score_round) VALUES ($round, $player, $pv, $score_bonus, $bonus_enchanteur, $pv_round)");
-        self::DbQuery("UPDATE player set player_score = player_score + $pv_round WHERE player_id = '{$player}'");
+        self::DbQuery("INSERT INTO `scores` (`round`, `player_id`, `score_quest`, `score_bonus`, `bonus_enchanteur`, `score_round`) VALUES ($round, $player, $pv, $score_bonus, $bonus_enchanteur, $pv_round)");
+        self::DbQuery("UPDATE `player` set `player_score` = `player_score` + $pv_round WHERE `player_id` = '{$player}'");
 
         if($bonus_enchanteur == 1)
         {
@@ -2014,7 +2015,7 @@ function calculScore()
 
         
 
-        $new_score = self::getUniqueValueFromDB("SELECT player_score FROM player WHERE player_id = '{$player}'");
+        $new_score = self::getUniqueValueFromDB("SELECT `player_score` FROM `player` WHERE `player_id` = '{$player}'");
         game::$instance->notifyAllPlayers(
                 'score',
                 '',
@@ -2055,9 +2056,9 @@ function calculScore()
     
         self::checkArgs($arg1);        
         
-        $pending =  self::getObjectFromDB( "SELECT* FROM pending order by id desc limit 1");
+        $pending =  self::getObjectFromDB( "SELECT* FROM `pending` order by `id` desc limit 1");
         $this->callPending($pending, true, $arg1);
-        self::DbQuery("delete from pending where id=".$pending['id']);
+        self::DbQuery("delete from `pending` where `id`=".$pending['id']);
         $this->gamestate->nextState( 'next');
         
     }
@@ -2067,18 +2068,18 @@ function calculScore()
 
         self::checkArgs($arg1);       
         
-        $pending =  self::getObjectFromDB( "SELECT* FROM pending order by id desc limit 1");
+        $pending =  self::getObjectFromDB( "SELECT* FROM `pending` order by `id` desc limit 1");
         $this->callPending($pending, true, $arg1);
-        self::DbQuery("delete from pending where id=".$pending['id']);
+        self::DbQuery("delete from `pending` where `id`=".$pending['id']);
         $this->gamestate->nextState( 'next');
         
     }
 
     public function actValidateMulti(string $arg1)
     {
-        $pending =  self::getObjectFromDB("SELECT* FROM pending order by id desc limit 1");
+        $pending =  self::getObjectFromDB("SELECT* FROM `pending` order by `id` desc limit 1");
         $this->callPending($pending, true, $arg1);
-        self::DbQuery("delete from pending where id=" . $pending['id']);
+        self::DbQuery("delete from `pending` where `id`=" . $pending['id']);
         $this->gamestate->nextState('next');
     }
 
@@ -2096,7 +2097,7 @@ function calculScore()
 
     public function argPlayerTurn()
     {
-        $pending =  self::getObjectFromDB( "SELECT* FROM pending order by id desc limit 1");
+        $pending =  self::getObjectFromDB( "SELECT* FROM `pending` order by `id` desc limit 1");
         $arg = $this->callPending($pending, false);
     
         return $arg;
@@ -2144,7 +2145,7 @@ public function callPending($pending, $execute, $arg1 = null, $arg2 = null)
 
 public function stPending() {
    
-   $pending =  self::getObjectFromDB( "SELECT * FROM pending order by id desc limit 1");
+   $pending =  self::getObjectFromDB( "SELECT * FROM `pending` order by `id` desc limit 1");
    if($pending == null)
    {
         //$this->endGame();
@@ -2168,7 +2169,7 @@ public function stPending() {
        {
            //no args required, execute
            $this->callPending($pending, true);
-           self::DbQuery("delete from pending where id=".$pending['id']);
+           self::DbQuery("delete from `pending` where `id`=".$pending['id']);
            $this->gamestate->nextState( 'same' );  
        }
        
@@ -2224,7 +2225,7 @@ public function stPending() {
                 default:
                 {
                     $player_id = $this->getActivePlayerId();
-    	            self::DbQuery("delete from pending where player_id = {$player_id}");
+    	            self::DbQuery("delete from `pending` where `player_id` = {$player_id}");
                     $this->gamestate->nextState("end");
                     break;
                 }
@@ -2240,6 +2241,6 @@ public function stPending() {
             return;
         }
 
-        throw new \feException("Zombie mode not supported at this game state: \"{$state_name}\".");
+        throw new VisibleSystemException("Zombie mode not supported at this game state: \"{$state_name}\".");
     }
 }
