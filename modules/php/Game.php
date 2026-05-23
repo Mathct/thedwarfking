@@ -1579,7 +1579,7 @@ function calculScore()
         {
 
             $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `card_win` = 1 AND `player_win` = '{$player}'", true ));
-            if ($nb_tricks % 2 == 0)
+            if ($nb_tricks % 2 == 0 && $nb_tricks != 0)
             {
                 $pv = 5;
             }
