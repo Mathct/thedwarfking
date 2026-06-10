@@ -1875,7 +1875,17 @@ function calculScore()
 
             $tab = [$nb_vert, $nb_bleu, $nb_rouge];
 
-            $pv = min($tab);
+            $count_zero = count(array_keys($tab, 0));
+            if($count_zero == 3)
+            {
+                $pv = 0;
+            }
+            else
+            {
+                $tab = array_values(array_diff($tab, [0]));
+                $pv = min($tab);
+            }
+
         }
 
         if($quest == '172')
