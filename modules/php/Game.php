@@ -1394,14 +1394,14 @@ function calculScore()
 
         if($quest == '31')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND (`type_arg` = 3 OR `type_arg` = 4)", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` <= 3 AND (`type_arg` = 3 OR `type_arg` = 4)", true ));
             $pv = $nb_tricks * 4;
             
         }
 
         if($quest == '32')
         {
-            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND (`type_arg` = 6 OR `type_arg` = 7)", true ));
+            $nb_tricks = count(self::getObjectListFromDB( "SELECT `id` FROM `tricks` WHERE `round` = '{$round}' AND `player_win` = '{$player}' AND `type` <= 3 AND (`type_arg` = 6 OR `type_arg` = 7)", true ));
             $pv = $nb_tricks * 4;
             
         }
