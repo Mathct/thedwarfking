@@ -2542,6 +2542,19 @@ class Pending
 
             game::$instance->giveExtraTime($this->player_id);
 
+
+            // NOUVEL ORDRE PENDING SI LE 5 ROUGE A ETE VOLE
+            $first_player_play = intval(Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=3 AND `card_type_arg` = 5"));
+            game::$instance->setGameStateValue("first_player_play", $first_player_play);
+            Table::DbQuery("DELETE FROM `pending`;");
+            $nextplayer = $first_player_play;
+            $count_players = count(Table::getObjectListFromDB("SELECT `player_id` `id` FROM `player`", true));
+            for ($i = 1; $i <= $count_players; $i++) {
+                game::$instance->addPendingFirst($nextplayer, "PlayCard");
+                $nextplayer = game::$instance->getPlayerAfter($nextplayer);
+            }
+            game::$instance->addPending($first_player_play, "FirstPlay");
+
         }
 
         if($this->player_pref_confirm == 2)
@@ -2631,6 +2644,18 @@ class Pending
                 );
 
             game::$instance->giveExtraTime($this->player_id);
+
+            // NOUVEL ORDRE PENDING SI LE 5 ROUGE A ETE VOLE
+            $first_player_play = intval(Table::getUniqueValueFromDB("SELECT `card_location_arg` FROM `cards` WHERE `card_type`=3 AND `card_type_arg` = 5"));
+            game::$instance->setGameStateValue("first_player_play", $first_player_play);
+            Table::DbQuery("DELETE FROM `pending`;");
+            $nextplayer = $first_player_play;
+            $count_players = count(Table::getObjectListFromDB("SELECT `player_id` `id` FROM `player`", true));
+            for ($i = 1; $i <= $count_players; $i++) {
+                game::$instance->addPendingFirst($nextplayer, "PlayCard");
+                $nextplayer = game::$instance->getPlayerAfter($nextplayer);
+            }
+            game::$instance->addPending($first_player_play, "FirstPlay");
         
         }
     }
